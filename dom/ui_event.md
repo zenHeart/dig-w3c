@@ -1,16 +1,22 @@
 ---
-title: event    
-tags: event      
-birth: 2017-06-05      
-modified: 2017-06-05      
+title: dom_event    
+tags: dom_event      
+birth: 2017-07-18      
 ---
 
-event
+dom_event
 ===
-**前言:详解 js 事件体系**
+**前言:详解 dom 3 规范下的事件模型**
 
 ---
 
+## 概述
+所有讲述参考 [UI EVENT ](https://www.w3.org/TR/DOM-Level-3-Events/#dom-event-architecture)
+
+
+
+
+## mdn event
 
 ## 事件基础
 
