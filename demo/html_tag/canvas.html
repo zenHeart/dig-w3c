@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<style>
+    body {background:window;}
+    #test {border:1px red solid;}
+    #addele {width:200px;height:200px;border:1px red solid;}
+</style>
+<body>
+<select name="globalCompositeOperation" id= "select">
+  <option value="source-atop">source-atop</option>
+   <option value="source-over">source-over</option>
+  <option value="source-in">source-in</option>
+  <option value="source-out">source-out</option>
+</select><br>
+<canvas id="test"width="400" height="400">fdfdfdf</canvas>
+
+</body>
+<script>
+  /*context = document.getElementById("test").getContext("2d");
+  // add a new path
+  context.beginPath();
+  context.moveTo (75,130);                // make (75,130) the current point
+  context.lineTo (145,75);                // line from (75,130) to (145,75)
+  context.arc (75,75,70,0,Math.PI,true);  // draw half circle disk with center (75,75), radius 70 and counterclockwise
+  context.lineTo (75,130);                // line from (5,70) to (75,130)
+  context.lineWidth = 3.0;                // set the line width for the stroke drawing
+  context.strokeStyle = 'purple';         // set the line color for the stroke drawing
+  context.stroke();                       // draw the shape
+
+  // determine the position of two points
+  var answer1 = context.isPointInPath (25,100);    // answer1 is now either true or false
+  var answer2 = context.isPointInPath (100,25);    // answer2 is also either true or false
+
+  // print out the result on the canvas    
+  context.font = "14pt sans-serif";                                        // set the font for the text
+  context.fillText ( "(25,100) inarea is " + answer1, 160, 50);    // print the first line of text
+  context.fillText ( "(100,25) inarea is " + answer2, 160, 100);   // print the second line of text
+*//*
+// 1. clipped circle area
+context.fillStyle = 'yellow';
+context.beginPath();
+context.arc (60, 60, 60, 0, 2*Math.PI);
+context.fill();
+// 2. clip
+context.clip();
+// 3. draw a rectangle with text
+context.fillStyle = 'aqua';
+context.fillRect (30, 60, 180, 60);
+context.fillStyle = 'red';
+context.font = '60px sans-serif';
+context.fillText ('Hello!', 30, 110);
+
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.lineWidth = 2.0;
+  context.font = '25px Arial';    
+  // Settings for State A 
+  var verticalGrad = context.createLinearGradient (0,0,0,200);
+  verticalGrad.addColorStop (0,'red');
+  verticalGrad.addColorStop (1,'green');
+  context.fillStyle = verticalGrad;                                      
+  context.strokeStyle = 'yellow';
+  // Draw Figure 1 
+  context.fillRect (25,25,100,150);
+  context.strokeText ("Fig 1",75,50);
+  context.strokeText ("State A", 75,125);  
+  // Save State A
+  context.save(); 
+  context.clearRect (25,25,100,150);
+  context.restore();  
+  context.fillRect (25,25,100,150);
+   context.strokeText ("Fig 1",75,50);
+  context.strokeText ("State A", 75,125); */ 
+
+  select=document.getElementById("select");
+  select_name =select.options[select.selectedIndex].value;
+  context = document.getElementById("test").getContext("2d");
+  select.onchange = function() {
+        context.clearRect(0,0,200,200);
+        // 1. add the orange square
+        context.fillStyle = 'orange';
+        context.fillRect (0, 0, 60, 60);
+        // 2. set the globalCompositeOperation
+        select_name =select.options[select.selectedIndex].value;
+        context.globalCompositeOperation= select_name;
+        // 3. add the cyan circle
+        context.fillStyle = 'cyan';
+        context.arc(54,54,36,0,2*Math.PI,false);
+        context.fill();
+    }
+
+
+    /***chrome 在使用 pattern 模式时存在 bug 采用以下方法修复**********/
+    // 解决地址 ：http://stackoverflow.com/questions/9975619/canvas-createpattern-bug-in-chrome-18
+    /*
+     window.onload = draw;
+     function draw() {
+     var context = document.getElementById('test').getContext('2d');
+     // create an Image object from the grayhorse.jpg file
+     var horseImage = new Image ();
+     horseImage.src = './image/02-red.png';
+     // create a CanvasPattern object with this image and make that the new fillStyle value
+     var horsePattern = context.createPattern (horseImage, 'repeat');
+     context.fillStyle = horsePattern;
+     // Now draw same objects: first a rectangle
+     context.fillRect (0, 0, 200, 210);
+     context.beginPath();
+     context.moveTo (220, 0);
+     context.lineTo (220, 100);
+     context.lineTo (550, 50);
+     context.lineTo (220, 0);
+     context.fill();
+     context.closePath();
+     // and finally write "Hello!"
+     context.font = '120px sans-serif';
+     context.fillText ('Hello!', 210, 200);
+     }*/
+
+    /*彩虹鱼*/
+    /*
+    var context = document.getElementById('test').getContext('2d');
+    var rainbowGradient = context.createLinearGradient(170,0,350,0);
+    rainbowGradient.addColorStop(0,'red');
+    rainbowGradient.addColorStop(0.25,'yellow');
+    rainbowGradient.addColorStop(0.5,'green');
+    rainbowGradient.addColorStop(0.75,'blue');
+    rainbowGradient.addColorStop(1,'violet');
+    context.fillStyle = rainbowGradient;
+    context.beginPath();
+    context.moveTo (170, 67);
+    context.lineTo (220, 100);
+    context.lineTo (350, 50);
+    context.lineTo (350,80);
+    context.lineTo (220, 0);
+    context.lineTo (170,67);
+    context.fill();
+    context.closePath();
+    var rainbowGradient = context.createRadialGradient(220,57,0,220,57,10);
+    rainbowGradient.addColorStop(0,'red');
+    rainbowGradient.addColorStop(0.25,'yellow');
+    rainbowGradient.addColorStop(0.5,'green');
+    rainbowGradient.addColorStop(0.75,'blue');
+    rainbowGradient.addColorStop(1,'violet');
+    context.fillStyle = rainbowGradient;
+    context.beginPath();
+    context.arc (220,57,10, 0, 2*Math.PI);
+    context.fill();
+    // and finally write "Hello!"
+    context.font = '120px sans-serif';
+    context.fillText ('Hello!', 210, 200);
+
+    /*context.addGrid();
+     context.fillStyle = "rgba(12,54,180,0.2)";
+     context.fillRect(0,0,640,320);
+     var message = "this canvas is " + canvas.height + "pixel high and " + canvas.width + "pixel wide";
+
+     context.font = "1.2rem Arial";
+     context.fillStyle = "rgba(98,54,180,1)";
+     context.fillText(message,0,160);
+     canvas.onclick = function () {
+     window.location = canvas.toDataURL('image/png');
+     }
+
+     var rainbowGradient = context.createLinearGradient(0,0,160,320);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.fillStyle = rainbowGradient;
+     context.fillRect(0,0,320,320);
+
+     var rainbowGradient = context.createRadialGradient(160,0,10,160,0,340);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.strokeStyle = rainbowGradient;
+     context.fillRect(160,0,160,320);
+
+
+     var rainbowGradient = context.createRadialGradient(100,100,0,160,160,100);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.fillStyle = rainbowGradient;
+     context.fillRect(0,0,320,320);*/
+
+    // 记住圆形渐变在同心圆、相离相切等情况下表现的不同效果。
+    /*var rainbowGradient = context.createRadialGradient(200,0,0,200,100,50);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.fillStyle = rainbowGradient;
+     context.fillRect(150,0,100,180);
+
+     var rainbowGradient = context.createRadialGradient(200,0,0,200,50,50);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.fillStyle = rainbowGradient;
+     context.fillRect(150,50,100,110);
+     */
+
+    /*线性的处理*/
+    /*
+     var context =document.getElementById("test").getContext('2d');
+     var rainbowGradient = context.createLinearGradient(0,0,0,400);
+     rainbowGradient.addColorStop(0,'red');
+     rainbowGradient.addColorStop(0.25,'yellow');
+     rainbowGradient.addColorStop(0.5,'green');
+     rainbowGradient.addColorStop(0.75,'blue');
+     rainbowGradient.addColorStop(1,'violet');
+     context.beginPath();                // start a new path
+     context.lineWidth = 20;
+     context.lineCap = 'round';
+     context.lineJoin = 'round';
+     context.strokeStyle = rainbowGradient;       // set the color for subsequently called stroke() calls to 'lime'
+     context.moveTo (25, 25);            // go to point (25,25) and make that the current point in the path
+     context.lineTo (25, 125);           // add a line from (25,25) to (25,125) to the path
+     context.lineTo (150, 125);
+     context.stroke();
+
+     context.moveTo(50,225);
+     context.shadowOffsetX = 10;                // shadow appears 15 pixel to the right
+     context.shadowOffsetY = 10;                // shadow appears 15 pixel to the botttom
+     context.shadowBlur = 20;
+     context.shadowColor = "gray";            // shadow color now is 'orange'
+     context.lineTo (50,325);
+     context.lineTo (175,325);
+     context.lineWidth = 20;
+     context.lineCap = 'square';
+     context.lineJoin = 'miter';
+     context.miterLimit = 1;
+     context.stroke();
+     context.font = '2rem caption';
+     context.fillText ("#1",100,100);*/
+
+    /*var context = document.getElementById('test').getContext('2d');
+     context.fillStyle = 'red';
+     context.beginPath();
+     context.moveTo (150,60);                        // start at point 0
+     context.bezierCurveTo (150,30, 100,30, 90,30);  // from point 0 to point 1
+     context.bezierCurveTo (60,30,30,60,30,90);      // from point 1 to point 2
+     context.bezierCurveTo (30,180,90,210,150,240);  // from point 2 to point 3
+     context.bezierCurveTo (210,210,270,180,270,90); // from point 3 to point 4
+     context.bezierCurveTo (270,60,240,30,210,30);   // from point 4 to point 5
+     context.bezierCurveTo (180,30,150,30,150,60);   // from point 5 to point 0
+     context.fill(); */
+
+    CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams) {
+        // define the default values for the optional arguments
+        if (! arguments[0]) { delta = 25; }
+        if (! arguments[1]) { color = 'blue'; }
+        if (! arguments[2]) { fontParams = '8px sans-serif'; }
+        // extend the canvas width and height by delta
+        var oldWidth = this.canvas.width;
+        var oldHeight = this.canvas.height;
+        this.canvas.width = oldWidth + delta;
+        this.canvas.height = oldHeight + delta;
+        // draw the vertical and horizontal lines
+        this.lineWidth = 0.1;
+        this.strokeStyle = color;
+        this.font = fontParams;
+        this.beginPath();
+        for (var i = 0; i * delta < oldWidth; i ++) {
+            this.moveTo (i * delta, 0);
+            this.lineTo (i * delta, oldHeight);
+        }
+        for (var j = 0; j * delta < oldHeight; j ++) {
+            this.moveTo (0, j * delta);
+            this.lineTo (oldWidth, j * delta);
+        }
+        this.closePath();
+        this.stroke();
+        // draw a thicker line, which is the border of the original canvas
+        this.lineWidth = 0.5;
+        this.beginPath();
+        this.moveTo(0,0);
+        this.lineTo(oldWidth,0);
+        this.lineTo(oldWidth,oldHeight);
+        this.lineTo(0,oldHeight);
+        this.lineTo(0,0);
+        this.closePath();
+        this.stroke();
+        // set the text parameters and write the number values to the vertical and horizontal lines
+        this.font = fontParams
+        this.lineWidth = 0.3;
+        // 1. writing the numbers to the x axis
+        var textY = oldHeight + Math.floor(delta/2); // y-coordinate for the number strings
+        for (var i = 0; i * delta <= oldWidth; i ++) {
+            this.strokeText (i * delta, i * delta, textY);
+        }
+        // 2. writing the numbers to the y axis
+        var textX = oldWidth + 5; // x-coordinate for the number strings
+        for (var j = 0; j * delta <= oldHeight; j ++) {
+            this.strokeText (j * delta, textX, j * delta);
+        }
+    };
+
+
+
+</script>
+</html>

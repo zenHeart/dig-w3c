@@ -64,6 +64,10 @@ ele.dispatchEvent(custom_click);
 
 [CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent)
 
+## 困惑
+* [ ] 阻止事件传递
+* [ ] 上层事件对象的识别
+
 # 参考资料
 
 [mdn 所有 event 汇总](https://developer.mozilla.org/en-US/docs/Web/Events)

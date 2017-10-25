@@ -1,0 +1,21 @@
+{
+  "name": "es6-demo",
+  "version": "1.0.0",
+  "description": "测试 es6 新语法",
+  "main": "es6.test.js",
+  "scripts": {
+    "test": "mocha es6.test.js"
+  },
+  "keywords": [
+    "es6",
+    "test"
+  ],
+  "author": "zenheart",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2"
+  }
+}
