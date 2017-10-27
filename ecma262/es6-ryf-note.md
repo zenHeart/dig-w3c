@@ -14,7 +14,7 @@ es6-ryf-note
 ## es6 简介
 * 利用 `node --v8-options | grep harmony` 查询 node 对 es6 的支持
 
-
+http://112.74.170.197/api/command/notifyInfo
 
 
 
