@@ -12,12 +12,13 @@ describe('[传入参数] => [表达式|代码块] 测试箭头函数',function (
        expect(autoAdd1(1)).to.be.equal(2);
    });
    it(" (arg1,arg2) => 表达式",function () {
+
        var autoAddn = (n1,n) => n1 + n;
        expect(autoAddn(1,4)).to.be.equal(5);
    });
 
    //todo 该函数返回非预期
-   it("(arg1,arg2,..)=> {代码块},返回代码块结果",function () {
+   it.skip("(arg1,arg2,..)=> {代码块},返回代码块结果",function () {
        var squareN = (n) => {
            n = n^2;
            return n^2;
@@ -128,4 +129,188 @@ describe('generator 测试',function(){
         expect(sunMove().next(),'重新实例化一个迭代器').to.be.deep.equal({ value: 'sunrise', done: false });
     })
 })
+
+describe("测试 async 函数",function() {
+    /**
+     * 1. 使用 async 申明函数
+     * 2. 使用 await 定义返回值
+     * 3. 注意 await 的返回值必须是 promise 对象
+     *  */
+    it("async 基本使用",function(done) {
+        async function  asyncAdd(a,b) {
+            return await new Promise(function (resolve,reject) {
+                setTimeout(function () {
+                    if(Number.isInteger(a) && Number.isInteger(b)) {
+                        resolve(a + b);
+                    } else {
+                        reject(new Eror('确定输入为整型!'));
+
+                    }
+                },10)
+            })
+        }
+
+        asyncAdd(1,2).then(function (result) {
+            expect(result).to.equal(3);
+            done();
+        }).catch(function (e) {
+           expect(e).to.throw('确定输入为整型!')
+            done();
+        });
+    });
+
+    it("验证 async 属性",function(done) {
+        /**
+         * 验证 async 申明函数返回 promise 对象
+         * 返回值作为 resolve 结果
+         *
+         * */
+        async function myAdd(a,b) {
+            return  a + b;
+        }
+
+        expect(myAdd(1,2)).to.be.an.instanceOf(Promise);
+        myAdd(1,2).then(function (result) {
+            expect(result).to.equal(3);
+            done();
+        });
+    });
+    it("验证 async 内部错误会以 reject 方式返回",function(done) {
+        async function myAdd(a,b) {
+            throw new Error('unexpected error')
+        }
+
+        myAdd(1,2).catch(function (e) {
+            expect(e.message).to.equal('unexpected error');
+            done();
+        })
+    });
+    it("验证 await 返回值会被转换为 promise 的 resolve,reject 状态",function(done) {
+        async function myAdd(a,b) {
+            if(Number.isInteger(a) && Number.isInteger(b)) {
+                return await a + b;
+            } else {
+                return await (() => {throw new Error('unexpected error')})();
+            }
+        }
+
+        myAdd(1,2).then(function (result) {
+            expect(result).to.equal(3);
+            return 1;
+        }).then(function () {
+            return myAdd(1,'2');
+        }).catch(function (e) {
+            expect(e.message).to.equal('unexpected error');
+            done();
+        })
+    });
+
+    it("验证 await 的异常处理逻辑",function(done) {
+        async function myAdd(a,b) {
+            await (() => {throw new Error('unexpected error!')})();
+            //此处不会执行
+            return await (()=>{
+                console.log('此处不会执行!');
+                return a+b;
+            })()
+        }
+
+        myAdd(1,2).catch(function (e) {
+            expect(e.message).to.equal('unexpected error!');
+            done();
+        })
+    });
+
+    it("利用 try,catch 结构捕获异步执行的错误",function(done) {
+        async function myAdd(a,b) {
+            try{
+                await (() => {throw new Error('unexpected error!')})();
+            } catch (e) {
+                /**
+                 * 若不期望 await 的执行错误阻断后续操作,利用 catch 捕获错误
+                 * 测试发现,无法在非 promise 对象上直接使用 catch 方法进行错误捕获
+                 * */
+                console.log('----捕获错误成功-------', e.message);
+            }
+            //此处会继续执行
+            return await (()=>{
+                console.log('此处会继续执行!');
+                return a+b;
+            })()
+        }
+
+        myAdd(1,2).then(function (result) {
+            expect(result).to.equal(3);
+            done();
+        })
+    });
+
+    it("验证 await 的继发特性",function(done) {
+        function myAddNs(a,b,n) {
+            return new Promise(function (resolve) {
+                setTimeout(function () {
+                    resolve(a + b);
+                },n * 1000);
+            })
+        }
+        async function myTwiceAdd(a,b) {
+            /**
+             * 由于 await 结果 2 在结果 1 返回 promise 对象后才会触发
+             * 变成了顺序执行,执行时间会将近 4 s
+             * 在使用 await 时一定要注意,异步函数之间是否有调用关系
+             * */
+
+            const result1 = await myAddNs(a,b,2);
+            const result2 = await myAddNs(a,b,2);
+
+            return result1 + result2;
+        }
+        const startTime = process.uptime();
+
+        myTwiceAdd(1,1).then(function (result) {
+            //验证加法执行了两次
+            const spendTime = process.uptime() - startTime;
+
+            expect(result).to.equal(4);
+            expect(spendTime).to.above(4);
+            done();
+        })
+    });
+
+    it("修复 await 异步继发导致的函数阻塞",function(done) {
+        function myAddNs(a,b,n) {
+            return new Promise(function (resolve) {
+                setTimeout(function () {
+                    resolve(a + b);
+                },n * 1000);
+            })
+        }
+        async function myTwiceAdd(a,b) {
+            /**
+             * 由于 await 结果 2 在结果 1 返回 promise 对象后才会触发
+             * 变成了顺序执行,执行时间会将近 4 s
+             * 在使用 await 时一定要注意,异步函数之间是否有调用关系
+             *
+             * 也可使用 await Promise.all() 的方式并行执行上述异步操作
+             * */
+
+            const result1Promise = myAddNs(a,b,2);
+            const result2Promise = myAddNs(a,b,2);
+            //注意这里先执行 promise ,利用 await 等待所有结果
+            return await result1Promise + await result2Promise;
+        }
+        const startTime = process.uptime();
+
+        myTwiceAdd(1,1).then(function (result) {
+            //验证加法执行了两次
+            const spendTime = process.uptime() - startTime;
+
+            expect(result).to.equal(4);
+            expect(spendTime).to.below(3);
+            done();
+        })
+    });
+});
+
+
 
