@@ -250,29 +250,29 @@ describe("测试 async 函数",function() {
             return new Promise(function (resolve) {
                 setTimeout(function () {
                     resolve(a + b);
-                },n * 1000);
+                },n);
             })
         }
         async function myTwiceAdd(a,b) {
             /**
              * 由于 await 结果 2 在结果 1 返回 promise 对象后才会触发
-             * 变成了顺序执行,执行时间会将近 4 s
+             * 变成了顺序执行,执行时间会将近 400ms
              * 在使用 await 时一定要注意,异步函数之间是否有调用关系
              * */
 
-            const result1 = await myAddNs(a,b,2);
-            const result2 = await myAddNs(a,b,2);
+            const result1 = await myAddNs(a,b,200);
+            const result2 = await myAddNs(a,b,200);
 
             return result1 + result2;
         }
-        const startTime = process.uptime();
+        const startTime = process.hrtime();
+
 
         myTwiceAdd(1,1).then(function (result) {
             //验证加法执行了两次
-            const spendTime = process.uptime() - startTime;
-
+            const spendTime = process.hrtime(startTime);
             expect(result).to.equal(4);
-            expect(spendTime).to.above(4);
+            expect(spendTime[1]).to.above(400*1e6);
             done();
         })
     });
@@ -282,7 +282,7 @@ describe("测试 async 函数",function() {
             return new Promise(function (resolve) {
                 setTimeout(function () {
                     resolve(a + b);
-                },n * 1000);
+                },n );
             })
         }
         async function myTwiceAdd(a,b) {
@@ -294,23 +294,24 @@ describe("测试 async 函数",function() {
              * 也可使用 await Promise.all() 的方式并行执行上述异步操作
              * */
 
-            const result1Promise = myAddNs(a,b,2);
-            const result2Promise = myAddNs(a,b,2);
+            const result1Promise = myAddNs(a,b,200);
+            const result2Promise = myAddNs(a,b,200);
             //注意这里先执行 promise ,利用 await 等待所有结果
             return await result1Promise + await result2Promise;
         }
-        const startTime = process.uptime();
+        const startTime = process.hrtime();
 
         myTwiceAdd(1,1).then(function (result) {
             //验证加法执行了两次
-            const spendTime = process.uptime() - startTime;
+            const spendTime = process.hrtime(startTime);
 
             expect(result).to.equal(4);
-            expect(spendTime).to.below(3);
+            expect(spendTime[1]).to.below(300*1e6);
             done();
         })
     });
 });
+
 
 
 

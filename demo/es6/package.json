@@ -4,7 +4,7 @@
   "description": "测试 es6 新语法",
   "main": "es6.test.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register -t 10000 es6.test.js"
+    "test": "mocha --compilers js:babel-core/register -t 10000  -w 'test/**/*.test.js'"
   },
   "keywords": [
     "es6",
