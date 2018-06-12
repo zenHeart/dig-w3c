@@ -36,10 +36,6 @@ describe('class 语法,底层仍采用原型链封装',function(){
                 this.name = name;
             } //声明类
 
-            //申明方法无需使用函数字面量形式
-            showName() {
-                console.log(this.name);
-            }
         }
 
         var person = new Person('zenheart');
@@ -54,21 +50,12 @@ describe('class 语法,底层仍采用原型链封装',function(){
                 this.name = name;
             } //声明类
 
-            //申明方法无需使用函数字面量形式
-            showName() {
-                console.log(this.name);
-            }
         }
         class Student extends Person {
             constructor(name,school) {
                 super(name);
                 this.school = school;
             } //声明类
-
-            //申明方法无需使用函数字面量形式
-            showInfo() {
-                console.log(`name:%s,school:%s`,this.name,this.school);
-            }
         }
 
         var student = new Student('zenheart','test');
@@ -112,7 +99,6 @@ describe('generator 测试',function(){
         function * sunMove() {
             yield 'sunrise';
             yield ;//申明一个空的 yield 阶段返回 undefined
-            console.log((yield 'noon'));//yield 在另一个表达式中必须包含括号
             yield 'sundown';
         }
         //实例化一个迭代器
@@ -210,7 +196,6 @@ describe("测试 async 函数",function() {
             await (() => {throw new Error('unexpected error!')})();
             //此处不会执行
             return await (()=>{
-                console.log('此处不会执行!');
                 return a+b;
             })()
         }
@@ -230,11 +215,9 @@ describe("测试 async 函数",function() {
                  * 若不期望 await 的执行错误阻断后续操作,利用 catch 捕获错误
                  * 测试发现,无法在非 promise 对象上直接使用 catch 方法进行错误捕获
                  * */
-                console.log('----捕获错误成功-------', e.message);
             }
             //此处会继续执行
             return await (()=>{
-                console.log('此处会继续执行!');
                 return a+b;
             })()
         }

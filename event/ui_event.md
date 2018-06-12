@@ -1,4 +1,3 @@
----
 title: dom_event    
 tags: dom_event      
 birth: 2017-07-18      
@@ -21,7 +20,7 @@ dom_event
 ## 事件基础
 
 
-#  [event 对象](https://developer.mozilla.org/en-US/docs/Web/API/Event)
+#  [event 对象](https://developer.mozilla.org/en-US/docs/Web/DEVICE_API/Event)
 ## 创建一个 event 对象
 
 ```js
@@ -62,7 +61,7 @@ ele.dispatchEvent(custom_click);
 
 ```
 
-[CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent)
+[CustomEvent](https://developer.mozilla.org/en-US/docs/Web/DEVICE_API/CustomEvent)
 
 ## 困惑
 * [ ] 阻止事件传递

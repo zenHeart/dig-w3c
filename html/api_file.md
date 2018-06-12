@@ -14,8 +14,8 @@ __
 
 ## 参考资料
 * [ ] [应用中使用文件](https://developer.mozilla.org/zh-CN/docs/Using_files_from_web_applications)
-* [ ] [fileReader](https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader)
-* [ ] [fileReader](https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader)
-* [ ] [file](https://developer.mozilla.org/zh-CN/docs/Web/API/File)
+* [ ] [fileReader](https://developer.mozilla.org/zh-CN/docs/Web/DEVICE_API/FileReader)
+* [ ] [fileReader](https://developer.mozilla.org/zh-CN/docs/Web/DEVICE_API/FileReader)
+* [ ] [file](https://developer.mozilla.org/zh-CN/docs/Web/DEVICE_API/File)
 
 

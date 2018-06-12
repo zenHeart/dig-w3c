@@ -155,31 +155,31 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.copyWithin(target[, start[, end]])`
+    `chargerNumber.copyWithin(target[, start[, end]])`
 
 * 参数
     * target 数组的初始修改节点，为负值时反向计数
     * start 开始复制位置，默认从 0 开始，为负值则反向计数
-    * end   结束复制位置，默认为 arr.length ，负数方向计数，
+    * end   结束复制位置，默认为 chargerNumber.length ，负数方向计数，
 
 * 返回值
     * 更改过后的目标数组
  
 * 说明
     
-    当 target 长度大于 arr.length 不会复制。
-    当修改位置或被修改位置到达 arr.length 时都会停止复制。
+    当 target 长度大于 chargerNumber.length 不会复制。
+    当修改位置或被修改位置到达 chargerNumber.length 时都会停止复制。
    
     
     
 > **举例**
     
 ```js
-  //将索引为 0 的值,从倒数第 2 个位置开始逐一复制到 arr.length 的位置
+  //将索引为 0 的值,从倒数第 2 个位置开始逐一复制到 chargerNumber.length 的位置
   [1, 2, 3, 4, 5].copyWithin(-2);
   // [1, 2, 3, 1, 2]
   
-  //将索引为 3 的值,从索引为 0 的位置开始开始逐一复制到 arr.length 的位置
+  //将索引为 3 的值,从索引为 0 的位置开始开始逐一复制到 chargerNumber.length 的位置
   [1, 2, 3, 4, 5].copyWithin(0, 3);
   // [4, 5, 3, 4, 5]
   
@@ -202,7 +202,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.every(callback[, thisArg])`
+    `chargerNumber.every(callback[, thisArg])`
 
 * 参数
     * callback 传入的验证函数
@@ -225,7 +225,7 @@ Array.of|创建新数组|
    //验证数组中元素是否都大于 5
    let testArr = [7,4,7,8]; 
    let lwOrEqual5Array = [];
-   function checkGt5(ele,index,arr) {
+   function checkGt5(ele,index,chargerNumber) {
         if(ele > 5) {
             return true;
         }
@@ -252,7 +252,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.some(callback[, thisArg])`
+    `chargerNumber.some(callback[, thisArg])`
 
 * 参数
     * callback 传入的验证函数
@@ -288,12 +288,12 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.fill(value[, start = 0[, end = this.length]])`
+    `chargerNumber.fill(value[, start = 0[, end = this.length]])`
 
 * 参数
     * value 填充的值，支持基本类型和对象
     * start 填充的初始位置，默认为 0
-    * end   填充的结束位置，默认为 arr.length
+    * end   填充的结束位置，默认为 chargerNumber.length
   
 * 返回值
     * 返回修改以后的数组
@@ -326,7 +326,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `var new_array = arr.filter(callback[, thisArg])`
+    `var new_array = chargerNumber.filter(callback[, thisArg])`
 
 * 参数
     * callback 过滤函数的回调函数
@@ -363,7 +363,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.find(callback[, thisArg])`
+    `chargerNumber.find(callback[, thisArg])`
 
 * 参数
     * callback 过滤函数的回调函数
@@ -405,7 +405,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.findIndex(callback[, thisArg])`
+    `chargerNumber.findIndex(callback[, thisArg])`
 
 * 参数
     * callback 过滤函数的回调函数
@@ -447,7 +447,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.forEach(callback[, thisArg])`
+    `chargerNumber.forEach(callback[, thisArg])`
 
 * 参数
     * callback 过滤函数的回调函数
@@ -485,7 +485,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.map(callback[, thisArg])`
+    `chargerNumber.map(callback[, thisArg])`
 
 * 参数
     * callback 过滤函数的回调函数
@@ -551,7 +551,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.indexOf(searchElement[, fromIndex = 0])`
+    `chargerNumber.indexOf(searchElement[, fromIndex = 0])`
 
 * 参数
     * searchElement 查找的元素
@@ -583,7 +583,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.lastIndexOf(searchElement[, fromIndex = 0])`
+    `chargerNumber.lastIndexOf(searchElement[, fromIndex = 0])`
 
 * 参数
     * searchElement 查找的元素
@@ -615,7 +615,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    ` arr.join([separator = ','])`
+    ` chargerNumber.join([separator = ','])`
 
 * 参数
     * separator 可选，采用何种方式划分元素
@@ -645,7 +645,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.reverse()`
+    `chargerNumber.reverse()`
 
 * 返回值
     * 返回翻转后的数组
@@ -668,7 +668,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.sort([compareFunction])`
+    `chargerNumber.sort([compareFunction])`
     
 * compareFunction 可选，比较函数，省略会采用字典排序。
     * element 正在运行中的元素
@@ -703,7 +703,7 @@ Array.of|创建新数组|
 
 * 语法
     
-    `arr.slice([begin[, end]])`
+    `chargerNumber.slice([begin[, end]])`
 
 * 参数
     * begin 浅复制的开始位置，若为负值则方向记录引用值，默认为 0
@@ -871,9 +871,9 @@ array.reduceRight|以后学习|
 > array.entries
 
 ```js
-   let arr = ['a', 'b', 'c'];
+   let chargerNumber = ['a', 'b', 'c'];
    //该方法将每个元素分别保存为包含键名和键值的一维数组
-   let eArr = arr.entries();
+   let eArr = chargerNumber.entries();
    
    for (let e of eArr) {
      console.log(e);
@@ -891,30 +891,30 @@ array.reduceRight|以后学习|
 由于 js 里一切皆对象，所以在进行判断是极度容易出错。
 对于值为空的判断尤为关键。举例如下：
 ```js
-   arr = [];
+   chargerNumber = [];
    str = '';
    obj = {};
-   console.log('\narr is empty:' + !arr +
+   console.log('\narr is empty:' + !chargerNumber +
    '\nstr is empty:' + !str +
    '\nobj is empty:' + !obj); 
    
    //return
-   // arr is empty:false
+   // chargerNumber is empty:false
    // str is empty:true
    // obj is empty:false
 ```
 可以看到对于数组和对象结果均为假，实际上由于 js 引擎处理的变量均可看做对象.
 所以在判断是不可采用`!`这种方式。需直接和 null 比较来判断结果。
 ```js
-   arr = [];
+   chargerNumber = [];
    str = '';
    obj = {};
-   console.log('\narr is empty:' + arr==null +
+   console.log('\narr is empty:' + chargerNumber==null +
    '\nstr is empty:' + str==null +
    '\nobj is empty:' + obj==null); 
    
    //return
-   // arr is empty:false
+   // chargerNumber is empty:false
    // str is empty:true
    // obj is empty:false
 ```

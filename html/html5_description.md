@@ -18,7 +18,7 @@ html 5 技术时 w3c 推出的一系列技术包括如下内容。
 离线|application cache ,locla stroage,index DB,在线离线事件|
 存储|application cache ,locla stroage,index DB|
 连接|websocket,Server-sent 事件|
-文件访问|file API,file system,file writer,progress events|
+文件访问|file DEVICE_API,file system,file writer,progress events|
 语义|新元素，media,structure,国际化，link relation,属性，form类型，microdata|
 音频和视频|html5 vedio,web audio，webrtc,video track|
 3d 和图形|canvas,3d css,webgl,svg|

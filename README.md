@@ -6,6 +6,7 @@ w3c
 
 深挖 w3c 文档,猛追 web 脚步. 
 内容打算分为如下几部分.
+所有标准参见 [w3c all standards](https://www.w3.org/TR/) 
 
 * w3c 概述
 * html 标准

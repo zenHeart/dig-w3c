@@ -102,4 +102,11 @@ ecmascript 一切皆对象.
 
 
 
- 
+## [数据类型和值](https://tc39.github.io/ecma262/#sec-ecmascript-data-types-and-values) 
+
+## 7.1 抽象操作
+### 7.2 测试比较操作
+#### 7.2.14 抽象相等比较
+1. x == y ,类型相同直接调用严格比较
+2. null == undefined 返回 true
+3.  

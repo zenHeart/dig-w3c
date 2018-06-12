@@ -1,0 +1,26 @@
+{
+  "name": "dig-w3c",
+  "version": "1.0.0",
+  "description": "w3c ===",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "jest":{
+    "testPathIgnorePatterns":["<rootDir>/ecma262/es6"]
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zenHeart/dig-w3c.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zenHeart/dig-w3c/issues"
+  },
+  "homepage": "https://github.com/zenHeart/dig-w3c#readme"
+}

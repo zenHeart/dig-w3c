@@ -140,7 +140,7 @@ u| 使用 Unicode 模式进行匹配
 **注意 \2 只代表匹配后的结果**。
 
 
-## js 正则 API 详解
+## js 正则 DEVICE_API 详解
 **属性**
 
 方法|描述
@@ -172,7 +172,7 @@ toString|返回该正则的字面量模式定义
    testPhoneNumber.test('123223233333');
 ```
 
-### 字符串中正则 API 的使用
+### 字符串中正则 DEVICE_API 的使用
 **exec**
 该函数用来查找符合正则模式的字符串，但是只返回首次匹配的结果举例如下
 ```js
@@ -202,9 +202,9 @@ toString|返回该正则的字面量模式定义
    var str = 'abbcdefabh';
    var myArray;
    while ((myArray = myRe.exec(str)) !== null) {
-     var msg = 'Found ' + myArray[0] + '. ';
-     msg += 'Next match starts at ' + myRe.lastIndex;
-     console.log(msg);
+     var errMsg = 'Found ' + myArray[0] + '. ';
+     errMsg += 'Next match starts at ' + myRe.lastIndex;
+     console.log(errMsg);
    } 
 ```
 

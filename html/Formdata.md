@@ -12,4 +12,4 @@ Formdata
 ---
 
 
-[formdata](https://developer.mozilla.org/zh-CN/docs/Web/API/FormData/Using_FormData_Objects)
+[formdata](https://developer.mozilla.org/zh-CN/docs/Web/DEVICE_API/FormData/Using_FormData_Objects)
