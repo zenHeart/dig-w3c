@@ -1,23 +1,30 @@
 {
   "name": "dig-w3c",
   "version": "1.0.0",
-  "description": "w3c ===",
+  "author": "zenheart",
+  "description": "w3c js css html",
   "main": "index.js",
   "directories": {
     "doc": "docs",
     "example": "examples"
   },
-  "jest":{
-    "testPathIgnorePatterns":["<rootDir>/ecma262/es6"]
-  },
   "scripts": {
-    "test": "jest"
+    "test": "npx mocha --require @babel/register -t 10000  -w '**/test/**/*.test.js'"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zenHeart/dig-w3c.git"
   },
-  "author": "",
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-proposal-decorators": "^7.2.0",
+    "@babel/plugin-syntax-decorators": "^7.2.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/register": "^7.0.0",
+    "babel-polyfill": "^6.26.0",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/zenHeart/dig-w3c/issues"
