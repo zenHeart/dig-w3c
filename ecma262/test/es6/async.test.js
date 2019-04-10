@@ -191,6 +191,7 @@ describe("测试 async 函数",function() {
 
         returnVal().then(res => {
             expect(res).to.equal('res')
+            done()
         })
     })
     it('验证 async 若不返回结果默认为 undefined',function(done) {

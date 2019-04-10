@@ -9,7 +9,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "npx mocha --require @babel/register -t 10000  -w '**/test/**/*.test.js'"
+    "test": "mocha --require @babel/register -t 10000  -w '**/test/**/*.test.js'"
   },
   "repository": {
     "type": "git",
