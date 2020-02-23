@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>DOMContentLoaded</title>
+    </head>
+    <body>
+        <h2>验证 DOMContentLoaded 时间的触发时间,在脚本执行完毕后才触发</h2>
+        <script>
+            document.addEventListener('DOMContentLoaded', function(event) {
+                console.log('DOM fully loaded and parsed');
+            });
+        </script>
+        <script>
+            wait(5000);
+
+            function wait(ms) {
+                var start = Date.now(),
+                    now = start;
+                while (now - start < ms) {
+                    now = Date.now();
+                }
+            }
+        </script>
+    </body>
+</html>

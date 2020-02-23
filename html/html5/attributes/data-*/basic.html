@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        /* 在 css 中获取 dataset */
+        #demo::after {
+            content: attr(data-info);
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <p id="demo" data-section="demo" data-info="test" data-number="12">
+        测试自定义 data 字段
+    </p>
+    <button onclick=getDataInfo()>获取 data 信息</button>
+    <script>
+        function getDataInfo() {
+            let p = document.getElementById('demo');
+            
+                console.log(p.dataset);
+        }
+    </script>
+</body>
+
+</html>

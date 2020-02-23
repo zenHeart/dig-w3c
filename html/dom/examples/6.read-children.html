@@ -1,0 +1,26 @@
+<html>
+
+<body>
+    <h1>读取子元素</h1>
+    <ul>
+        <li></li>
+    </ul>
+
+    <div>End</div>
+
+    <script>
+        let bodyEle = document.body;
+        [...bodyEle.children].forEach((ele, index) => {
+            console.log(`子节点 ${index}:`, ele);
+        })
+        console.log('firstElementChild === children[0]:',bodyEle.firstElementChild === bodyEle.children[0])
+        console.log('lastElementChild === children[children.length - 1]:',bodyEle.lastElementChild === bodyEle.children[bodyEle.children.length - 1])
+        console.log('body.previousElementSibling:',bodyEle.previousElementSibling)
+        console.log('body.nextElementSibling:',bodyEle.nextElementSibling) // 后续内容未解析返回 null
+        console.log('document.documentElement.parentElement',document.documentElement.parentElement ) //返回 null
+
+    </script>
+    <p>之前的脚本无法读取到此节点</p>
+</body>
+
+</html>

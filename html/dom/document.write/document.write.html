@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>验证 document.write 向文档动态注入内容</h1>
+	<script>
+		document.write('<p> 采用 document.write 动态注入文本</p>');
+		window.onload = function () {
+			setTimeout(() => {
+				console.log('清空写入内容!');
+				document.write('<p>该写入会清空 html 文档内容</p>');
+			}, 1000)
+		}
+	</script>
+
+</body>
+
+</html>

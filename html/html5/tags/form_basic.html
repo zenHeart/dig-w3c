@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>测试表单创建</title>
+</head>
+<body>
+<!--
+action 定义表单提交地址
+method 定义 http 提交方法
+-->
+<form action="/my-handling-form-page" method="post">
+
+    <!--
+    for 属性关联输入组件,值为组件对应的 id,当点击 label 时会激活对应的输入框
+    type 定义 input 输入框的类型,该类型会自动对输入进行校验
+    name 定义关联表单此项的键名.
+    value 设置表单中的默认值
+    -->
+    <div>
+        <label for="name">Name:
+            <input type="text" id="name" name="user_name" value="test">
+        </label>
+    </div>
+    <div>
+        <label for="mail">Name:
+            <input type="email" id="mail" name="user_mail">
+        </label>
+    </div>
+    <div>
+        <label for="errMsg">Name:
+            <!--
+            textarea 文本输入框
+            -->
+            <textarea id="errMsg" name="user_message"></textarea>
+        </label>
+    </div>
+    <!--
+    button 使能表单的按钮
+    type 对应的动作
+        * submit 将表单提交到 form 对应的 action 地址
+        * reset 复位所有数据
+        * button 没有任何作用,常用来禁用按钮
+    -->
+    <div class="button">
+        <button type="submit">send your message</button>
+    </div>
+</form>
+</body>
+</html>

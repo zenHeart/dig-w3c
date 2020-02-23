@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>preventDefault 测试</title>
+  </head>
+  <body>
+    <h2>preventDefault 值元素默认行为,当不屏蔽事件的冒泡和捕获逻辑</h2>
+    <div>
+      <p>阻止 checkbox 的选中行为</p>
+      <form>
+        <label for="checkbox">checkbox:</label>
+        <input type="checkbox" name="checkbox" />
+      </form>
+      <div id="output-box"></div>
+    </div>
+  </body>
+  <script>
+    document.querySelector('[type="checkbox"]').addEventListener(
+      'click',
+      function(e) {
+        console.log('checkbox');
+        document.getElementById('output-box').innerHTML += '阻止选中元素<br>';
+        e.preventDefault();
+      },
+      true
+    );
+    document.querySelector('[type="checkbox"]').addEventListener(
+      'click',
+      function(e) {
+        console.log('checkbox 1', 'defaultPrevented', e.defaultPrevented);
+      },
+      true
+    );
+    document.addEventListener('click', () => console.log('document'), true);
+  </script>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	<h1>验证 performance api 来评估运行时间</h1>
+	<div>
+		<button onclick="getPerf()">点击评估函数运行时间</button>
+		<p>1e5 自减到 0 的时间: <strong id="minus-time"></strong>ms</p>
+	</div>
+	
+	<script>
+
+	function getPerf() {
+		let start = performance.now();
+		let i = 1e5;
+		while(i-- >= 0 );
+		let res = performance.now() - start;
+
+		let minusTime = document.getElementById('minus-time');
+		minusTime.innerText = res;
+	}
+	</script>
+</body>
+</html>

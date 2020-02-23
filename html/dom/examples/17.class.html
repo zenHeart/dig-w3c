@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<style>
+		.error {
+			color: red
+		}
+
+		.warn {
+			color: yellow;
+		}
+
+		.bg {
+			background: green;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>class 的操作方法总结</h1>
+	<div>
+		<h1>利用 className 修改样式</h1>
+		<p><button onclick="changeClassName()">通过修改 className 修改样式</button></p>
+		<div id="d1">test</div>
+	</div>
+	<div>
+		<h1>通过 classList 修改样式</h1>
+		<p><button onclick="add()">classList.add 添加样式</button></p>
+		<p><button onclick="remove()">classList.remove 删除样式</button></p>
+		<p><button onclick="toggle()">classList.toggle 触发样式</button></p>
+		<p><button onclick="replace()">classList.replace 替换样式</button></p>
+		<p><button onclick="contains()">classList.contains 检测样式存在性</button></p>
+		<div id="d2">test</div>
+	</div>
+	<script>
+		let flag = 0;
+		function changeClassName() {
+			flag ^= 1;
+			let div = document.getElementById('d1');
+			div.className = flag ? 'error' : 'warn';
+			function add() {
+				let div = document.getElementById('d2');
+				div.classList.add('bg')
+			}
+			function remove() {
+				let div = document.getElementById('d2');
+				div.classList.remove('bg')
+			}
+			function toggle() {
+				let div = document.getElementById('d2');
+				div.classList.toggle('warn')
+			}
+			function contains() {
+				let div = document.getElementById('d2');
+				//  注意只能检查单一类名
+				console.log(div.classList.contains('warn'))
+			}
+			function replace() {
+				let div = document.getElementById('d2');
+				div.classList.replace('warn', 'error');
+			}
+	</script>
+</body>
+
+</html>

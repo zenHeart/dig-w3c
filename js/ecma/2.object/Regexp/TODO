@@ -1,0 +1,21 @@
+todo:
+	☐ 为什么数量无法限制某些定位匹配,例如 `^{10}` 非法
+	☐ \f 的使用
+	☐ \v 垂直制表符的使用
+	☐ y 标志位的使用
+	☐ s 标志位的使用
+	☐ g 标志位的使用
+	☐ (?<Name>pattern) 具名捕获分组的使用
+	☐ 断言判断
+		☐ (?=) 正行断言
+		☐ (?!) 正行否定断言
+		☐ (?<=) 负行断言
+		☐ (?<!) 负行否定断言
+	☐ exec 方法的使用
+	☐ String.prototype.match  方法的使用
+	☐ String.prototype.matchAll  方法的使用
+	☐ String.prototype.search   方法的使用
+	☐ String.prototype.replace   方法的使用
+	☐ String.prototype.split   方法的使用
+	☐ 正则原理 [浅谈正则](http://www.alloyteam.com/2019/07/13574/)
+	☐ 

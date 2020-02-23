@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<style>
+		#container {
+			border: 1px solid #000;
+		}	
+	</style>
+</head>
+
+<body>
+	<h1>验证 insertAdjacentHTML 添加节点</h1>
+	<div>
+		<h2>在指定位置添加节点</h2>
+		<div id="container">
+			<p>
+				<button onclick="addText('beforebegin')">beforebegin 节点开标签之前</button>
+				<button onclick="addText('afterbegin')">afterbegin 节点开标签之后</button>
+				<button onclick="addText('beforeend')">beforeend 节点闭标签之前</button>
+				<button onclick="addText('afterend')">afterend 节点闭标签之后</button>
+				<button onclick="reset()">reset</button>
+			</p>
+		</div>
+	</div>
+	<script>
+		function addText(pos) {
+			let container = document.getElementById('container');
+			let p = `<p class="time">添加随机节点 <time>${new Date().toLocaleString()}</time></p>`
+			container.insertAdjacentHTML(pos, p);
+		}
+		function reset() {
+			document.querySelectorAll('.time').forEach(ele => ele.remove())
+		}
+	</script>
+</body>
+
+</html>

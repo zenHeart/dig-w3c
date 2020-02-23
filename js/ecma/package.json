@@ -1,0 +1,15 @@
+{
+  "name": "ecma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "mocha --require @babel/register -t 10000  -w '**/**/*.test.js' --recursive "
+  },
+  "keywords": [],
+  "author": "chengle297 <chengle297@163.com>",
+  "license": "ISC"
+}

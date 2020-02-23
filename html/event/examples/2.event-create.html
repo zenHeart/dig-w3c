@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>event create</title>
+</head>
+<body>
+	<h1>验证 event 事件的分发</h1>
+	<div>
+		<button class="btn">触发 demo 事件</button>
+	</div>
+	<script>
+		let btn = document.getElementsByClassName('btn')[0];
+		window.addEventListener('demo',function(e) {
+			console.log('bubbling',e.eventPhase)
+		},true);
+		window.addEventListener('demo',function(e) {
+			console.log('capture',e.eventPhase)
+		},true);
+		btn.onclick = triggerEvent;
+		function triggerEvent() {
+			let e = new Event('demo',{
+				bubbles:true
+			});
+			btn.dispatchEvent(e);
+		}
+	</script>
+</body>
+</html>

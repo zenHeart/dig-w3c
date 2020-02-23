@@ -1,3 +1,0 @@
-plan:
-    ☐ use config file to run mocha
-    ☐ make mocha can work in new added file

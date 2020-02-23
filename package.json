@@ -9,7 +9,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "mocha --require @babel/register -t 10000  -w '**/test/**/*.test.js'"
+    "test": "lerna exec --scope ecma -- npm run test"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,9 @@
     "@babel/register": "^7.0.0",
     "babel-polyfill": "^6.26.0",
     "chai": "^4.1.2",
-    "mocha": "^5.2.0"
+    "lerna": "^3.14.1",
+    "mocha": "^5.2.0",
+    "sinon": "^7.4.1"
   },
   "license": "ISC",
   "bugs": {
