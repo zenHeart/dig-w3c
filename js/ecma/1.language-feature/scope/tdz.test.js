@@ -9,6 +9,6 @@ describe('tdz 测试', function() {
       }
       a();
     }
-    expect(printSomething).throw(ReferenceError, /x is not defined/);
+    expect(printSomething).throw(ReferenceError, /Cannot access.*x/);
   });
 });
