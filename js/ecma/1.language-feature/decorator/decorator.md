@@ -1,15 +1,4 @@
----
-title: demo    
-tags: js      
-birth: 2017-08-29      
-modified: 2017-08-29      
----
-
-demo
-===
-**前言:讲解 demo 中的语法特性**
-
----
+装饰器
 
 
 ## decorator

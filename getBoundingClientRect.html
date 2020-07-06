@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>求取子元素相对父容器相对高度</title>
+  <style>
+    #parent {
+      height :300px;
+      overflow: auto;
+      border: 1px solid black;
+    }
+    #children {
+      border: 1px solid red;
+    }
+    .c1 {
+      height: 400px
+    }
+
+  </style>
+</head>
+<body>
+  <button id="outRes">show res</button>
+  <div id="parent">
+    <div class="c1"></div>
+    <div id="children">
+    test
+    </div>
+    <div class="c1"></div>
+  </div>
+  <script>
+     p = document.getElementById('parent');
+     c = document.getElementById('children');
+     btn = document.getElementById('outRes');
+     btn.onclick = () => {
+       let pr =p.getBoundingClientRect();
+       let cr = c.getBoundingClientRect();
+       let offsetRes = {};
+       Object.keys(pr.toJSON()).forEach(key => {
+         offsetRes[key] = pr[key] - cr[key];
+       })
+     console.log('p',pr,'c',cr)
+     console.log('offset',offsetRes)
+     }
+  </script>
+</body>
+</html>
