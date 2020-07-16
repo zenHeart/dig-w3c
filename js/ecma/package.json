@@ -7,9 +7,12 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "mocha   -t 10000  -w '**/**/*.test.js' --recursive "
+    "test": "mocha -t 10000  -w '**/**/*.test.js' --recursive "
   },
   "keywords": [],
   "author": "chengle297 <chengle297@163.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/register": "^7.10.5"
+  }
 }
