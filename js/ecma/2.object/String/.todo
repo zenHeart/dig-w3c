@@ -1,2 +1,2 @@
 todo:
-	☐ 理解 replace 使用
+	☐ 搞清楚字符串比较方法 localeCompare https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
