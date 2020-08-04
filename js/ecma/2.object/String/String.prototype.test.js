@@ -1,6 +1,12 @@
 const { expect } = require('chai');
 
 describe("String.prototype 原型方法", function () {
+	describe('string extensions',function() {
+		it('expand strings',function() {
+			let a = 'hello'
+			expect([...a]).to.deep.eq(['h','e','l','l','o'])
+		})
+	})
 	describe('String.prototype.charAt', function () {
 		it('get certain index value', function () {
 			let str = 'abcd'

@@ -1,6 +1,16 @@
 const { expect } = require('chai');
 
 describe("String.prototype", function () {
+	describe('string.length is determine by unicode length',function() {
+		it('ascii length same unicode lenght', function() {
+			let a = "hello"
+			expect(a.length).eq(5)
+		})
+		it('emoji length', function() {
+			let a = "😁"
+			expect(a.length).eq(2)
+		})
+	})
 	describe('String.prototype.indexOf', function () {
 		it('get first match index', function () {
 			let str = 'hello world'
