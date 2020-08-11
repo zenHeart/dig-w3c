@@ -68,6 +68,18 @@ describe('Object 静态方法', function() {
             a = new A();
             a.a();
         });
+        it('check defineProperty overwrite', function() {
+           let a = {a:1};
+            let desp = Object.getOwnPropertyDescriptor(a,'a');
+            Object.defineProperty(a,'a',{
+                configurable: desp.configurable,
+                enumerable: desp.enumerable,
+                get() {
+                    return 2
+                }
+            }) 
+            expect(a.a).eq(2)
+        });
     });
     describe('Object.defineProperties(object,propertyDescriptors)', function() {
         it('在对象上动态添加多个属性', function() {
