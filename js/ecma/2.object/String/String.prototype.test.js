@@ -9,6 +9,7 @@ describe("String.prototype 原型方法", function () {
 	})
 	describe('String.prototype.charAt', function () {
 		it('get certain index value', function () {
+			
 			let str = 'abcd'
 
 			// 无法修改 string 的值

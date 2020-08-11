@@ -49,6 +49,25 @@ describe('Object 静态方法', function() {
                 name: 'tom'
             });
         });
+        it('验证修改类方法后的运行时', function() {
+            class A { 
+                a() {
+                    expect(this).instanceOf(A)
+                 } 
+            }
+            let a;
+            let desp = Object.getOwnPropertyDescriptor(A.prototype,'a');
+            let val = desp.value;
+            desp.value = function (...args) {
+                expect(this).to.eq(a)
+                // 避免 this 值的丢失
+                val.call(this,...args)
+            }
+            Object.defineProperty(A.prototype,'a',desp);
+
+            a = new A();
+            a.a();
+        });
     });
     describe('Object.defineProperties(object,propertyDescriptors)', function() {
         it('在对象上动态添加多个属性', function() {
