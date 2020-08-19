@@ -380,5 +380,14 @@ f2c('-15f');
 3. 利用 escape('\n\r')显示结果为`%d%a`说明，文本中的换行都解释为了`%a`
 实际上这两个值是完全不一样的，在利用 HTTP 通讯是尤为注意。
 
+
+
 ## 字符串结合运算
 [Why is the result of ('b'+'a'+ + 'a' + 'a').toLowerCase() 'banana'?](https://stackoverflow.com/questions/57456188/why-is-the-result-of-ba-a-a-tolowercase-banana)
+
+
+## 字符串编码
+### 比较问题
+* [ ] 参考 [Is it Safe to Compare JavaScript Strings?](https://dmitripavlutin.com/compare-javascript-strings/)
+
+

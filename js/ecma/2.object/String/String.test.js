@@ -19,4 +19,14 @@ describe("测试 String 对象",function() {
 
         expect(s.codePointAt(0)).to.be.equal(134071);
     })
+    it("显示相等不代表字符编码相等",function () {
+        // 详细资料参见 https://dmitripavlutin.com/compare-javascript-strings/
+        const e1 = 'é' // ;
+        const e2 = 'é';
+        const e3 = 'e\u0301'
+
+        expect(e1).not.eq(e2);
+        expect(e2).not.eq(e3);
+
+    })
 });
