@@ -32,4 +32,10 @@ describe('[传入参数] => [表达式|代码块] 测试箭头函数',function (
        expect(squareN(2)).to.be.equal(4);
        expect(squareN(500)).to.be.equal('calculate result overflow max number 100');
    })
+   it('嵌套箭头函数, 返回函数作为参数', function() {
+        // 利用嵌套箭头函数表示科里化
+        const add = x => y => x + y
+        expect(add(1)).instanceOf(Function)
+        expect(add(1)(2)).eq(3)
+   })
 });
