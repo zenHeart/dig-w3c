@@ -74,38 +74,44 @@ let obj = {
 
 
 ## 知识点
-1. 迭代器解决，循环集合时需要额外参数记录循环位置的问题，同时提供了暂停执行能力，提供了程序控制的更多可能性
-2. 生成器语法
-    ```js
-    // 1. 函数关键字后加 * 号申名生成器函数
-    function* a() {
-        // 2. yield 用在值和表达式之前，申名迭代位置
-        yield 1
-
-    }
-    ```
-3. 生成器返回可迭代对象
+1. 迭代器概述，循环集合时需要额外参数记录循环位置的问题，同时提供了暂停执行能力，提供了程序控制的更多可能性
+2. [迭代器协议](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol)
    1. 利用 next 触发迭代，返回结果为 `value,done` 的对象
-   2. 迭代器的 next 为惰性运算，在 next 调用后触发
-   3. next 支持传值
-   4. 利用 throw 抛出错误
-4. 内建的迭代器特性
-   1. `array,set,map,string` 支持迭代器，可采用 `for of` 方法进行索引
-      1. 数组和 Set 默认使用 values 创建的循环迭代器，数组 `for in` 循环会迭代所有属性，而 keys 只返回数值索引
-      2. Map 使用的是 entries 
-      3. 字符串按照字符而非码元返回值
-   2. `Symbol.iterator` 内建属性定义迭代器，可采用 `Symbol.iterator` 判断是否可迭代
-      1. 数组，Set,Map 内部包含 `Symbol.iterator` 的方法，
-   3. 迭代器函数
+3. [可迭代协议](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol)，可采用 `for of ` 循环结果
+   1. `Symbol.iterator` 内建属性定义迭代器，可采用 `Symbol.iterator` 判断是否可迭代
+   2. 内建的可迭代对象 `array,set,map,string` 支持迭代器
+      1. 字符串按照字符而非码元返回值
+      2. 数组，set 返回 value
+      3. 数组 `for in` 循环会迭代所有属性，而 keys 只返回数值索引
+      4. Map  `for, of ` 返回 value 为 [key,value]
+      5. nodeList 为可迭代对象
+   3. 返回可迭代对象的内建函数
       1. `entries` 迭代器返回的 value 为 [key,value] 索引
          1. 对于 Set 集合 key 值就是 value
       2. `values` 迭代器返回 value 为值的迭代器
       3.  `keys` 迭代器返回 value 为键的迭代器，对于 set 键为值
+4. 迭代器创建，生成器函数和生成器对象，[generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator), [GeneratorFunction](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction)
+   
+   ```js
+   // 1. 函数关键字后加 * 号申名生成器函数
+   function* a() {
+     // 2. yield 用在值和表达式之前，申名迭代位置
+     yield 1
+
+   }
+   ```
+
+   1. 利用 throw 抛出错误
+   2. next 支持传值
+   3. next 为惰性求值
 5. 代理迭代器，可采用 `yield *` 定义代理迭代器  
-6. 使用场景
+6. 使用场景, 迭代器改变了数据和值的消费模式，消费者可以依据值的生产速度消费结果
    1. 任务调度，函数暂停的协程功能，详见 [迭代器调度](https://javascript-concurrency.gitbook.io/javascript-concurrency/04.-di-si-zhang-shi-yong-generators-shi-xian-duo-xing-ji-suan)
    2. 无限状态机
-
+7.  es6 迭代器如何转为 es5，详见 [regenerator](https://facebook.github.io/regenerator/)
 
 ## 参考迭代器规范
 * [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol)
+
+## 参考资料
+* [ES6 Generators: Complete Series](https://davidwalsh.name/concurrent-generators)
