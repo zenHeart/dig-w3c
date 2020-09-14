@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>event</title>
+</head>
+<body>
+  <h2>验证 Event 对象属性</h2>
+  <div id="parent">
+    父元素
+    <div id="c1">
+      <button id="cc1">子孙</button>
+    </div>
+  </div>
+  <script>
+    let el = document.getElementById('cc1')
+    el.onclick = () => {
+      // 1. 创建 event 事件对象,事件名必传，初始化配置可选
+      const evt = new Event('test', {
+        bubbles: true,
+        cancelable: true, 
+      })
+      // 2. 调用元素 dispatchEvent 方法发送事件
+      el.dispatchEvent(evt);
+      console.log('同步则在 test 事件触发后执行')
+    }
+    let p = document.getElementById('parent')
+
+    // 3. 绑定事件处理钩子
+    p.addEventListener('test', function(e) {
+      console.log('触发 test 事件')
+      console.log('event:' , e)
+    })
+  </script>
+  
+</body>
+</html>

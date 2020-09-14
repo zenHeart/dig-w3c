@@ -12,6 +12,7 @@
 	<h1>验证 websocket </h1>
 	<input id="msg" type="text">
 	<button onclick="sendMsg()">发送消息</button>
+	<button onclick="sendBinaryMsg()">发送二进制数据</button>
 	<button onclick="closeConnect()">
 		关闭连接
 	</button>
@@ -27,7 +28,7 @@
 		脚本
 	</button>
 	<script>
-		ws = new WebSocket('wss://echo.websocket.org')
+		ws = new WebSocket('ws://echo.websocket.org')
 		ws.onopen = function (event) {
 			console.log('connect success', event)
 			console.log('ws:',ws);
@@ -49,6 +50,11 @@
 		function sendMsg() {
 			ws.send(msg.value)
 			console.log('send:',msg.value)
+		}
+		function sendBinaryMsg() {
+			let data = 	new Int8Array(msg.value.split('').map(el => el.charCodeAt(0)))
+			debugger
+			ws.send([data,'1212'])
 		}
 
 	</script>
