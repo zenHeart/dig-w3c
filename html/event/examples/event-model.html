@@ -1,0 +1,15 @@
+<script>
+  // 采用 eventtarget 和 event 验证事件机制
+  // 1. 创建事件分发对象
+  let obj = new EventTarget();
+  // 2. 监听子事件
+  obj.addEventListener('test',(...args) => {
+    console.log('receive e:', args)
+  })
+
+  // 3. 创建事件对象
+  let testE = new Event('test');
+
+  // 4. 分发事件
+  obj.dispatchEvent(testE, {payload: 1})
+</script>

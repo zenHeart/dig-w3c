@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button onclick="add()">添加数据</button>
+  <button onclick="clean()">清除数据</button>
+  <script>
+    a = []
+    let b = new WeakSet()
+    b.add(a)
+    function add() {
+      if(!a) {
+        a = [];
+      } 
+      a.push(Array.from({length: 1e7}).map((el, index) => 1 ))
+    }
+    function clean() {
+      a = null
+    }
+  </script>
+</body>
+</html>

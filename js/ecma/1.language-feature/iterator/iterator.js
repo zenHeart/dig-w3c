@@ -46,12 +46,25 @@ exports.createIterator = function creatIterator(arr) {
     }
 
 }
-// 采用函数方式返回
-exports.iteratorArr = function * iteratorArr(arr) {
-    for(let i =0;i< arr.length;i++) {
-         yield arr[i]
-    }
-}
 exports.isIterable = function(obj) {
     return typeof obj[Symbol.iterator] === 'function'
 }
+
+class RandomNumberGenerator {
+    constructor(number) {
+        this._MAX = number;
+        this._index = 0;
+    }
+    reset() {
+        this._index = 0; 
+    }
+    [Symbol.iterator]() {
+      return {
+        next: () => {
+           return  this._index++ < this._MAX ? { value: Math.random() }: 
+           { done: true }
+        },
+      };
+    }
+  }
+exports.RandomNumberGenerator = RandomNumberGenerator

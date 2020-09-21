@@ -1,6 +1,6 @@
-# iterator
+# generator
 
-## 迭代器解决了什么问题？
+## 解决了什么问题？
 1. 简化多层 for 循环引用(出自理解 es6 第八章)
 
 ## 迭代器(iterator)是什么
@@ -74,21 +74,29 @@ let obj = {
 
 
 ## 知识点
-1. 迭代器概述，循环集合时需要额外参数记录循环位置的问题，同时提供了暂停执行能力，提供了程序控制的更多可能性
-2. [迭代器协议](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol)
-   1. 利用 next 触发迭代，返回结果为 `value,done` 的对象
-3. [可迭代协议](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol)，可采用 `for of ` 循环结果，同时支持对象扩展语法
-   1. `Symbol.iterator` 内建属性定义迭代器，可采用 `Symbol.iterator` 判断是否可迭代
-   2. 内建的可迭代对象 `array,set,map,string` 支持迭代器
-      1. 字符串按照字符而非码元返回值
-      2. 数组，set 返回 value
-      3. 数组 `for in` 循环会迭代所有属性，而 keys 只返回数值索引
-      4. Map  `for, of ` 返回 value 为 [key,value]
-      5. nodeList 为可迭代对象
-   3. 返回可迭代对象的内建函数
-      1. `entries` 迭代器返回的 value 为 [key,value] 索引
-         1. 对于 Set 集合 key 值就是 value
-      2. `values` 迭代器返回 value 为值的迭代器
-      3.  `keys` 迭代器返回 value 为键的迭代器，对于 set 键为值
-4. `for await (for of)` 异步迭代，可采用 `Symbol.asyncIterator` 迭代 
-5. iterator 可使用 `...`
+1. 生成器构造函数
+2. 生成器对象 [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator), [GeneratorFunction](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction)
+   
+   ```js
+   // 1. 函数关键字后加 * 号申名生成器函数
+   function* a() {
+     // 2. yield 用在值和表达式之前，申名迭代位置
+     yield 1
+
+   }
+   ```
+
+   1. 利用 throw 抛出错误
+   2. next 支持传值
+   3. next 为惰性求值
+3. 代理生成器，可采用 `yield *` 定义代理迭代器  
+4. 使用场景, 迭代器改变了数据和值的消费模式，消费者可以依据值的生产速度消费结果
+   1. 任务调度，函数暂停的协程功能，详见 [迭代器调度](https://javascript-concurrency.gitbook.io/javascript-concurrency/04.-di-si-zhang-shi-yong-generators-shi-xian-duo-xing-ji-suan)
+   2. 无限状态机
+5.  es6 迭代器如何转为 es5，详见 [regenerator](https://facebook.github.io/regenerator/)
+
+## 参考迭代器规范
+* [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol)
+
+## 参考资料
+* [ES6 Generators: Complete Series](https://davidwalsh.name/concurrent-generators)

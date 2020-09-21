@@ -42,3 +42,7 @@ construct|使用 new 调用一个函数|Reflect.construct()
 
 
 ## 常用代理汇总
+
+
+## 知识点
+1. 采用 Proxy 定义代理对象
