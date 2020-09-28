@@ -13,6 +13,10 @@ describe('template string', function () {
       // be careful space also keep 
       expect(testData.input).deep.equal(testData.expect)
     })
+    it('test empty value will convert to string',function() {
+      expect(`${undefined}`).deep.equal('undefined')
+      expect(`${null}`).deep.equal('null')
+    })
     it('test tagged parameter 0 has raw property', function () {
       let tag = (a) => a.raw;
       let testData = {
