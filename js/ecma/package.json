@@ -7,7 +7,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "mocha -t 10000  -w '**/**/*.test.js' --recursive "
+    "test": "mocha  --require babel-register -t 10000  -w '**/**/*.test.js' --recursive "
   },
   "keywords": [],
   "author": "chengle297 <chengle297@163.com>",

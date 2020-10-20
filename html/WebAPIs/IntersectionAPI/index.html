@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基本示例</title>
+  <style>
+    .parent {
+      border: 1px solid #000;
+      height: 300px;
+      padding: 20px;
+      overflow: auto;
+    }
+    .children {
+      height: 100px;
+      background: cyan;
+      margin: 10px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="parent">
+    <div id="el" class="children">1</div>
+    <div class="children" style="height: 400px;">2</div>
+  </div>
+  <script>
+    // 1. 定义外层元素
+    let observer = new IntersectionObserver(console.log, {
+      root: document.getElementsByClassName('parent')[0],
+      threshold: 0
+    })
+    
+    // 2. 定义被观察的元素
+    let el = document.getElementById('el')
+    observer.observe(el);
+  </script>
+  
+</body>
+</html>
