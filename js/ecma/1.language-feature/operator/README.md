@@ -340,3 +340,9 @@ console.log(a3);
 ## 结合性和优先级
 * [ ](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence#Associativity)
 <!--TODO: 补充结合性和优先级的示例  -->
+
+
+## instanceOf
+1. 判断构造函数的 `prototype` 属性是否存在一个对象的原型链上。
+由于 `prototype` 和 `__proto__` 均可动态修改，无法利用此方法判断对象是否继承自某构造器
+2. 不同执行环境不共享原型，例如 iframe 之间的内建对象是隔离的
