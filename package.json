@@ -8,9 +8,6 @@
     "doc": "docs",
     "example": "examples"
   },
-  "scripts": {
-    "test": "lerna exec --scope ecma -- npm run test"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zenHeart/dig-w3c.git"

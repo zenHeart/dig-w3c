@@ -7,12 +7,17 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "mocha -t 10000  -w '**/**/*.test.js' --recursive "
+    "test": "mocha"
   },
   "keywords": [],
   "author": "chengle297 <chengle297@163.com>",
   "license": "ISC",
   "devDependencies": {
     "@babel/register": "^7.10.5"
+  },
+  "dependencies": {
+    "@sinonjs/referee-sinon": "^8.0.0",
+    "jsverify": "^0.8.4",
+    "knuth-shuffle": "^1.0.8"
   }
 }

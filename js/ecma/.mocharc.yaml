@@ -1,0 +1,6 @@
+timeout: 10000 
+exclude:
+  - '1.language-feature/module/**/*.test.js'
+  - 'node_modules/**/*.test.js'
+watch:
+  - '**/**/*.test.js'
