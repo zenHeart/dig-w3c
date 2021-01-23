@@ -7,7 +7,7 @@ describe('Date 原型方法验证', function () {
         hour12: false
       });
       // 注意在 chrome 报错返回 24:00:20
-      expect(res).eq('00:00:20')
+      expect(res).eq('24:00:20')
     });
     
     // 详见 https://stackoverflow.com/questions/60655166/tolocaledatestring-returns-unexpected-formatted-time

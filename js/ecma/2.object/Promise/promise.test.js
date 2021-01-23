@@ -1,6 +1,11 @@
 const {expect} = require('chai');
 
-describe('test promise.all',function() {
+describe('Promise',function() {
+  describe('promise',function() {
+    it('',function() {
+      
+    })
+  })
 
     
 })

@@ -27,6 +27,5 @@ describe("测试 String 对象",function() {
 
         expect(e1).not.eq(e2);
         expect(e2).not.eq(e3);
-
     })
 });

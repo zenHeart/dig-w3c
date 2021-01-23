@@ -32,18 +32,44 @@ describe('class 语法,底层仍采用原型链封装', function() {
     expect(student.name).to.be.equal('zenheart');
     expect(student.school).to.be.equal('test');
   });
-  /* describe.skip('private', function() {
+  describe('private', function() {
     it('私有变量可以在类中访问', function() {
       class Message {
         #message;
-        constructor() {
-          this.#message = 'home';
+        constructor(msg) {
+          this.#message = msg;
         }
         static greet() {
-          expect(this.#message).to.be('home1');
+         let a = this.#message
+        }
+        getMsg() {
+         return this.#message; 
         }
       }
-      expect(Message.greet());
+      expect(new Message('home').getMsg()).eq('home');
     });
-  }); */
+    it('私有变量无法在外部和静态方法访问', function() {
+      class Message {
+        #message;
+        constructor(msg) {
+          this.#message = msg;
+        }
+        static greet() {
+         let a = this.#message
+        }
+      }
+      expect(() => Message.greet()).throw(/private member #message/);
+    });
+    it('私有访问器属性', function() {
+      class Message {
+        log() {
+          return this.#time;
+        }
+        get #time() {
+          return new Date();
+        }
+      }
+      expect(new Message().log()).match(new RegExp(new Date().getFullYear()));
+    });
+  });
 });
