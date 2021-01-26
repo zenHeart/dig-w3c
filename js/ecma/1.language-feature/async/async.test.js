@@ -204,6 +204,23 @@ describe("测试 async 函数",function() {
             done()
         })
     })
+    it('async of await loop promise',async function() {
+        async function loopAsync() {
+            let events = [
+                Promise.resolve(1),
+                Promise.resolve(2),
+                Promise.resolve(3),
+            ]
+            let ret = []
+            // be careful await is out side variable
+            for await (let  res of  events) {
+                ret.push(res)
+            }
+            return ret
+        }
+        let res = await loopAsync();
+        expect(res).deep.eq([1, 2, 3])
+    })
 });
 
 

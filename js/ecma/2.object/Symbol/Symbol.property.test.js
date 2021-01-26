@@ -22,4 +22,10 @@ describe('Symbol 属性验证', function() {
       expect(obj + '').to.eq('true');
     });
   });
+  describe('Symbol.prototype.description', function() {
+    it('accessor property to get description for symbol', function() {
+        let a = Symbol('test foo');
+        expect(a.description).eq('test foo')
+    });
+  });
 });

@@ -182,4 +182,46 @@ describe("String.prototype 原型方法", function () {
 			expect(res).to.equal('a a b c a')
 		})
 	})
+
+
+	describe('String.prototype.padStart( maxLength [ , fillString ] )',function() {
+		it('fist arguments can empty no change',function() {
+			expect('12'.padStart()).eq('12')
+			
+		})
+		it('no side effect to origin string',function() {
+			let a = 'a';
+			a.padStart('4')
+			expect(a).eq(a)
+		})
+		it('default fill space start',function() {
+			expect('a'.padStart(4)).eq('   a')
+			
+		})
+		it('lower or bigger then max length no change',function() {
+			expect('a'.padStart(-1)).eq('a')
+			expect('aaaa'.padStart(2)).eq('aaaa')
+		})
+	
+		it('use in binary fiil zero',function() {
+			expect('01'.padStart(8, 0)).eq('00000001')
+			
+		})
+	})
+
+	describe('String.prototype.padEnd( maxLength [ , fillString ] )',function() {
+		it('fill end a character when arrive maxLength',function() {
+			expect('a'.padEnd(4, ' ')).eq('a   ')
+		})
+	})
+	describe('String.prototype.trimStart',function() {
+		it('remove start space',function() {
+			expect('   a'.trimStart()).eq('a')
+		})
+	})
+	describe('String.prototype.trimEnd',function() {
+		it('remove end space',function() {
+			expect('  a  '.trimEnd()).eq('  a')
+		})
+	})
 });

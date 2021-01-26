@@ -290,4 +290,19 @@ describe('Object 静态方法', function() {
             expect(res).to.eq('hello!');
         });
     });
+    describe('Object.entries(object)', function() {
+        it('return list like [ [key,val], [key1,val1]...]', function() {
+            let obj = {
+                a: 1,
+                b: 2
+            }
+
+            let res = Object.entries(obj)
+
+            expect(res).deep.eq([
+                ['a' ,1],
+                ['b' ,2],
+            ])
+        });
+    });
 });
