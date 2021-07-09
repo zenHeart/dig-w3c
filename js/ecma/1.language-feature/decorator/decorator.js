@@ -1,7 +1,6 @@
 const {expect} = require('chai');
 
-
-describe.skip('decorator',function(){
+describe('decorator',function(){
     it("baisc use",function() {
         @test
         class Foo {

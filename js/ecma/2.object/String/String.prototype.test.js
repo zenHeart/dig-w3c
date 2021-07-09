@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-
+import "core-js/proposals/string-replace-all"
 
 describe("String.prototype 原型方法", function () {
   describe('string.length is determine by unicode length',function() {
@@ -165,7 +165,6 @@ describe("String.prototype 原型方法", function () {
 			let res = str.replaceAll('tom', 'jack')
 
 			expect(res).to.equal('hello jack hello jack hello')
-
 		})
 		it('第一个参数为正则，全量替换模板', function () {
 			let str = "a {demo} b c {demo}"

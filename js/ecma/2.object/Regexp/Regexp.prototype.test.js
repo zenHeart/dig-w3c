@@ -10,12 +10,6 @@ describe('regexp prototype ',function() {
 			expect(r1.flags).to.equal('gi')
 			expect(r2.flags).to.empty.string
 		})
-		it('标志位配置为只读',function() {
-			let r1 = /\d/g;
-
-			r1.flags = 'gi'
-			expect(r1.flags).to.equal('g')
-		})
 	})
 	describe('RegExp.prototype.global',function() {
 		it('g 决定是否全局匹配',function() {
@@ -71,13 +65,6 @@ describe('regexp prototype ',function() {
 			let r1 = /\dw$/m;
 
 			// 由于开启了多行模式,$可以标识每行末尾
-			expect(r1.source).to.equal('\\dw$')
-		})
-		it('验证 source 只读',function() {
-			let r1 = /\dw$/m;
-			r1.source = 'a'
-			
-			// 无法修改 source 的值
 			expect(r1.source).to.equal('\\dw$')
 		})
 	})

@@ -28,7 +28,9 @@ describe('delete 运算符', function() {
             enumerable: true
         });
         // 无法删除不可配置属性
-        expect(delete obj.foo).to.false;
+        try {
+          expect(delete obj.foo).to.false;
+        } catch(e) {}
         expect(obj.foo).to.eq(10);
     });
     it('delete 对于不存在属性删除返回 true', function() {

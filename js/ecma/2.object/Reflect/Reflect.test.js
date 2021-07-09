@@ -19,11 +19,11 @@ describe("Reflect 测试",function() {
         }
         it('same call new', function() {
             
-            c = Reflect.construct(C1,[1,2,3])
+            let c = Reflect.construct(C1,[1,2,3])
             expect(c.a).deep.eq([1,2,3])
         })
         it('suppot change prototype', function() {
-            c = Reflect.construct(C1,[1,2,3], Array)
+            let c = Reflect.construct(C1,[1,2,3], Array)
             expect(c.a).instanceOf(Array)
         })
     })

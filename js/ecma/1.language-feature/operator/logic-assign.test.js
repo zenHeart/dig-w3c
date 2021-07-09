@@ -1,7 +1,7 @@
 const {expect, should, assert} = require ('chai');
 
 //箭头函数
-describe ('logic assignment operator', function () {
+describe('logic assignment operator', function () {
   describe('||=', function() {
     it('when left empty use right value', function() {
       let a;

@@ -30,6 +30,7 @@ describe('iterator', function () {
         });
       });
     });
+
     it('对象中申名生成器函数', function () {
       // 1. 采用 * 在函数 关键字后申名迭代器
       let obj = {
@@ -65,7 +66,7 @@ describe('iterator', function () {
           yield 3;
         }
       };
-      i = obj[Symbol.iterator]();
+      let i = obj[Symbol.iterator]();
       // js 引擎内部会创建迭代器,提取 value 值返回
       for (let val of obj) {
         expect(val).to.eq(i.next().value);
@@ -113,29 +114,6 @@ describe('iterator', function () {
         generator.next(4);
         expect(spy.args[2]).to.deep.eq([4])
       })
-      //  TODO:  mocha 如何测试 SyntaxError
-      it.skip('yield 只能用于外部是生成器的函数体内部', function () {
-        let func = eval(`a = () => {
-                yield 1;
-            }`);
-        try {
-          func();
-        } catch (e) {
-          expect(e).to.eq(/SyntaxError: Unexpected number/);
-        }
-      });
-      it.skip('yield 嵌套在内部生成器也不行', function () {
-        let func = eval(`function *()  {
-                function a() {
-                    yield 1;
-                    }
-            }`);
-        try {
-          func();
-        } catch (e) {
-          expect(e).to.eq(/SyntaxError: Unexpected number/);
-        }
-      });
     });
     describe('yield * 迭代器委托语法', function () {
       it('yield 委托，可返回迭代器', function () {

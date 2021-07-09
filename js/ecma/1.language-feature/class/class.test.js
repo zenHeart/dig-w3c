@@ -58,7 +58,7 @@ describe('class 语法,底层仍采用原型链封装', function() {
          let a = this.#message
         }
       }
-      expect(() => Message.greet()).throw(/private member #message/);
+      expect(() => Message.greet()).throw(/get private field on non-instance/);
     });
     it('私有访问器属性', function() {
       class Message {
@@ -72,4 +72,46 @@ describe('class 语法,底层仍采用原型链封装', function() {
       expect(new Message().log()).match(new RegExp(new Date().getFullYear()));
     });
   });
+
+  describe('super', function() {
+    it('can`t return super', function() {
+      // add test case
+    })
+    it('super only access in method and object literal', function() {
+      // add test case
+    })
+    it('super can access parent method', function() {
+      class A {
+        greet() {
+          return 1
+        }
+      }
+      class B extends A {
+        greet() {
+          return 2;
+        }
+        a() {
+          return super.greet()
+        }
+      }
+      let b = new B();
+
+      expect(b.a()).eq(1)
+      expect(b.greet()).eq(2)
+    })
+    it('access super property', function() {
+      class A { }
+      A.prototype.x = 100;
+      
+      class B extends A {
+        m() {
+          return super.x;
+        }
+      }
+      const b = new B();
+      
+      expect(b.m()).eq(100)
+
+    })
+  })
 });

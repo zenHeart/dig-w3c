@@ -10,7 +10,7 @@ describe ('Proxy.get', function () {
         return 'demo';
       },
     };
-    pobj = new Proxy (obj, trap);
+    let pobj = new Proxy (obj, trap);
 
     expect (pobj.demo).to.equal ('demo');
   });

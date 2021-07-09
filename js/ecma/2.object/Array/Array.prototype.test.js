@@ -394,17 +394,14 @@ describe('Array.prototype 属性测试', function() {
   });
 
   describe('Symbol.iterator 改变数组 for of 特性', function() {
-    it('利用 length 对数组进行截断', function() {
+    it.skip('Symbol.iterator 修改数组迭代时返回的值', function() {
       let arr = [1, 2, 3];
 
-      arr[Symbol.iterator] = function*() {
+      arr[Symbol.iterator] = function * () {
         yield 1;
-        yield 1;
-        yield 1;
-        return 2;
       };
 
-      for (val of arr) {
+      for (let val of arr) {
         expect(val).to.equal(1);
       }
     });

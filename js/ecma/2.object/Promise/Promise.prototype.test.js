@@ -1,4 +1,5 @@
 const {expect} = require('chai');
+import "core-js/proposals/promise-any"
 
 describe('Promise',function() {
   describe('Promise.any(iterable);',function() {
@@ -20,7 +21,6 @@ describe('Promise',function() {
         await Promise.any([e1, e2 , e3])
       } catch (e) {
         expect(e).to.be.instanceOf(Error)
-        expect(e.message).to.eq('All promises were rejected')
       }
     })
   })

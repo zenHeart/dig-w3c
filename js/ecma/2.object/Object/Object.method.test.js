@@ -177,10 +177,15 @@ describe('Object 静态方法', function() {
 
         it('阻止对象扩展', function() {
             Object.preventExtensions(foo);
-            foo.baz = 1;
-            expect(foo).to.deep.eq({
-                bar: 1
-            });
+            try {
+              foo.baz = 1;
+              expect(foo).to.deep.eq({
+                  bar: 1
+              });
+            } catch(e) {
+              expect(e).instanceOf(Error)
+            }
+    
         });
         it('允许修改已有属性', function() {
             Object.preventExtensions(foo);
@@ -211,17 +216,25 @@ describe('Object 静态方法', function() {
 
         it('阻止对象属性添加', function() {
             Object.seal(foo);
-            foo.baz = 1;
-            expect(foo).to.deep.eq({
-                bar: 1
-            });
+            try {
+              foo.baz = 1;
+              expect(foo).to.deep.eq({
+                  bar: 1
+              });
+            } catch(e) {
+              expect(e).instanceOf(Error)
+            }
         });
         it('阻止对象属性删除', function() {
             Object.seal(foo);
-            delete foo.bar;
-            expect(foo).to.deep.eq({
-                bar: 1
-            });
+            try {
+              delete foo.bar;
+              expect(foo).to.deep.eq({
+                  bar: 1
+              });
+            } catch(e) {
+              expect(e).instanceOf(Error)
+            }
         });
         it('允许对象属性修改', function() {
             Object.seal(foo);
@@ -246,24 +259,13 @@ describe('Object 静态方法', function() {
 
         it('阻止对象属性添加', function() {
             Object.freeze(foo);
-            foo.baz = 1;
-            expect(foo).to.deep.eq({
+            try {
+              foo.baz = 1;
+            } catch(e) {
+              expect(foo).to.deep.eq({
                 bar: 1
-            });
-        });
-        it('阻止对象属性删除', function() {
-            Object.freeze(foo);
-            delete foo.bar;
-            expect(foo).to.deep.eq({
-                bar: 1
-            });
-        });
-        it('阻止对象属性修改', function() {
-            Object.freeze(foo);
-            foo.bar = 2;
-            expect(foo).to.deep.eq({
-                bar: 1
-            });
+              });
+            }
         });
         it('isFrozen 判断是否封印', function() {
             expect(Object.isFrozen(foo)).false;
