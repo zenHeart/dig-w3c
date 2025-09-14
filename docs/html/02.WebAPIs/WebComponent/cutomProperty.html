@@ -1,0 +1,21 @@
+<div>
+  <h2>基本示例</h2>
+  <basic-demo id="bd">这是一个基本的 Web Component 示例。</basic-demo>
+</div>
+<script>
+  class BasicDemo extends HTMLElement {
+    constructor() {
+      super();
+      const shadow = this.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `<div>
+        <slot></slot>
+      </div>`;
+    }
+  }
+  customElements.define('basic-demo', BasicDemo);
+  const bd = document.getElementById('bd');
+
+  bd.onclick = function (element) {
+    console.log('click', element);
+  };
+</script>
