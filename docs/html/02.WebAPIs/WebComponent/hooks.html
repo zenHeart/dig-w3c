@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Component 基础使用示例</title>
+  <style>
+    button { margin: 4px; }
+  </style>
+</head>
+<body>
+  <h2>自定义元素示例</h2>
+  <my-greeting id="greet" name="世界"></my-greeting>
+  <div>
+    <button onclick="changeName()">更改属性</button>
+    <button onclick="removeGreeting()">卸载组件</button>
+    <button onclick="adoptGreeting()">转移组件</button>
+    <button onclick="restoreGreeting()">恢复组件</button>
+  </div>
+  <div id="adopted-container" style="margin-top:10px;"></div>
+
+  <script>
+    class MyGreeting extends HTMLElement {
+      static get observedAttributes() {
+        return ['name'];
+      }
+      constructor() {
+        super();
+        this.shadow = this.attachShadow({ mode: 'open' });
+        this.render();
+      }
+      render() {
+        const name = this.getAttribute('name') || '用户';
+        this.shadow.innerHTML = `<p>你好，${name}！这是一个 Web Component。</p>`;
+      }
+      connectedCallback() {
+        console.log('组件已挂载');
+      }
+      disconnectedCallback() {
+        console.log('组件已卸载');
+      }
+      attributeChangedCallback(name, oldValue, newValue) {
+        console.log(`属性 ${name} 已从 ${oldValue} 变为 ${newValue}`);
+        this.render();
+      }
+      adoptedCallback() {
+        console.log('组件已转移');
+      }
+    }
+    customElements.define('my-greeting', MyGreeting);
+
+    // 操作钩子的辅助函数
+    function changeName() {
+      const el = document.getElementById('greet');
+      el.setAttribute('name', '开发者');
+    }
+    function removeGreeting() {
+      const el = document.getElementById('greet');
+      if (el) el.remove();
+    }
+    function adoptGreeting() {
+      const el = document.getElementById('greet');
+      const container = document.getElementById('adopted-container');
+      if (el && container && !container.contains(el)) {
+        container.appendChild(el);
+      }
+    }
+    function restoreGreeting() {
+      const el = document.getElementById('greet');
+      const body = document.body;
+      const h2 = document.querySelector('h2');
+      if (el && h2 && el !== h2.nextElementSibling) {
+        h2.insertAdjacentElement('afterend', el);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Component 基础使用示例</title>
+  </head>
+  <body>
+    <h2>自定义元素示例</h2>
+    <my-greeting name="世界"></my-greeting>
+    <button onclick="toggleDisplay()">toggle display</button>
+
+    <script>
+      // 1. 采用 extends HTMLElement 创建自定义元素
+      class MyGreeting extends HTMLElement {
+
+        // 可以通过访问器拦截自定义元素的全局属性修改，也可以不拦截
+        get hidden() {
+          console.log("get hidden");
+          return this.hasAttribute("hidden");
+        }
+        set hidden(value) {
+          console.log("set hidden");
+          if (value) {
+            this.setAttribute("hidden", "");
+          } else {
+            this.removeAttribute("hidden");
+          }
+        }
+
+        constructor() {
+          super();
+          // 2. 使用 Shadow DOM 隔离样式和结构, 允许通过 element.shadowRoot 访问
+          const shadow = this.attachShadow({ mode: "open" });
+          // 3. 使用模板字符串定义组件的内部结构
+          const name = this.getAttribute("name") || "用户";
+          // 4. 定义自定义元素内容
+          shadow.innerHTML = `<p>你好，${name}！这是一个 Web Component。</p>`;
+        }
+      }
+      // 5. 挂载自定义元素
+      customElements.define("my-greeting", MyGreeting);
+
+      function toggleDisplay() {
+        const greeting = document.querySelector("my-greeting");
+        greeting.hidden = !greeting.hidden;
+      }
+    </script>
+  </body>
+</html>
