@@ -4,8 +4,8 @@
 
 ----
 
-
 ## 概述
+
 html 全称超文本描述语言(hypertext markup language) 。
 如下一个基本的 html 元素包含如下基本分支组成
 
@@ -26,6 +26,7 @@ html 全称超文本描述语言(hypertext markup language) 。
 <!-- TODO: 示例取自 https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/HTML_basics#So_what_is_HTML -->
 
 并不是所有元素必须包含内容还存在如下典型元素
+
 * 空元素
   * `</br>` 用于换行
   * `</img>` 替换元素用于插入图片
@@ -40,6 +41,7 @@ html 全称超文本描述语言(hypertext markup language) 。
 > 随着 web 富应用的变化,html 元素逐渐承载起 UI,交互等功能
 
 ## 字符转义
+
 html 会优先解析合法的标签,若标签集合包含特殊字符采用如下方式显示。
 
 * `&lt;` 表示 `<`
@@ -48,4 +50,4 @@ html 会优先解析合法的标签,若标签集合包含特殊字符采用如�
 * `&apos;` 表示 `'`
 * `&amp;` 表示 `&`
 
-参见 [escape](escape.html)
+<!-- 参见 [escape](escape.html) -->

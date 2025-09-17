@@ -79,12 +79,14 @@ function buildRecursiveSidebar(relativeDir: string) {
 
   return walk(baseDir, `/${relativeDir}/`);
 }
-
+// @ts-ignore
+const isDev = process.env.npm_lifecycle_script.includes("dev");
 export default defineConfig({
   title: 'W3C Notes',
   description: '深挖 W3C 与 Web 平台能力的学习笔记',
   lang: 'zh-CN',
   lastUpdated: true,
+  base: isDev ? "/" : "/dig-w3c/",
   themeConfig: {
     nav: [
       { text: 'HTML', link: '/html/' },

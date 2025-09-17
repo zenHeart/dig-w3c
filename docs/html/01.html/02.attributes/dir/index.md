@@ -1,8 +1,8 @@
 [dir](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/dir)
 dir 控制文本写入方向
 
+<!-- ## [basic](./basic.html) -->
 
-## [basic](./basic.html) 
 * 包含三个属性值
   * **ltr** 从左到右写入
   * **rtl** 从右到左写入
