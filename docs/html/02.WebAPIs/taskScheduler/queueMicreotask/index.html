@@ -1,0 +1,18 @@
+<script>
+  setTimeout(() => {
+    console.log("Task Scheduler - Queue Task (setTimeout)");
+  }, 0);
+
+  queueMicrotask(() => {
+    console.log("Task Scheduler - Queue Microtask (queueMicrotask)");
+  });
+  requestAnimationFrame(() => {
+    console.log("Task Scheduler - Queue Microtask (requestAnimationFrame)");
+  });
+  requestIdleCallback(() => {
+    console.log("Task Scheduler - Queue Microtask (requestIdleCallback)");
+  });
+  Promise.resolve().then(() => {
+    console.log("Task Scheduler - Queue Microtask (Promise)");
+  });
+</script>

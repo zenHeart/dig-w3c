@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Broadcast Example</title>
+  </head>
+  <body>
+    <button id="broadcastBtn">广播消息</button>
+    <div>
+      <iframe
+        id="frameA"
+        src="http://localhost:3000/broadcast/iframeA.html"
+        width="300"
+        height="150"
+      ></iframe>
+      <iframe
+        id="frameB"
+        src="http://localhost:3000/broadcast/iframeB.html"
+        width="300"
+        height="150"
+      ></iframe>
+    </div>
+    <script>
+      const bc = new BroadcastChannel("demo-channel");
+      document.getElementById("broadcastBtn").onclick = function () {
+        bc.postMessage({ type: "broadcast", text: "Hello iframes!" });
+      };
+    </script>
+  </body>
+</html>

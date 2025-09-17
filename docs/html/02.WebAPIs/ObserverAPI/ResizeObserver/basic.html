@@ -1,0 +1,36 @@
+<body></body>
+<script>
+  // 1. 创建观察者
+  const observer = new ResizeObserver((...args) => {
+    console.log("ResizeObserver callback entries:", args, args[1] === observer);
+  });
+
+  // 2. 观察 body
+  observer.observe(document.body);
+
+  // 3. 触发 body 尺寸变化
+  setTimeout(() => {
+    document.body.style.width = "100px";
+  }, 5);
+
+  // 4. 先取消对 body 的单独观察
+  setTimeout(() => {
+    observer.unobserve(document.body);
+    console.log("已 unobserve body，若无其他目标将不再接收后续变化");
+  }, 1000);
+
+  // 5. 再次触发 body 尺寸变化
+  setTimeout(() => {
+    observer.observe(document.body);
+    // 重复订阅无效
+    observer.observe(document.body);
+    document.body.style.width = "200px";
+  }, 2000);
+
+  setTimeout(() => {
+    observer.observe(document.body);
+    // 不会触发
+    observer.disconnect();
+    document.body.style.width = "300px";
+  }, 3000);
+</script>

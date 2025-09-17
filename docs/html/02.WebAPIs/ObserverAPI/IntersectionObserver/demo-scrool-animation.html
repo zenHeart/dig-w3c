@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基本示例</title>
+  <style>
+    .parent {
+      border: 1px solid #000;
+      height: 300px;
+      padding: 20px;
+      overflow: auto;
+    }
+    .children {
+      height: 100px;
+      background: cyan;
+      margin: 10px;
+
+    }
+    #el {
+      transition: all;
+      transition-duration: 1s;
+    }
+    #el.enter {
+      background: darkkhaki;
+    }
+  </style>
+</head>
+<body>
+  <div class="parent">
+    <div class="children" style="height: 400px;">1</div>
+    <div id="el" class="children">2</div>
+    <div class="children" style="height: 400px;">3</div>
+  </div>
+  <script>
+    // 1. 定义外层元素
+    let observer = new IntersectionObserver((res) => {
+      let { target, isIntersecting} = res[0];
+      if(isIntersecting) {
+        target.classList.add('enter')
+      } else {
+        target.classList.remove('enter')
+      }
+    }, {
+      root: document.getElementsByClassName('parent')[0],
+      threshold: 0.5
+    })
+    
+    // 2. 定义被观察的元素
+    let el = document.getElementById('el')
+    observer.observe(el);
+  </script>
+  
+</body>
+</html>

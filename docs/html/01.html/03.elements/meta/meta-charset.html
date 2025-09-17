@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>自定义标签名</title>
+</head>
+
+<body>
+	<h1>meta charset 用于控制浏览器显示的字符集</h1>
+	<button>点击切换字符集查看显示结果</button>
+	<script>
+		(function () {
+			var sets = ['US-ASCII', "UTF-8"];
+			var flag = 0;
+			var button = document.querySelector('button')
+			var meta = document.querySelector('meta')
+
+			button.onclick = () => {
+				console.log('----')
+				meta.setAttribute('charset', sets[flag]);
+				button.textContent = `字符集:${sets[flag]}`
+				flag ^= 1;
+			}
+		})()
+	</script>
+</body>
+
+</html>

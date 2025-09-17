@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>camera demo</title>
+</head>
+
+<body>
+	<video id="video" width="640" height="480" autoplay></video>
+	<button id="snap">开始录像</button>
+	<canvas id="canvas" width="640" height="480"></canvas>
+	<script>
+		var video = document.getElementById('video');
+
+		// 获取摄像头权限
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+				// 将获取的视频流传给 video 属性
+				video.srcObject = stream;
+				// 播放 video
+				video.play();
+			});
+		}
+
+		// Elements for taking the snapshot
+		var canvas = document.getElementById('canvas');
+		var context = canvas.getContext('2d');
+		var video = document.getElementById('video');
+
+		// Trigger photo take
+		document.getElementById("snap").addEventListener("click", function () {
+			// 绘制当前的视频
+			context.drawImage(video, 0, 0, 640, 480);
+		});
+	</script>
+</body>
+
+</html>

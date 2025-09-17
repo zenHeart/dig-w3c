@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document 属性测试</title>
+    <style>
+        p:hover {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+<p onclick="showProperty('anchors')"> <strong>anchors</strong>返回所有超链接节点数组(不符合预期)</p>
+<p onclick="showProperty('body')"> <strong>body</strong>显示 body 节点</p>
+<p id="sdf"></p>
+<script>
+    function showProperty(name) {
+        console.dir(document[name]);
+    }
+</script>
+</body>
+</html>

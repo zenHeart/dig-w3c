@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>requestIdleCallback Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .box {
+      flex: 1;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .task-list {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .high {
+      color: #d9534f;
+    }
+    .idle {
+      color: #5cb85c;
+    }
+  </style>
+</head>
+<body>
+  <h1>requestIdleCallback API Demo</h1>
+  
+  <p>
+    The <code>requestIdleCallback</code> API allows you to schedule non-urgent tasks 
+    during browser idle periods, which helps improve page performance by ensuring 
+    important tasks aren't blocked.
+  </p>
+
+  <div class="container">
+    <div class="box">
+      <h2>Task Queue Demo</h2>
+      <button id="add-normal">Add setTimeout Tasks</button>
+      <button id="add-idle">Add Idle Tasks</button>
+      <button id="simulate-load">Simulate Heavy Load (3s)</button>
+      <div class="task-list" id="task-log"></div>
+    </div>
+    
+    <div class="box">
+      <h2>When to Use requestIdleCallback</h2>
+      <ul>
+        <li>Non-essential analytics</li>
+        <li>Background data processing</li>
+        <li>Prefetching resources</li>
+        <li>Deferred computations</li>
+        <li>Cleanup tasks</li>
+      </ul>
+      <p><strong>Note:</strong> Don't use for time-critical tasks like animations or user input handling.</p>
+    </div>
+  </div>
+
+  <h3>How It Works</h3>
+  <p>
+    Compare how tasks are executed with <code>setTimeout</code> vs <code>requestIdleCallback</code>.
+    Click the buttons above to add tasks, then observe how they're processed in the task log.
+    The simulated heavy load shows how idle tasks yield to more important work.
+  </p>
+
+  <script>
+    const taskLog = document.getElementById('task-log');
+    const addNormalBtn = document.getElementById('add-normal');
+    const addIdleBtn = document.getElementById('add-idle');
+    const simulateLoadBtn = document.getElementById('simulate-load');
+    
+    let taskCounter = 0;
+
+    // Helper function to log events to the UI
+    function logTask(message, type) {
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+      const entry = document.createElement('div');
+      entry.className = type || '';
+      entry.textContent = `${timestamp}: ${message}`;
+      taskLog.prepend(entry);
+    }
+
+    // Add setTimeout tasks
+    addNormalBtn.addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) {
+        const id = ++taskCounter;
+        setTimeout(() => {
+          logTask(`setTimeout task #${id} executed`, 'high');
+          // Simulate some work
+          const start = performance.now();
+          while (performance.now() - start < 10) { /* busy work */ }
+        }, 0);
+      }
+      logTask('Added 10 setTimeout tasks', 'high');
+    });
+
+    // Add requestIdleCallback tasks
+    addIdleBtn.addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) {
+        const id = ++taskCounter;
+        requestIdleCallback((deadline) => {
+          logTask(`Idle task #${id} executed (timeRemaining: ${deadline.timeRemaining().toFixed(2)}ms)`, 'idle');
+          // Simulate some work
+          const start = performance.now();
+          while (performance.now() - start < 10) { /* busy work */ }
+        });
+      }
+      logTask('Added 10 idle tasks', 'idle');
+    });
+
+    // Simulate heavy load
+    simulateLoadBtn.addEventListener('click', () => {
+      logTask('Starting heavy CPU load for 3 seconds...', 'high');
+      simulateLoadBtn.disabled = true;
+      
+      const startTime = performance.now();
+      
+      // Block the main thread
+      setTimeout(() => {
+        const blockUntil = performance.now() + 3000;
+        while (performance.now() < blockUntil) { 
+          // Heavy computation simulation
+        }
+        logTask(`Heavy load finished after ${((performance.now() - startTime) / 1000).toFixed(1)}s`, 'high');
+        simulateLoadBtn.disabled = false;
+      }, 10);
+    });
+
+    // Initial message
+    logTask('Demo ready! Click buttons to add tasks.', '');
+  </script>
+</body>
+</html>

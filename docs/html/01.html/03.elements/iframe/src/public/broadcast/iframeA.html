@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>iframeA</title>
+</head>
+<body>
+  <div id="msg"></div>
+  <script>
+    const bc = new BroadcastChannel('demo-channel');
+    bc.onmessage = function(e) {
+      if (e.data && e.data.type === 'broadcast') {
+        document.getElementById('msg').textContent = '收到广播: ' + e.data.text;
+      }
+    };
+  </script>
+</body>
+</html>

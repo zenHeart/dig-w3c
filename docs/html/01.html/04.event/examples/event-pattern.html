@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="create_event">
+    <p>测试创建事件</p>
+</div>
+</body>
+<script>
+    //
+    var event = new Event('test');
+    var ele = document.querySelector('#create_event');
+
+    //2. 绑定事件监听
+    ele.addEventListener('test',function (e) {
+        console.log('receive event ' , e);
+    });
+
+    //3. 触发事件
+    ele.dispatchEvent(event);
+
+
+    //用户自定义事件利用 detail 属性传递事件信息
+    var customEvent = new CustomEvent('custom',{detail:'custom'});
+
+    //2. 绑定事件监听
+    ele.addEventListener('custom',function (e) {
+        console.log('receive event type is: ' + e.detail);
+    });
+
+    //3. 触发事件
+    ele.dispatchEvent(customEvent);
+
+
+    //模拟交互事件,只是事件类型不一样
+    var custom_click = new MouseEvent('click',{
+        'view':window,
+        'bubbles':true,
+        'cancelable':true
+    });
+
+    ele.addEventListener('click',function() {
+        console.log('模拟触发点击事件!');
+    });
+
+    ele.dispatchEvent(custom_click);
+
+</script>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="create_event">
+    <p>测试创建事件</p>
+</div>
+</body>
+<script>
+    //
+    var event = new Event('test');
+    var ele = document.querySelector('#create_event');
+
+    //2. 绑定事件监听
+    ele.addEventListener('test',function (e) {
+        console.log('receive event ' , e);
+    });
+
+    //3. 触发事件
+    ele.dispatchEvent(event);
+
+
+    //用户自定义事件利用 detail 属性传递事件信息
+    var customEvent = new CustomEvent('custom',{detail:'custom'});
+
+    //2. 绑定事件监听
+    ele.addEventListener('custom',function (e) {
+        console.log('receive event type is: ' + e.detail);
+    });
+
+    //3. 触发事件
+    ele.dispatchEvent(customEvent);
+
+
+    //模拟交互事件,只是事件类型不一样
+    var custom_click = new MouseEvent('click',{
+        'view':window,
+        'bubbles':true,
+        'cancelable':true
+    });
+
+    ele.addEventListener('click',function() {
+        console.log('模拟触发点击事件!');
+    });
+
+    ele.dispatchEvent(custom_click);
+
+</script>
+</html>

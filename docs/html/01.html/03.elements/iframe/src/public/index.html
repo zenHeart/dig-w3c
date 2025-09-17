@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>iframe 通信示例</title>
+</head>
+<body>
+  <h2>主页面</h2>
+  <button id="send">向 iframe 发送消息</button>
+  <button id="sameSend">同源 iframe 修改信息</button>
+  <iframe id="myframe" src="http://localhost:4000/cors.html" width="400" height="200"></iframe>
+  <iframe id="samFrame" src="http://localhost:3000/same.html" width="400" height="200"></iframe>
+  <script>
+    const iframe = document.getElementById('myframe');
+    document.getElementById('send').onclick = () => {
+        console.log(window.corsShareData);
+        corsShareData.count++;
+      iframe.contentWindow.postMessage('Hello from parent', 'http://localhost:4000');
+    };
+    window.addEventListener('message', e => {
+      console.log('主页面收到消息: ' + e.data);
+    });
+
+    const samFrame = document.getElementById('samFrame');
+    document.getElementById('sameSend').onclick = () => {
+      console.log(window.shareData);
+      shareData.count++;
+      shareData.time = `parent ${new Date().toString()}`;
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<h3>使用 caption 来描述表格标题，多用于可访问性</h3>
+<table>
+  <caption>
+    测试标题
+  </caption>
+  <tbody>
+    <tr scope="row">
+      <th>Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+    <tr>
+      <th scope="row">Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>设置 caption 背景，默认背景不起作用，修改 caption display 为 block 有效
+    <strong>其他类型也可生效</strong>
+</h3>
+<style>
+  .t1 {
+    background: cyan;
+  }
+  input[name='caption']:checked+.t1>caption {
+    display: block;
+  }
+</style>
+<label for="caption">display</label>
+<input name="caption" type="checkbox" />
+<table class="t1">
+  <caption>
+    测试标题
+  </caption>
+  <tbody>
+    <tr scope="row">
+      <th>Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+    <tr>
+      <th scope="row">Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h3>使用 caption-side 修改 caption 的位置</h3>
+<style>
+.t2>caption {
+    /* caption 被设置在下方 */
+    caption-side: bottom;
+}
+</style>
+<table class="t2">
+  <caption>
+    测试标题
+  </caption>
+  <tbody>
+    <tr scope="row">
+      <th>Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+    <tr>
+      <th scope="row">Dark secret</th>
+      <td>Expert florist</td>
+      <td>Cries at romcoms</td>
+    </tr>
+  </tbody>
+</table>
+

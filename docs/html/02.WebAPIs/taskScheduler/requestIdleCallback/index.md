@@ -1,0 +1,1 @@
+# [requestIdleCallback](https://developer.chrome.com/blog/using-requestidlecallback)

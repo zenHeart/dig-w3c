@@ -1,0 +1,16 @@
+{
+  "name": "iframe",
+  "version": "1.0.0",
+  "description": "## 知识点",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^3.0.1",
+    "koa-static": "^5.0.0"
+  }
+}

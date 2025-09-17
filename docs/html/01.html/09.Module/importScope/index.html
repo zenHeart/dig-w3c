@@ -1,0 +1,27 @@
+<script
+  async
+  src="https://cdn.jsdelivr.net/npm/es-module-shims@1.5.18/dist/es-module-shims.wasm.js"
+></script>
+<script type="importmap">
+  {
+    "imports": {
+      "foo": "./foo-v1.js"
+    },
+    "scopes": {
+      "./scoped/": {
+        "foo": "./foo-v2.js"
+      }
+    }
+  }
+</script>
+
+<script type="module">
+  // 在全局作用域中导入 "foo"，解析为 ./foo-v1.js
+  import foo from "foo";
+  console.log("全局作用域:", foo);
+
+  // 动态导入 "./scoped/" 目录中的模块
+  // 在该作用域中，"foo" 将解析为 ./foo-v2.js
+  import foo2 from "./scoped/bar.js";
+  console.log("作用域内:", foo2);
+</script>

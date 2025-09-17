@@ -1,0 +1,10 @@
+forget:
+	☐ sort 函数的使用
+	☐ copyWithin 的应用场景,类似底层 c,c++ memmove 效率更高
+	☐ copyWithin 的 Ployfill,参考 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin?v=example
+	☐ 深刻理解 sort 排序原理
+	☐ 实现 flat 函数
+	☐ 实现 flatMap 的作用
+	☐ 为什么 unshift(el,el1,...) 推入队列顺序为从右往左???
+	☐ 有了 reduce 为什么需要 reduceRight 存在的原因
+	☐ entries,keys,values 迭代器存在的价值

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>验证 websocket </h1>
+	<input id="msg" type="text">
+	<button onclick="sendMsg()">发送消息</button>
+	<button onclick="sendBinaryMsg()">发送二进制数据</button>
+	<button onclick="closeConnect()">
+		关闭连接
+	</button>
+	<button onclick="
+	i=1;
+	for(i=1;i<10;i++) {
+		console.log(i)
+	};
+	console.log(arguments)
+	console.log(this)
+	"
+	>
+		脚本
+	</button>
+	<script>
+		ws = new WebSocket('ws://echo.websocket.org')
+		ws.onopen = function (event) {
+			console.log('connect success', event)
+			console.log('ws:',ws);
+		}
+		ws.onmessage = function (event) {
+			console.log('receive from server', event)
+		}
+		ws.onerror = function (event) {
+			console.log('error', event)
+		}
+		ws.onclose = function (event) {
+			console.log('close connect', event)
+		}
+
+		function closeConnect() {
+			console.log('close connect ...')
+			ws.close();
+		}
+		function sendMsg() {
+			ws.send(msg.value)
+			console.log('send:',msg.value)
+		}
+		function sendBinaryMsg() {
+			let data = 	new Int8Array(msg.value.split('').map(el => el.charCodeAt(0)))
+			debugger
+			ws.send([data,'1212'])
+		}
+
+	</script>
+
+</body>
+
+</html>

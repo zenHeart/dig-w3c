@@ -1,0 +1,15 @@
+js:
+	array:
+		☐ sort 排序详解
+todo:
+	☐ abort api 
+		☐ https://developer.mozilla.org/zh-CN/docs/Web/API/FetchController
+		☐ 示例 https://blog.comandeer.pl/assets/i-ciecie/
+	☐ 学习 https://www.robinwieruch.de/web-components-tutorial/
+	☐ 图片解释 closure https://dmitryfrank.com/articles/js_closures
+	☐ 完成对象封印等 API 的接口验证
+	☐ intl 国际化 API https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Intl
+	☐ Intl.NumberFormat https://v8.dev/features/intl-numberformat
+	☐ device api https://web.dev/devices-introduction/
+bugs:
+	☐ 搞清楚利用 thml 绑定语句块的作用域,为什么会出现函数名覆盖的现象？重现案例参见 ./html/dom/bugs/1.html 

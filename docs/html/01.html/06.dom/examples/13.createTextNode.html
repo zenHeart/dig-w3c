@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>验证 createTextNode 创建文本节点</h1>
+	<div id="basic">
+		<h2>添加文本节点,可转义内容</h2>
+		<p><button onclick="addText()">添加随机文本</button></p>
+	</div>
+	<script>
+		function addText() {
+			let basic = document.getElementById('basic');
+			let text = document.createTextNode(`<time>${new Date().toLocaleString()}</time>`)
+			basic.appendChild(text);
+		}
+	</script>
+</body>
+
+</html>

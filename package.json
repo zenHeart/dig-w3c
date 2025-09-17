@@ -1,0 +1,50 @@
+{
+  "name": "dig-w3c",
+  "version": "1.0.0",
+  "author": "zenheart",
+  "description": "w3c js css html",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zenHeart/dig-w3c.git"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-proposal-decorators": "^7.2.0",
+    "@babel/plugin-syntax-decorators": "^7.2.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/register": "^7.11.5",
+    "@types/jest": "^25.1.4",
+    "babel": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "jest": "^25.1.0",
+    "lerna": "^3.14.1",
+    "mocha": "^5.2.0",
+    "sinon": "^7.4.1",
+    "ts-jest": "^25.2.1",
+    "vitepress": "2.0.0-alpha.12"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zenHeart/dig-w3c/issues"
+  },
+  "homepage": "https://github.com/zenHeart/dig-w3c#readme",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.8.3",
+    "@babel/plugin-proposal-private-methods": "^7.8.3",
+    "@babel/plugin-syntax-bigint": "^7.8.3"
+  }
+}

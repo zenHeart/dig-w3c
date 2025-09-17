@@ -1,0 +1,33 @@
+<h1>验证 DocumentFragment </h1>
+<button onclick="creatList()">创建子节点</button>
+<button onclick="mount()">挂载子节点</button>
+<ul id="test"></ul>
+<script>
+  let ul = document.getElementById('test')
+  // 1. 创建 fragment
+  let fragment
+  function creatList() {
+    if(!fragment) {
+      fragment = new DocumentFragment();
+    }
+    let list = ['a', 'b', 'c']
+    list.forEach(item => {
+      let li = document.createElement('li');
+      li.textContent = `${new Date().toISOString()}: ${item}`;
+      // 2. 在 fragment 上插入子节点，不影响文档布局
+      fragment.appendChild(li)
+    })
+    console.dir(fragment)
+  }
+
+  // 3. 插入实际文档节点
+  function mount() {
+    // 注意插入节点后 fragment 的子节点被清空
+    ul.appendChild(fragment)
+    console.dir(fragment)
+    fragment  =null
+  }
+
+
+
+</script>

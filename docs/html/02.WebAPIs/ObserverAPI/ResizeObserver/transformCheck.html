@@ -1,0 +1,65 @@
+<style>
+  body {
+    box-sizing: content-box;
+    width: 300px;
+    height: 300px;
+    background: #ccc;
+    /* 改变缩放不会触发布局尺寸变化（不会触发 ResizeObserver），仅示意 */
+    /* transform: scale(1.2); */
+  }
+</style>
+<body></body>
+<script>
+  // 说明：
+  // box 取值：
+  //  - content-box：内容盒（CSS 像素）
+  //  - border-box：边框盒（含 padding + border，CSS 像素）
+  //  - device-pixel-content-box：内容盒（设备像素，等于 contentBox * devicePixelRatio）
+  // 仅当渲染尺寸真正变化时才回调；transform 缩放不会触发。
+  // device-pixel-content-box 可用于精确位图渲染 / canvas 同步等高 DPI 场景。
+
+  function logEntry(tag, entry) {
+    const c = entry.contentBoxSize?.[0];
+    const b = entry.borderBoxSize?.[0];
+    const d = entry.devicePixelContentBoxSize?.[0];
+    console.log(tag, {
+      contentBox: c && { inline: c.inlineSize, block: c.blockSize },
+      borderBox: b && { inline: b.inlineSize, block: b.blockSize },
+      devicePixelContentBox: d && { inline: d.inlineSize, block: d.blockSize },
+      devicePixelRatio: window.devicePixelRatio
+    });
+  }
+
+  const contentObserver = new ResizeObserver(entries => {
+    entries.forEach(e => logEntry('content-box observer', e));
+  });
+
+  const borderObserver = new ResizeObserver(entries => {
+    entries.forEach(e => logEntry('border-box observer', e));
+  });
+
+  const devicePixelObserver = new ResizeObserver(entries => {
+    entries.forEach(e => logEntry('device-pixel-content-box observer', e));
+  });
+
+  // 观察 body
+  contentObserver.observe(document.body, { box: 'content-box' });
+  borderObserver.observe(document.body, { box: 'border-box' });
+  devicePixelObserver.observe(document.body, { box: 'device-pixel-content-box' });
+
+  // 触发尺寸变化：加 border -> 影响 border-box，不影响 content-box
+  setTimeout(() => {
+    document.body.style.border = '10px solid red';
+  }, 1000);
+
+  // 再次改变内容区域尺寸：padding 改变 content-box 可用空间，从而触发所有观察者
+  setTimeout(() => {
+    document.body.style.padding = '20px';
+  }, 2000);
+
+  // 改变 width/height
+  setTimeout(() => {
+    document.body.style.width = '360px';
+    document.body.style.height = '240px';
+  }, 3000);
+</script>

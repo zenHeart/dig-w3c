@@ -1,0 +1,30 @@
+<script>
+  let startTime = Date.now();
+  let init = false;
+
+  while (Date.now() - startTime < 3) {
+    Promise.resolve().then(() => {
+      console.log(Date.now() - startTime);
+    });
+
+    if (init === false) {
+      init = true;
+
+      requestIdleCallback(() => {
+        console.log("Idle callback executed after idle");
+      });
+
+      requestIdleCallback(
+        () => {
+          console.log("Idle callback executed after 2ms");
+        },
+        { timeout: 2 }
+      );
+      requestAnimationFrame(() => {
+        console.log("Animation frame callback executed");
+      });
+    }
+
+    // Busy wait for 3 seconds
+  }
+</script>

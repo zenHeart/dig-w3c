@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <div>
+     <span class="text" style="font-size: 16px;">test</span>
+  </div>
+</head>
+<body>
+  <script>
+    const el = document.getElementsByClassName('text')[0]
+    setTimeout(() => {
+      el.style.fontSize = '18px'
+    }, 1e3)
+
+var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutationRecord) {
+      debugger
+        console.log('style changed!');
+    });    
+});
+
+observer.observe(el, { attributes : true, attributeFilter : ['style'] });
+  </script>
+  
+</body>
+</html>

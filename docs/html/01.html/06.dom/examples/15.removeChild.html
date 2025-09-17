@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<style>
+		#container {
+			border: 1px solid #000;
+		}	
+	</style>
+</head>
+
+<body>
+	<h1>验证 removeChild 删除节点</h1>
+	<div>
+		<h2>删除节点,注意节点只是从 dom 树中删除,但是若存在引用节点还保存在内存中</h2>
+		<div id="container">
+			<p>
+				<button onclick="removeP()">删除节点</button>
+				<button onclick="recoverP()">恢复节点</button>
+			</p>
+			<p id = "childP">子节点</p>
+		</div>
+	</div>
+	<script>
+		let p  = document.getElementById('childP');
+		let container = document.getElementById('container');
+		function removeP() {
+				container.removeChild(p)
+		}
+		function recoverP() {
+			container.appendChild(p)
+		}
+	</script>
+</body>
+
+</html>

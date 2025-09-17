@@ -1,0 +1,8 @@
+timeout: 10000 
+require:
+  - '@babel/register'
+exclude:
+  - '1.language-feature/module/**/*.test.js'
+  - 'node_modules/**/*.test.js'
+watch:
+  - '**/**/*.test.js'

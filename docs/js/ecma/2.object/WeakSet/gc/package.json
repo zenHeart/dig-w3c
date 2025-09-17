@@ -1,0 +1,5 @@
+{
+    "scripts":{
+        "gc":"node --expose-gc gc.js"
+    }
+}

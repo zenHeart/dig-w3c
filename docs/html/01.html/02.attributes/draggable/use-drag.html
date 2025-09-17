@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<style>
+    .container {
+        line-height: 100px;
+        width: 100px;
+        height: 100px;
+        background: black;
+        color: white;
+    }
+</style>
+
+<body>
+    <div draggable="true" ondragstart="dragWithCustomImage(...arguments)">测试拖曳文本显示</div>
+    <div class="container" ondragover="return false" ondrop="doDrop(...arguments)"  >接收拖曳信息</div>
+    <script>
+        function doDrop(event) {
+            var types = event.dataTransfer.types;
+            var supportedTypes = ["application/x-moz-file", "text/uri-list", "text/plain"];
+            types = supportedTypes.filter((value) => types.includes(value));
+            if (types.length) {
+                var data = event.dataTransfer.getData(types[0]);
+                console.log(data);
+            }
+            event.preventDefault();
+        }
+
+        function dragWithCustomImage(event) {
+            var canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+            canvas.width = canvas.height = 50;
+
+            var ctx = canvas.getContext("2d");
+            ctx.lineWidth = 4;
+            ctx.moveTo(0, 0);
+            ctx.lineTo(50, 50);
+            ctx.moveTo(0, 50);
+            ctx.lineTo(50, 0);
+            ctx.stroke();
+
+            var dt = event.dataTransfer;
+            dt.setData('text/plain', 'Data to Drag');
+            dt.setDragImage(canvas, 25, 25);
+        }
+    </script>
+</body>
+
+</html>

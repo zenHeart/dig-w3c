@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>验证 create Element</h1>
+	<div id="add-p">
+		<h2>添加一个新的节点</h2>
+		<p><button onclick="addP()">点击添加节点</button></p>
+	</div>
+	<div id="add-exist">
+		<h2>添加已经存在的节点会移动节点位置</h2>
+		<p><button onclick="moveP()">随机移动节点</button></p>
+		<p id="p1">节点 1</p>
+		<p id="p2">节点 2</p>
+		<p id="p3">节点 3</p>
+	</div>
+	<script>
+		function addP() {
+			let addP = document.getElementById('add-p');
+			let p = document.createElement('p')
+			p.innerText = `在 ${new Date().toLocaleString()} 添加文本节点`;
+			addP.insertAdjacentElement('beforeend', p);
+		}
+		function moveP() {
+			let addExist = document.getElementById('add-exist');
+			let p = document.getElementById(`p${~~(Math.random()*3)+1}`);
+			console.dir(p);
+			addExist.insertAdjacentElement('beforeend',p);
+		}
+	</script>
+</body>
+
+</html>

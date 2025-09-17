@@ -1,0 +1,24 @@
+<h1>使用 tabindex 定位元素</h1>
+<p>tabindex 取值为正值,按键盘 tab 键,导航顺序为正值按从小到大,最后是 0</p>
+<div>
+  <div tabindex="0">定位 3</div>
+  <div tabindex="2">定位 2</div>
+  <div tabindex="1">定位 1</div>
+</div>
+
+
+
+<h1>tabindex 为负值时保证 tab 键无法触发,但是可通过 js focus 方法触发聚焦</h1>
+<div>
+  <div class="focus">无法聚焦</div>
+  <div tabindex="-1" class="focus">可以通过 js 聚焦</div>
+  <button onclick="handleFocus()">点击聚焦</button>
+</div>
+<script>
+  let eles = document.getElementsByClassName('focus');
+  function handleFocus() {
+    [...eles].map(ele => {
+      ele.focus()
+    })
+  }
+</script>

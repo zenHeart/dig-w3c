@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<style>
+		.question {
+			font-weight: 700;
+			color: black;
+			user-select: none; 
+		}
+		.question::after {
+			content: attr(data-content);
+			padding-left:2rem;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>采用 dl 描述 faq 列表</h1>
+	<dl>
+		<dt class="question" data-content="🔽">问题 1?</dt>
+		<dd>In drama, where a character speaks to themselves, representing their inner thoughts or feelings and in the
+			process relaying them to the audience (but not to other characters.)</dd>
+		<dt dt class="question" data-content="🔽">问题 2?</dt>
+		<dd>In drama, where a character speaks their thoughts out loud to share them with the audience and any other
+			characters present.</dd>
+		<dt dt class="question" data-content="🔽">问题 3?</dt>
+		<dd>In drama, where a character shares a comment only with the audience for humorous or dramatic effect. This is
+			usually a feeling, thought, or piece of additional background information.</dd>
+	</dl>
+</body>
+	<script>
+		let quesItem  = document.querySelectorAll('.question')
+		quesItem.forEach(el => {
+			el.onclick = function() {
+					let {nextElementSibling} =el;
+					nextElementSibling.hidden ^=1;
+					el.dataset.content = nextElementSibling.hidden?'▶️':'🔽';
+					
+			}
+		})
+	</script>
+</html>

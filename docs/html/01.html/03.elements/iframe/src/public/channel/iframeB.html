@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>iframeB</title>
+</head>
+<body>
+  <h3>iframeB</h3>
+  <div id="msg"></div>
+  <button id="reply">回复 A</button>
+  <script>
+    let port;
+    window.addEventListener('message', e => {
+      if (e.data.type === 'port' && e.ports[0]) {
+        port = e.ports[0];
+        port.onmessage = evt => {
+          document.getElementById('msg').textContent = '收到消息: ' + evt.data;
+        };
+      }
+    });
+    document.getElementById('reply').onclick = () => {
+      if (port) port.postMessage('Hello from B to A');
+    };
+  </script>
+</body>
+</html>

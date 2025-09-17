@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>跨域 iframe 页面</title>
+</head>
+<body>
+  <h2>跨域 iframe 页面</h2>
+  <button id="reply">回复主页面</button>
+  <script>
+    window.addEventListener('message', e => {
+      console.log('iframe 收到消息: ' + e.data);
+    });
+    document.getElementById('reply').onclick = () => {
+      window.parent.postMessage('Hello from iframe', 'http://localhost:3000');
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<div id="el" style="margin-top: 150vh; height: 100px;background: cyan;"></div>
+<script>
+  // 当元素完全隐藏或者可见一个像素时触发
+  const observer = new IntersectionObserver(console.log)
+
+  // 绑定元素
+  observer.observe(document.getElementById("el"))
+
+  // 触发元素变化
+  setTimeout(() => {
+    document.getElementById("el").style.marginTop = "150vh"
+  }, 1000)
+
+
+</script>

@@ -1,0 +1,95 @@
+<body>
+  <h3>ResizeObserver options.box 差异示例 (content-box / border-box / device-pixel-content-box)</h3>
+  <p>依次修改：1) 改 padding 2) 改 border 3) 改 content 宽度 4) 改 transform 缩放</p>
+  <div id="wrap" style="display:flex;gap:12px;font:14px/1.4 sans-serif;">
+    <div id="boxContent" class="demo">content-box</div>
+    <div id="boxBorder"  class="demo">border-box</div>
+    <div id="boxDevice"  class="demo">device-pixel-content-box(可能不支持)</div>
+  </div>
+  <pre id="log" style="background:#111;color:#0f0;padding:8px;height:260px;overflow:auto;font-size:12px;"></pre>
+  <style>
+    .demo{
+      box-sizing:content-box;
+      width:200px;
+      height:60px;
+      background:#4c8;
+      border:4px solid #095;
+      padding:8px;
+      color:#000;
+      position:relative;
+    }
+    .demo:nth-child(2){background:#f9c;}
+    .demo:nth-child(3){background:#9cf;}
+  </style>
+<script>
+const logEl = document.getElementById('log');
+const log = (...a)=>{logEl.textContent += a.join(' ') + '\n'; logEl.scrollTop = logEl.scrollHeight;}
+
+function fmtSize(entry){
+  const c = entry.contentRect;
+  const content = `${Math.round(c.width)}x${Math.round(c.height)}`;
+  // borderBoxSize / contentBoxSize arrays (logical size)
+  const bb = entry.borderBoxSize?.[0];
+  const cb = entry.contentBoxSize?.[0];
+  const dp = entry.devicePixelContentBoxSize?.[0];
+  const bbStr = bb? `${Math.round(bb.inlineSize)}x${Math.round(bb.blockSize)}`:'-';
+  const cbStr = cb? `${Math.round(cb.inlineSize)}x${Math.round(cb.blockSize)}`:'-';
+  const dpStr = dp? `${Math.round(dp.inlineSize)}x${Math.round(dp.blockSize)}`:'-';
+  return `contentRect=${content} | contentBoxSize=${cbStr} | borderBoxSize=${bbStr} | devicePixelContentBoxSize=${dpStr}`;
+}
+
+const ro = new ResizeObserver(entries=>{
+  for(const e of entries){
+    log(`[${new Date().toLocaleTimeString()}] target=${e.target.id} -> ${fmtSize(e)}`);
+  }
+});
+
+// 观察三个元素
+ro.observe(boxContent, { box: 'content-box' });
+ro.observe(boxBorder,  { box: 'border-box' });
+// 尝试 device-pixel-content-box
+try {
+  ro.observe(boxDevice, { box: 'device-pixel-content-box' });
+  log('device-pixel-content-box 已尝试注册 (若浏览器暂不支持可能退化为 content-box)');
+} catch(err){
+  log('device-pixel-content-box 不支持: ' + err.message);
+}
+
+// 一系列变化，展示触发区别
+let step = 0;
+function next(){
+  step++;
+  switch(step){
+    case 1:
+      log('\n步骤1: 增加 padding (content-box 内部尺寸不变, border-box 变大)');
+      document.querySelectorAll('.demo').forEach(d=> d.style.padding = '28px');
+      break;
+    case 2:
+      log('\n步骤2: 增加 border (content 仍保持, border-box 继续变化)');
+      document.querySelectorAll('.demo').forEach(d=> d.style.borderWidth = '20px');
+      break;
+    case 3:
+      log('\n步骤3: 改变 content 宽度 (content-box + border-box 都变)');
+      document.querySelectorAll('.demo').forEach(d=> d.style.width = '260px');
+      break;
+    case 4:
+      log('\n步骤4: 使用 transform: scale(1.3) (几何盒未变, 但视觉放大; ResizeObserver 不触发)');
+      document.querySelectorAll('.demo').forEach(d=> d.style.transform = 'scale(1.3)');
+      break;
+    case 5:
+      log('\n结束: disconnect');
+      ro.disconnect();
+      return;
+  }
+  setTimeout(next, 1200);
+}
+setTimeout(next, 800);
+
+/*
+差异总结:
+- box: "content-box": 仅当 content box 尺寸改变时回调 (padding/border 变化通常不触发, 因为 contentRect 不变)
+- box: "border-box": 只要 border box 尺寸变化就触发 (padding / border / content 宽高变化都会触发)
+- box: "device-pixel-content-box": 与 content-box 类似, 但提供设备像素级尺寸 (高 DPI 下可见更精细值); 兼容性有限
+*/
+</script>
+</body>

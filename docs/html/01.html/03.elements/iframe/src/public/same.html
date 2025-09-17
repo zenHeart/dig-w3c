@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>同源 iframe 页面</title>
+</head>
+<body>
+  <h2>同源 iframe 页面</h2>
+  <button id="reply">回复主页面</button>
+  <script>
+    window.addEventListener('message', e => {
+      console.log('iframe 收到消息: ' + e.data);
+    });
+    let count = 0;
+    document.getElementById('reply').onclick = () => {
+      console.log(window.parent?.shareData);
+      window.parent.shareData = {
+        time: `same origin - ${new Date().toString()}`,
+        count: count++
+      }
+    };
+  </script>
+</body>
+</html>

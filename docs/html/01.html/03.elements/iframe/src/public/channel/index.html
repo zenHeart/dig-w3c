@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MessageChannel 双 iframe 通信示例</title>
+</head>
+<body>
+  <h2>主页面</h2>
+  <iframe id="frameA" src="http://localhost:4000/channel/iframeA.html" width="300" height="150"></iframe>
+  <iframe id="frameB" src="http://localhost:4000/channel/iframeB.html" width="300" height="150"></iframe>
+  <button id="send">主进程发送消息</button>
+  <script>
+    const frameA = document.getElementById('frameA');
+    const frameB = document.getElementById('frameB');
+    const channel = new MessageChannel();
+
+    // 将 port2 发送给 B
+    frameB.onload = () => {
+      frameB.contentWindow.postMessage({type: 'port'}, '*', [channel.port2]);
+    };
+    // 将 port1 发送给 A
+    frameA.onload = () => {
+      frameA.contentWindow.postMessage({type: 'port'}, '*', [channel.port1]);
+    };
+
+  </script>
+</body>
+</html>

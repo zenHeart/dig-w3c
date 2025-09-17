@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>方法名和内部属性名一致会导致运行错误</h1>
+	<p><button onclick="animate()">animate</button>
+		<button onclick="contains()">contain</button></p>
+	<script>
+		function animate() {
+			console.log('animate')
+		}
+		function contains() {
+			console.log('contains')
+		}
+	</script>
+</body>
+
+</html>

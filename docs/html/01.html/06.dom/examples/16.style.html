@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+
+<body>
+	<h1>验证 style 属性</h1>
+	<div>
+		<h1>赋值字符串修改 style 样式</h1>
+		<p><button onclick="setStyleByString()">赋值 style 修改样式</button></p>
+		<div id="style1">test</div>
+	</div>
+	<div>
+		<h1>访问属性修改 style 样式,注意驼峰转换属性名</h1>
+		<p><button onclick="setStyleByObj()">赋值 style 修改样式</button></p>
+		<div id="style2">test</div>
+	</div>
+	<div>
+		<h1>利用  setAttribute 设置属性</h1>
+		<p><button onclick="setStyle()">赋值 style 修改样式</button></p>
+		<div id="style3">test</div>
+	</div>
+	<script>
+		let flag = 0;
+		function setStyleByString() {
+			flag^=1;
+			let style1 = document.getElementById('style1');
+			style1.style = flag?`background:green;color:red;`:null;
+		}
+		function setStyleByObj() {
+			flag^=1;
+			let div = document.getElementById('style2');
+			div.style.fontSize = flag?'2rem':'1rem';
+		}
+		function setStyle() {
+			flag^=1;
+			let div = document.getElementById('style3');
+			flag?div.setAttribute('style','color:red'):div.setAttribute('style','color:green');
+		}
+	</script>
+</body>
+
+</html>

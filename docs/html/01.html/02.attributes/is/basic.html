@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #demo {
+            color:red;
+        }
+    </style>
+</head>
+<body>
+    <p  is="word-count"><span>=sdf</span>计算字节数量</p>
+    <script>
+        class WordCount extends HTMLParagraphElement {
+            constructor() {
+               super();
+               let strong = document.createElement('strong');
+               strong.innerText = `总字数:${this.innerText.length}`;
+               this.appendChild(strong);
+            }
+        }
+        customElements.define('word-count',WordCount,{extends:'p'})
+
+    </script>
+</body>
+</html>

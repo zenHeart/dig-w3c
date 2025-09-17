@@ -1,0 +1,16 @@
+<script
+  async
+  src="https://cdn.jsdelivr.net/npm/es-module-shims@1.5.18/dist/es-module-shims.wasm.js"
+></script>
+
+  {
+    "imports": {
+      "lodash": "https://unpkg.com/lodash-es@4.17.21"
+    }
+  }
+</script>
+<script type="module">
+  import { sum } from "lodash";
+  console.log(sum([1, 2, 3]));
+</script>
+<script type="importmap">
