@@ -1,0 +1,22 @@
+<style>
+  .item {
+    width: 100px;
+    height: 100px;
+    background: gray;
+  }
+</style>
+<div class="item"></div>
+<span class="item">1</span>
+
+<script>
+  const NodesMap = Object.entries(Node).reduce((res, el) => {
+    if (res[el[1]] === undefined) {
+      res[el[1]] = el[0];
+    }
+    return res;
+  }, {});
+  console.log(NodesMap)
+  document.addEventListener("click", (e) => {
+    console.log("Node Type", e, NodesMap[e.target.nodeType]);
+  });
+</script>
