@@ -1,0 +1,18 @@
+<div class="parent">
+  <div class="first">first</div>
+  <div class="last">last</div>
+</div>
+<script>
+  const parent = document.querySelector(".parent");
+
+  const newNode = new Text("new node");
+
+  // 新节点会插入结尾, 返回新节点对象
+  const n = parent.appendChild(newNode);
+  console.log(n === newNode); // true
+
+  // 插入已存在的节点，会移动该节点
+  const first = document.querySelector(".first");
+  const f = parent.appendChild(first);
+  console.log(f === first); // true
+</script>

@@ -1,0 +1,19 @@
+<div class="parent"></div>
+
+<script>
+  const parent = document.querySelector(".parent");
+  const t1 = document.createTextNode("Hello ");
+  const t2 = document.createTextNode("World");
+  const c1 = document.createComment("comment");
+  const t3 = document.createTextNode("!!!");
+  parent.appendChild(t1);
+  parent.appendChild(t2);
+  parent.appendChild(c1);
+  parent.appendChild(t3);
+  // 显示三个文本节点和一个注释节点
+  console.table(parent.childNodes);
+
+  // 合并文本节点, 会合并文本节点 t1，t2
+  parent.normalize();
+  console.table(parent.childNodes);
+</script>

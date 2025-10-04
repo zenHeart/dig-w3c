@@ -1,0 +1,18 @@
+<div class="parent">
+  <div class="first">first</div>
+  <div class="last">last</div>
+</div>
+<script>
+  const parent = document.querySelector(".parent");
+
+  // 第二个参数传 null ，等同于 appendChild
+  const newNode = new Text("new node");
+  const f = parent.insertBefore(newNode, null);
+  console.log(f === newNode); // true
+
+  // 插入之前位置之前, 返回插入的新节点
+  const first = document.querySelector(".first");
+  const t = new Text("new first");
+  const n = parent.insertBefore(t, first);
+  console.log(n === t);
+</script>

@@ -1,0 +1,19 @@
+<div class="parent">
+  <div class="first">first</div>
+  <div class="last">
+    last
+    <div>nest child</div>
+  </div>
+</div>
+<script>
+  const parent = document.querySelector(".parent");
+
+  // 传 false 只可隆当前节点
+  const last = document.querySelector(".last");
+  const c1 = last.cloneNode(false);
+  parent.appendChild(c1);
+
+  // 传 true 可连同子节点一起克隆
+  const c2 = last.cloneNode(true);
+  parent.appendChild(c2);
+</script>

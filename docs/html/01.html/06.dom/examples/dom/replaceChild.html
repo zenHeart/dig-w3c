@@ -1,0 +1,14 @@
+<div class="parent">
+  <div class="first">first</div>
+  <div class="last">last</div>
+</div>
+<script>
+  const parent = document.querySelector(".parent");
+
+  const newNode = new Text("new node");
+
+  // 替换节点，返回被替换的节点对象
+  const first = document.querySelector(".first");
+  const f = parent.replaceChild(newNode, first);
+  console.log(f === first); // true
+</script>

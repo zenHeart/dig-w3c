@@ -1,0 +1,12 @@
+<div class="parent">
+  <div class="first">first</div>
+  <div class="last">last</div>
+</div>
+<script>
+  const parent = document.querySelector(".parent");
+
+  // 删除节点，返回被删除的节点对象
+  const first = document.querySelector(".first");
+  const f = parent.removeChild(first);
+  console.log(f === first); // true
+</script>
