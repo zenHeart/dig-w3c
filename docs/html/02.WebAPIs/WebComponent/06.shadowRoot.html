@@ -1,0 +1,39 @@
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+      }
+
+      connectedCallback() {
+         this.render()
+      }
+
+
+      render() {
+
+         const template = document.createElement('template');
+         template.innerHTML = `
+         <style>
+            p {
+               color: red;
+            }
+         </style>
+         <slot></slot>
+         <p>这是一个自定义元素</p>
+         `
+
+         const shadowRoot = this.attachShadow({
+            mode: 'open'
+         })
+         shadowRoot.appendChild(template.content.cloneNode(true));
+         shadowRoot.addEventListener('click', () => {
+            console.log('点击了自定义元素');
+         });
+      }
+   }
+
+   customElements.define('my-element', MyElement);
+</script>
+<my-element>
+   <h1>自定义标题</h1>
+</my-element>

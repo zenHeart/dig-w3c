@@ -1,0 +1,44 @@
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+      }
+
+      connectedCallback() {
+         this.render();
+      }
+
+
+      render() {
+         const shadowRoot = this.attachShadow({
+            mode: 'open'
+         })
+         shadowRoot.appendChild(this.template().content.cloneNode(true));
+      }
+
+      template() {
+         const template = document.createElement('template');
+         template.innerHTML = `
+         <style>
+            p {
+               color: red;
+            }
+         </style>
+         <slot></slot>
+         <p>这是一个自定义元素</p>
+         <slot name="content"></slot>
+         <slot name="bottom"></slot>
+         `
+         return template;
+      }
+   }
+
+   customElements.define('my-element', MyElement);
+</script>
+<my-element>
+   <h1>标题</h1>
+   <div slot="content">
+      <button onclick="alert('Hello!')">hi</button>
+   </div>
+   <p slot="bottom">底部</p>
+</my-element>

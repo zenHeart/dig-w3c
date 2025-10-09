@@ -1,0 +1,17 @@
+<script>
+   //1. 采用 extends HTMLElement 的方式创建自定义元素
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+         // 2. 暴露根元素
+         const shadow = this.attachShadow({ mode: 'open' });
+         // 3. 设置根元素
+         shadow.innerHTML = `<p>这是一个自定义元素</p>`;
+      }
+   }
+
+   // 4. 定义自定义元素
+   customElements.define('my-element', MyElement);
+</script>
+<!-- 5. 实例化根元素 -->
+<my-element></my-element>
