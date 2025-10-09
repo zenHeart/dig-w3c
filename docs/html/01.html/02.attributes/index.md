@@ -1,4 +1,4 @@
-记录所有 html 属性.
+# 属性
 
 * [ ] [html global attribute](https://developer.mozilla.org/zh-CN/docs/Web/HTML)
 

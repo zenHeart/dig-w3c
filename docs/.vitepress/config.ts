@@ -45,33 +45,18 @@ function buildRecursiveSidebar(relativeDir: string) {
       const subRoute = routePrefix + d.name + '/';
       const hasIndex = fs.existsSync(path.join(subAbs, 'README.md')) || fs.existsSync(path.join(subAbs, 'index.md'));
 
-      // 仅包含 index.md（按 .md 统计；子目录如无 .md 视为无效）时，直接将目录作为链接项
-      const onlyIndex = (() => {
-        const subDirents = fs.readdirSync(subAbs, { withFileTypes: true });
-        const subDirs = subDirents.filter((e) => e.isDirectory() && !shouldSkipDir(e.name));
-        const subMdFiles = subDirents.filter((e) => e.isFile() && allowFile(e.name));
-        const hasIdx = subMdFiles.some((f) => isIndexMd(f.name));
-        const otherMdCount = subMdFiles.filter((f) => !isIndexMd(f.name)).length;
-        const subDirHasMd = subDirs.some((e) => hasMdRecursively(path.join(subAbs, e.name)));
-        return hasIdx && otherMdCount === 0 && !subDirHasMd;
-      })();
-
-      if (onlyIndex) {
-        children.push({ text: d.name, link: subRoute });
-        continue;
-      }
 
       const items = walk(subAbs, subRoute);
       // 若无任何 md 内容（递归）且无 index.md，则忽略该目录
       if (!hasIndex && items.length === 0) {
         continue;
       }
-
-      const node: any = { text: d.name, items };
       if (hasIndex) {
-        node.items = [{ text: '概览', link: subRoute }, ...items];
+        // onlyIndex 时 items 为空，hasIndex 时 items 可能有内容
+        children.push({ text: d.name, link: subRoute, ...(items.length > 0 ? { items } : {}) });
+      } else {
+        children.push({ text: d.name, items });
       }
-      children.push(node);
     }
 
     return children;
