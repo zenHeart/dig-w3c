@@ -51,3 +51,15 @@ html 会优先解析合法的标签,若标签集合包含特殊字符采用如�
 * `&amp;` 表示 `&`
 
 <!-- 参见 [escape](escape.html) -->
+
+```mermaid
+flowchart TB
+    A[HTML] --> B[元素(Element)]
+    B --> C[标签(Tag)]
+    B --> D[属性(Attribute)]
+    B --> E[内容(Content)]
+    D --> F[属性名]
+    D --> G[属性值]
+    C --> H[开始标签]
+    C --> I[结束标签]
+```

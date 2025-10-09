@@ -66,6 +66,7 @@ function buildRecursiveSidebar(relativeDir: string) {
 }
 // @ts-ignore
 const isDev = process.env.npm_lifecycle_script.includes("dev");
+
 export default defineConfig({
   title: 'W3C Notes',
   description: '深挖 W3C 与 Web 平台能力的学习笔记',
@@ -91,7 +92,7 @@ export default defineConfig({
   vite: {
     server: { fs: { strict: false } }
   }
-});
+})
 
 
 
