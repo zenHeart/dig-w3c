@@ -74,6 +74,7 @@ export default defineConfig({
   lastUpdated: true,
   base: isDev ? "/" : "/dig-w3c/",
   themeConfig: {
+    outline: [2, 4],
     nav: [
       { text: 'HTML', link: '/html/' },
       { text: 'ECMAScript', link: '/js/' }

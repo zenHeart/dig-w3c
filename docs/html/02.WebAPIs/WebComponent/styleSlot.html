@@ -1,0 +1,39 @@
+<style>
+   h1 {
+      color: red;
+   }
+</style>
+<my-element>
+   <h1>test</h1>
+</my-element>
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+
+         const shadowRoot = this.attachShadow({ mode: 'open' });
+         shadowRoot.innerHTML = `
+         <style>
+            :host {
+               display: block;
+               width: 200px;
+               height: 100px;
+               background: lightgray;
+               border: 1px solid black;
+               --color: orange;
+            }
+            p {
+               color: var(--color, red);
+            }
+            ::slotted(h1) {
+               color: blue !important;
+            }
+         </style>
+
+         <p class="custom-element">这是一个自定义元素</p>
+         <slot></slot>  
+         `
+      }
+   }
+   customElements.define('my-element', MyElement);
+</script>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<!-- 注意：meta 必须尽量靠前，且运行时修改不再影响已解析内容 -->
+	<meta charset="GBK">
+	<title>字符集示例：正确与错误解码对比</title>
+	<style>
+		body {
+			font-family: system-ui, sans-serif;
+			padding: 16px;
+		}
+
+		button,
+		select {
+			margin: 4px 0;
+		}
+
+		pre {
+			background: #f5f5f5;
+			padding: 8px;
+			overflow: auto;
+		}
+
+		table {
+			border-collapse: collapse;
+			margin-top: 8px;
+		}
+
+		td,
+		th {
+			border: 1px solid #ccc;
+			padding: 4px 8px;
+		}
+
+		code {
+			color: #c7254e;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>字符集正确与错误解码影响演示</h1>
+	<p>原页面 meta 改写后不会重解码，因此用 <code>TextDecoder</code> 模拟不同 charset 对同一字节序列的解码结果。</p>
+
+	<label>选择原始字节序列：
+		<select id="dataset">
+			<option value="utf8">UTF-8 编码的“你好，世界”</option>
+			<option value="gbk">GBK 编码的“你好，世界”</option>
+			<option value="mixed">故意混合(前半是 GBK，后半当作 UTF-8)</option>
+		</select>
+	</label>
+	<button id="run">解码对比</button>
+	<button id="toggleMeta">尝试切换 meta charset (观察正文无变化)</button>
+
+	<div id="metaInfo"></div>
+
+	<h2>字节 (十六进制)</h2>
+	<pre id="hex"></pre>
+
+	<h2>解码结果对比</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>解码方式</th>
+				<th>结果</th>
+			</tr>
+		</thead>
+		<tbody id="results"></tbody>
+	</table>
+
+	<h2>说明</h2>
+	<ul>
+		<li>表中行展示：同一字节序列用不同 charset 解码的输出。</li>
+		<li>若 charset 错误，会出现“乱码 / ?”。</li>
+		<li>动态修改 <code>&lt;meta charset&gt;</code>（下方按钮）不会让已解析文本重新解析，因此页面主体不变。</li>
+	</ul>
+
+	<script>
+		// 预定义字节：十六进制 -> Uint8Array
+		const bytesSets = {
+			utf8: "E4 BD A0 E5 A5 BD EF BC 8C E4 B8 96 E7 95 8C",        // “你好，世界” (UTF-8)
+			gbk: "C4 E3 BA C3 A3 AC CA C0 BD E7",                      // “你好，世界” (GBK)
+			mixed: "C4 E3 BA C3 EF BC 8C E4 B8 96 E7 95 8C"              // 前四字节按 GBK 会是“你好”，后面是 UTF-8
+		};
+
+		const decoders = [
+			{ label: "按 UTF-8 解码", codec: "utf-8" },
+			{ label: "按 GBK 解码", codec: "gbk" },
+			{ label: "按 GB18030 解码", codec: "gb18030" }
+		];
+
+		function hexToBytes(str) {
+			const parts = str.trim().split(/\s+/);
+			return new Uint8Array(parts.map(h => parseInt(h, 16)));
+		}
+
+		function run() {
+			const key = dataset.value;
+			const hex = bytesSets[key];
+			const bytes = hexToBytes(hex);
+			hexEl.textContent = hex;
+			results.innerHTML = '';
+			decoders.forEach(d => {
+				let out;
+				try {
+					const decoder = new TextDecoder(d.codec, { fatal: false });
+					out = decoder.decode(bytes);
+				} catch (e) {
+					out = "浏览器不支持该编码";
+				}
+				const tr = document.createElement('tr');
+				tr.innerHTML = `<td>${d.label} (${d.codec})</td><td>${escapeHTML(out)}</td>`;
+				results.appendChild(tr);
+			});
+		}
+
+		function escapeHTML(s) {
+			return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+		}
+
+		// 动态尝试修改 meta（不会真正重解码文档）
+		const meta = document.querySelector('meta[charset]');
+		let toggleFlag = false;
+		function toggleMeta() {
+			meta.setAttribute('charset', toggleFlag ? 'UTF-8' : 'GBK');
+			toggleFlag = !toggleFlag;
+			metaInfo.innerHTML = `<p>当前 meta charset = <code>${meta.getAttribute('charset')}</code> （正文未重新解析，只有以后新创建的解析上下文才可能受影响）</p>`;
+		}
+
+		const dataset = document.getElementById('dataset');
+		const runBtn = document.getElementById('run');
+		const toggleBtn = document.getElementById('toggleMeta');
+		const hexEl = document.getElementById('hex');
+		const results = document.getElementById('results');
+		const metaInfo = document.getElementById('metaInfo');
+
+		runBtn.onclick = run;
+		toggleBtn.onclick = toggleMeta;
+		run(); // 初始展示
+	</script>
+
+	<h2>真正想看到页面乱码？</h2>
+	<ol>
+		<li>准备两个物理文件：a.html、b.html。</li>
+		<li>a.html: 文件实际编码 UTF-8，meta 写 UTF-8（正常）。</li>
+		<li>b.html: 复制 a.html 内容，另存为 GBK 编码，但 meta 仍写 UTF-8（结果会乱码）。</li>
+		<li>或反之：文件用 UTF-8 保存，却把 meta 写成 GBK。</li>
+	</ol>
+</body>
+
+</html>

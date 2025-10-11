@@ -1,17 +1,72 @@
+<!-- 1. 定义模版和插槽 -->
+<template id="my-element-template">
+   <style>
+      :host {
+         display: block;
+         width: 200px;
+         height: 100px;
+         background: lightgray;
+         border: 1px solid black;
+         margin: 10px;
+      }
+
+      /* 直接作用于模板中的 h2，而不是宿主元素 */
+      h2.title {
+         color: red;
+      }
+
+      :host(.highlight) {
+         border-color: orange;
+      }
+   </style>
+   <h2 class="title">这是标题</h2>
+   <slot></slot>
+</template>
 <script>
-   //1. 采用 extends HTMLElement 的方式创建自定义元素
+   //2. 创建自定义元素
    class MyElement extends HTMLElement {
       constructor() {
          super();
-         // 2. 暴露根元素
-         const shadow = this.attachShadow({ mode: 'open' });
-         // 3. 设置根元素
-         shadow.innerHTML = `<p>这是一个自定义元素</p>`;
+         // 3. 创建 shadow DOM
+         const shadowRoot = this.attachShadow({ mode: 'open' });
+
+         const template = document.getElementById('my-element-template');
+         const templateContent = template.content;
+
+         // 4. 插入模版到 shadow DOM
+         shadowRoot.appendChild(templateContent.cloneNode(true));
       }
+
+
+      set title(value) {
+         this.setAttribute('title', value);
+         if (this.shadowRoot) {
+            const h2 = this.shadowRoot.querySelector('h2');
+            if (h2) {
+               h2.textContent = value;
+            }
+         }
+      }
+
+      // 5. 绑定挂载回调
+      connectedCallback() {
+         if (this.hasAttribute('title')) {
+            const title = this.getAttribute('title');
+            this.title = title;
+         }
+      }
+
    }
 
-   // 4. 定义自定义元素
+   // 6. 全局自定义元素
    customElements.define('my-element', MyElement);
 </script>
-<!-- 5. 实例化根元素 -->
-<my-element></my-element>
+<!-- 7. 使用自定义元素 -->
+<my-element class="highlight" title="自定义标题">
+   <p>这是一个插槽</p>
+</my-element>
+
+<!-- 8. 使用自定义元素 -->
+<my-element title="自定义标题">
+   <p>这是一个插槽</p>
+</my-element>

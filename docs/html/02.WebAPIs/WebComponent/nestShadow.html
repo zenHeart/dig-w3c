@@ -1,0 +1,36 @@
+<my-element></my-element>
+<p>test</p>
+
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+         this.attachShadow({ mode: 'open' }).innerHTML = `<my-nested></my-nested>`;
+      }
+   }
+   class MyNested extends HTMLElement {
+      constructor() {
+         super();
+         const shadow = this.attachShadow({ mode: 'open' });
+         shadow.innerHTML = `
+         <style>
+            
+            :host {
+               display: block;
+               width: 200px;
+               height: 100px;
+               background: lightgray;
+               border: 1px solid black;
+               --color: orange;
+            }
+            p {
+               color: var(--color, red);
+            }
+         </style>
+         <p class="custom-element">这是一个嵌套的自定义元素</p>
+         `;
+      }
+   }
+   customElements.define('my-element', MyElement);
+   customElements.define('my-nested', MyNested);
+</script>

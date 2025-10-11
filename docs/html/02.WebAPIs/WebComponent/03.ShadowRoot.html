@@ -1,0 +1,23 @@
+<style>
+   /* 注意这里的样式无法影响 shadow DOM 内部元素 */
+   p {
+      background: orange;
+      color: purple;
+   }
+</style>
+<div id="root"></div>
+<p>外部元素</p>
+<script>
+   const el = document.getElementById('root');
+   const shadowRoot = el.attachShadow({ mode: 'open' });
+   shadowRoot.innerHTML = `
+   <style>
+      /* 注意这里的样式不会影响外部的 <p> 元素 */
+      p {
+         background: lightgray;
+         color: red;
+      }
+   </style>
+   <p>自定义元素</p>
+   `
+</script>

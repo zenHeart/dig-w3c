@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+   <meta charset="utf-8" />
+   <title>meta http-equiv="refresh" 自动刷新示例</title>
+   <meta http-equiv="refresh" content="3;http://localhost:3000/redirect.html"> <!-- 每 3 秒整页刷新 -->
+   <style>
+      body {
+         font: 14px/1.5 system-ui, Arial;
+         margin: 20px;
+      }
+
+      code {
+         background: #f4f4f4;
+         padding: 2px 4px;
+         border-radius: 3px;
+      }
+   </style>
+</head>
+
+<body>
+   <h1>meta refresh 自动刷新</h1>
+   <p>本页每 <code>3</code> 秒整页刷新一次。</p>
+   <div id="info"></div>
+   <script>
+      const loadedAt = new Date();
+      let n = +localStorage.getItem('a_refresh_count') || 0;
+      n++;
+      localStorage.setItem('a_refresh_count', n);
+      document.getElementById('info').innerHTML = `
+<ul>
+   <li>当前加载时间: ${loadedAt.toLocaleTimeString()}</li>
+   <li>本地累计刷新次数(localStorage): ${n}</li>
+   <li>若计数不增，可能浏览器阻止了自动刷新。</li>
+</ul>`;
+   </script>
+</body>
+
+</html>

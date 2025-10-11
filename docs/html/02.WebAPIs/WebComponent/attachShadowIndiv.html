@@ -1,0 +1,31 @@
+<style>
+   #host {
+      width: 200px;
+      height: 100px;
+      border: 1px solid black;
+      --color: orange;
+   }
+</style>
+<div id="host"></div>
+<script>
+   const el = document.getElementById('host');
+   const shadow = el.attachShadow({ mode: 'open' });
+   shadow.innerHTML = `
+   <style>
+      :host {
+         background: lightgray;
+      }
+      p {
+         color: var(--color, red);
+      }
+   </style>
+   <p class="custom-element">这是一个自定义元素</p>
+   `;
+
+   // shadowRoot 和 host 只能是一对一关系，不允许 1 对多
+   // const shadow1 = el.attachShadow({ mode: 'open' });
+   // shadow1.innerHTML = `<p>这是第二个 shadow DOM</p>`;
+   // el.shadowRoot = shadow1;
+
+
+</script>

@@ -1,0 +1,18 @@
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+         // 创建 shadow DOM
+         this.attachShadow({ mode: 'open' });
+         // 注入样式和内容
+         this.shadowRoot.innerHTML = `<p>这是一个自定义元素</p>`;
+      }
+
+   }
+
+   // 定义自定义元素
+   customElements.define('my-element', MyElement);
+</script>
+
+<!-- 消费自定义元素 -->
+<my-element></my-element>

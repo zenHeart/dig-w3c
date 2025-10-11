@@ -1,0 +1,14 @@
+<p is="my-paragraph">测试扩展 P 标签</p>
+<script>
+   class MyParagraph extends HTMLParagraphElement {
+      constructor() {
+         super();
+         this.style.color = 'red';
+         this.style.fontWeight = 'bold';
+         this.textContent = this.textContent + ' (已扩展)';
+      }
+   }
+
+   // 定义“自定义内置元素”必须带第三个参数 { extends: 'p' }
+   customElements.define('my-paragraph', MyParagraph, { extends: 'p' });
+</script>
