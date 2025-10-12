@@ -1,0 +1,31 @@
+<style>
+  #root {
+    /* 覆盖了内部 blue 控制  */
+    color: red;
+    border: 2px dashed blue;
+    padding: 20px;
+  }
+  /* 注意只能覆盖 root 的样式，内部元素无法覆盖 */
+  #root h1 {
+    color: purple;
+  }
+</style>
+<div id="root"></div>
+<script>
+  const el = document.getElementById("root");
+  const shadowRoot = el.attachShadow({ mode: "open" });
+  shadowRoot.innerHTML = `
+  <style>
+    :host {
+      padding: 10px;
+      border: 1px solid red;
+      color: blue;
+    }
+
+    h1 {
+      color: yellow;
+    }
+  </style>
+  <h1>内部样式</h1>
+  `;
+</script>

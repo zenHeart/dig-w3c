@@ -1,0 +1,23 @@
+<template id="my-highlight">
+  <style>
+    :host {
+      color: red;
+    }
+  </style>
+  <slot></slot>
+  <slot name="content"></slot>
+</template>
+<script>
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      const template = document.getElementById("my-highlight").content;
+      this.attachShadow({ mode: "open" }).appendChild(template.cloneNode(true));
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+</script>
+<my-highlight>
+  <h2>标题内容</h2>
+  <p slot="content">这是具名插槽的内容。</p>
+</my-highlight>

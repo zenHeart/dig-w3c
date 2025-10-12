@@ -29,8 +29,7 @@
     "mocha": "^5.2.0",
     "sinon": "^7.4.1",
     "ts-jest": "^25.2.1",
-    "vitepress": "2.0.0-alpha.12",
-    "vitepress-plugin-mermaid": "^2.0.17"
+    "vitepress": "2.0.0-alpha.12"
   },
   "license": "ISC",
   "bugs": {

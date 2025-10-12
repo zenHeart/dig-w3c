@@ -1,0 +1,25 @@
+<style>
+  /* 注意这里的样式无法影响 shadow DOM 内部元素 */
+  p {
+    background: orange;
+    color: purple;
+  }
+</style>
+<div id="root"></div>
+<div id="root1"></div>
+<script>
+  const el = document.getElementById("root");
+  const shadowRoot = el.attachShadow({ mode: "open" });
+  shadowRoot.innerHTML = `<script>alert('自定义元素')<\/\script><p>自定义元素, alert 无法触发</p>`;
+
+  const el1 = document.getElementById("root1");
+  const shadowRoot1 = el1.attachShadow({ mode: "open" });
+  const fragment = document.createDocumentFragment();
+  const script = document.createElement("script");
+  script.textContent = "alert('自定义元素1')";
+  fragment.appendChild(script);
+  const p = document.createElement("p");
+  p.textContent = "自定义元素1, alert 可以触发";
+  fragment.appendChild(p);
+  shadowRoot1.appendChild(fragment);
+</script>

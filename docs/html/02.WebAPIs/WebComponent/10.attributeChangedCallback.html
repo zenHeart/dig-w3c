@@ -1,0 +1,35 @@
+<script>
+  class MyHighlight extends HTMLElement {
+    static get observedAttributes() {
+      return ["content"];
+    }
+
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+    }
+
+    connectedCallback() {
+      this._updateContent();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (name === "content" && oldValue !== newValue) {
+        this._updateContent();
+      }
+    }
+
+    _updateContent() {
+      const content = this.getAttribute("content") || "默认内容";
+      this.shadowRoot.innerHTML = `<strong style="color: red;">${content}</strong>`;
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+</script>
+<!-- 修改 content 属性时内容会动态更新 -->
+<my-highlight id="highlight" content="hello world"></my-highlight>
+<button
+  onclick="document.getElementById('highlight').setAttribute('content', '动态内容已更新')"
+>
+  修改 content 属性
+</button>

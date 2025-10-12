@@ -1,0 +1,20 @@
+<style>
+  h1 {
+    color: red;
+  }
+</style>
+<div id="root"></div>
+<script>
+  const el = document.getElementById("root");
+  const shadowRoot = el.attachShadow({ mode: "open" });
+  shadowRoot.innerHTML = `
+  <style>
+    :host {
+      padding: 10px;
+      border: 1px solid red;
+      color: blue;
+    }
+  </style>
+  <h1>内部样式</h1>
+  `;
+</script>

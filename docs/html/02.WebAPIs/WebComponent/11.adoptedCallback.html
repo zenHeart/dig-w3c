@@ -1,0 +1,46 @@
+<script>
+  // 假设浏览器支持 adoptedCallback
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+    }
+
+    connectedCallback() {
+      // 只在主文档插入时渲染，adopted 后不重复渲染
+      if (this.ownerDocument === document) {
+        this.render("已插入文档");
+      }
+    }
+
+    // adoptedCallback 在元素被 adopted 到新文档时触发
+    adoptedCallback(oldDocument, newDocument) {
+      this.render("已被 adopted 到新文档");
+    }
+
+    render(status) {
+      const content = this.getAttribute("content") || "默认内容";
+      this.shadowRoot.innerHTML = `<strong style="color: red;">${content}（${status}）</strong>`;
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+
+  // 演示 adoptedCallback 的调用
+  setTimeout(() => {
+    const el = document.querySelector("my-highlight");
+    const f1 = document.getElementById("f1");
+    // 先移除元素，确保不会再次触发 connectedCallback
+    el.remove();
+    f1.onload = () => {
+      // 使用 adoptNode 方法将自定义元素 adopt 到新文档
+      const adoptedEl = f1.contentDocument.adoptNode(el);
+      f1.contentDocument.body.appendChild(adoptedEl);
+    };
+    f1.srcdoc = "<body></body>";
+  }, 2000);
+</script>
+
+<div id="container">
+  <iframe id="f1" frameborder="0"></iframe>
+  <my-highlight content="hello world"></my-highlight>
+</div>

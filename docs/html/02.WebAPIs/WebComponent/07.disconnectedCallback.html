@@ -1,0 +1,39 @@
+<script>
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+      this.timer = null;
+    }
+
+    connectedCallback() {
+      const content = this.getAttribute("content") || "默认内容";
+      this.shadowRoot.innerHTML = `<strong style="color: red;">${content}</strong>`;
+      // 模拟实际场景：定时高亮闪烁
+      this.timer = setInterval(() => {
+        this.shadowRoot.querySelector("strong").style.background =
+          this.shadowRoot.querySelector("strong").style.background === "yellow"
+            ? ""
+            : "yellow";
+      }, 500);
+    }
+
+    disconnectedCallback() {
+      // 清理定时器，避免内存泄漏
+      if (this.timer) {
+        // 注意此处如果不销毁该定时器会导致，即使组件移除任然有定时器在运行
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+      console.log("MyHighlight 元素已被移除");
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+
+  // 演示动态移除组件
+  setTimeout(() => {
+    document.querySelector("my-highlight").remove();
+  }, 3000);
+</script>
+
+<my-highlight content="hello world"></my-highlight>

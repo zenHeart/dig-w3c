@@ -1,0 +1,19 @@
+<style>
+  h1 {
+    color: red;
+  }
+</style>
+<h1>外部样式</h1>
+<div id="root"></div>
+<script>
+  const el = document.getElementById("root");
+  const shadowRoot = el.attachShadow({ mode: "open" });
+  shadowRoot.innerHTML = `
+  <style>
+    h1 {
+      color: blue;
+    }
+  </style>
+  <h1>内部样式</h1>
+  `;
+</script>

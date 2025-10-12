@@ -1,0 +1,33 @@
+<template id="my-highlight">
+  <style>
+    :host {
+      color: red;
+    }
+  </style>
+  <!-- 只会使用第一个默认插槽 -->
+  <slot></slot>
+  <h2>2 slot</h2>
+  <slot></slot>
+  <!-- 只会使用第一个具名插槽 -->
+  <slot name="content"></slot>
+  <h2>2 slot content</h2>
+  <slot name="content"></slot>
+</template>
+<script>
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      const template = document.getElementById("my-highlight").content;
+      this.attachShadow({ mode: "open" }).appendChild(template.cloneNode(true));
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+</script>
+<my-highlight>
+  <h2>标题1</h2>
+  <p slot="content">内容1</p>
+  <h2>标题2</h2>
+  <p slot="content">内容2</p>
+  <h2>标题3</h2>
+  <p slot="content">内容2</p>
+</my-highlight>

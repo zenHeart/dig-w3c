@@ -1,0 +1,37 @@
+<script>
+  // 假设浏览器支持 connectedMoveCallback
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+    }
+
+    connectedCallback() {
+      this.render("已插入文档");
+    }
+    // connectedMoveCallback 在元素移动到文档中的新位置时触发
+    connectedMoveCallback() {
+      this.render("已移动到新位置");
+    }
+
+    render(status) {
+      const content = this.getAttribute("content") || "默认内容";
+      this.shadowRoot.innerHTML = `<strong style="color: red;">${content}（${status}）</strong>`;
+    }
+  }
+  customElements.define("my-highlight", MyHighlight);
+
+  // 演示动态移动组件
+  setTimeout(() => {
+    const container = document.querySelector("#container");
+    const el = document.querySelector("my-highlight");
+    const item = document.querySelector("#item");
+    // 将 my-highlight 移动到 item 之前
+    container.moveBefore(el, item);
+  }, 2000);
+</script>
+
+<div id="container">
+  <div id="item">test</div>
+  <my-highlight content="hello world"></my-highlight>
+</div>
