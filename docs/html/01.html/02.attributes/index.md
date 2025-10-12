@@ -10,6 +10,10 @@
 
 * [is](is/index.md) 实现覆盖默认标签特性
 
+## 知识点
+
+* 属性反射
+
 ## 未实现标签
 
 * [ ] [inputmode](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/inputmode) 设定 html 标签

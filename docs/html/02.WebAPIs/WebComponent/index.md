@@ -83,11 +83,28 @@ ShadowRoot -> DocumentFragment -> Node -> EventTarget -> Object
 
 :::
 
+### connectedCallback
+
+一般我们会在自定义元素上定义属性，参考如下示例
+
+<<< ./05.attribute.html
+
+:::waning
+此处 contructor 会在浏览器解析到自定义标签时触发一次，由于 HTML 标签是流式解析的，所以当读取到标签 token 时就会立即触发 contructor，
+而此时并未读取到属性值，所以在 contructor 中通过 `getAttribute` 获取属性值会返回 null， 从而显示默认值。
+:::
+
+因此自定义元素提供了 `connectedCallback` 确保在元素标签完全解析，并且插入到 DOM 树后才触发。
+
+<<< ./06.connectedCallback
+
+可以打开断点查看示例，会先显示默认内容，然后触发 `connectedCallback` 获取到 
+
 ### extends 内置标签
 
 <<< ./05.extendsBuiltIn.html
 
-采用自定义标签
+采用自定义标签， 可以使用自定义标签覆盖内置标签的默认行为
 
 ### 使用
 

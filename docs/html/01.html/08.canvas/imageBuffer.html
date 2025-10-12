@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>图片像素分析器</title>
+   <!-- 引入 Tailwind CSS 以便快速构建美观的界面 -->
+   <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+      /* 自定义加载动画样式 */
+      .loader {
+         border: 4px solid #f3f3f3;
+         border-top: 4px solid #3498db;
+         border-radius: 50%;
+         width: 40px;
+         height: 40px;
+         animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+         0% {
+            transform: rotate(0deg);
+         }
+
+         100% {
+            transform: rotate(360deg);
+         }
+      }
+
+      /* 自定义文件输入按钮样式 */
+      .custom-file-button input[type="file"] {
+         display: none;
+      }
+
+      /* 确保在小屏幕上滚动条不会挤占太多空间 */
+      #histogram::-webkit-scrollbar {
+         width: 6px;
+      }
+
+      #histogram::-webkit-scrollbar-thumb {
+         background-color: #cbd5e1;
+         border-radius: 3px;
+      }
+   </style>
+</head>
+
+<body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen p-4">
+
+   <div class="container mx-auto max-w-4xl w-full bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+      <!-- 头部信息 -->
+      <header class="text-center mb-8">
+         <h1 class="text-3xl md:text-4xl font-bold text-gray-800">图片像素颜色分析器</h1>
+         <p class="text-gray-500 mt-2">选择一张本地图片，查看其颜色分布。</p>
+      </header>
+
+      <!-- 文件选择区域 -->
+      <div class="mb-8 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+         <div class="custom-file-button">
+            <label for="imageInput"
+               class="cursor-pointer inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+               </svg>
+               选择图片文件
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+         </div>
+         <p id="fileName" class="text-sm text-gray-500 mt-3"></p>
+      </div>
+
+      <!-- 加载状态和图片预览 -->
+      <div id="statusContainer" class="text-center mb-8 min-h-[60px] flex items-center justify-center">
+         <div id="loader" class="loader hidden"></div>
+         <p id="statusText" class="text-gray-600 font-medium"></p>
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-8">
+         <!-- 图片预览 -->
+         <div class="w-full md:w-1/3 flex-shrink-0">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">图片预览</h2>
+            <div class="bg-gray-200 rounded-lg overflow-hidden aspect-square flex items-center justify-center">
+               <img id="imagePreview" src="https://placehold.co/400x400/e2e8f0/a0aec0?text=Your+Image"
+                  alt="Image Preview" class="max-w-full max-h-full object-contain">
+            </div>
+            <!-- 图片信息显示区域 -->
+            <div id="imageInfo" class="mt-4 text-sm text-gray-600 space-y-1 p-3 bg-gray-50 rounded-lg">
+               <p><strong>尺寸:</strong> <span>N/A</span></p>
+               <p><strong>总像素 (不透明):</strong> <span>N/A</span></p>
+            </div>
+         </div>
+
+         <!-- 颜色分布结果 -->
+         <div id="analysisResult" class="w-full md:w-2/3">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+               <h2 class="text-2xl font-bold text-gray-700">颜色分布</h2>
+               <!-- 颜色格式切换开关 -->
+               <div class="flex items-center space-x-2 text-sm">
+                  <span class="text-gray-600">RGB</span>
+                  <label for="colorToggle" class="relative inline-flex items-center cursor-pointer">
+                     <input type="checkbox" id="colorToggle" class="sr-only peer" checked>
+                     <div
+                        class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                     </div>
+                  </label>
+                  <span class="text-gray-600 font-semibold">HEX</span>
+               </div>
+            </div>
+            <div id="histogram" class="max-h-[600px] overflow-y-auto pr-2">
+               <!-- 色块图将通过 JS 动态生成 -->
+               <p class="text-gray-400">暂无分析结果。请先选择一张图片。</p>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <!-- JavaScript 代码 -->
+   <script>
+      // 获取 DOM 元素
+      const imageInput = document.getElementById('imageInput');
+      const imagePreview = document.getElementById('imagePreview');
+      const histogramContainer = document.getElementById('histogram');
+      const fileNameDisplay = document.getElementById('fileName');
+      const loader = document.getElementById('loader');
+      const statusText = document.getElementById('statusText');
+      const colorToggle = document.getElementById('colorToggle');
+      const imageInfo = document.getElementById('imageInfo');
+
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      let lastAnalysisData = [];
+
+      imageInput.addEventListener('change', (event) => {
+         const file = event.target.files[0];
+         if (file) {
+            lastAnalysisData = [];
+            fileNameDisplay.textContent = `已选择文件: ${file.name}`;
+            histogramContainer.innerHTML = '<p class="text-gray-400">正在分析中...</p>';
+            imagePreview.src = "https://placehold.co/400x400/e2e8f0/a0aec0?text=Loading...";
+            statusText.textContent = '正在读取图片...';
+            loader.classList.remove('hidden');
+            imageInfo.innerHTML = `<p><strong>尺寸:</strong> <span>N/A</span></p><p><strong>总像素 (不透明):</strong> <span>N/A</span></p>`;
+
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+               imagePreview.src = e.target.result;
+               imagePreview.onload = () => setTimeout(() => analyzeImage(imagePreview), 50);
+               imagePreview.onerror = () => showError('无法加载图片文件。');
+            };
+            reader.onerror = () => showError('读取文件时发生错误。');
+            reader.readAsDataURL(file);
+         }
+      });
+
+      colorToggle.addEventListener('change', () => {
+         if (lastAnalysisData.length > 0) {
+            renderHistogram(lastAnalysisData);
+         }
+      });
+
+      function analyzeImage(img) {
+         statusText.textContent = '正在分析像素数据，请稍候...';
+
+         canvas.width = img.naturalWidth;
+         canvas.height = img.naturalHeight;
+         ctx.drawImage(img, 0, 0);
+
+         let imageData;
+         try {
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            debugger
+         } catch (e) {
+            showError('无法分析图片，可能是因为跨域问题或图片格式不受支持。');
+            console.error("getImageData error:", e);
+            return;
+         }
+
+         const data = imageData.data;
+         const colorCounts = {};
+         let totalPixels = 0;
+
+         for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 255) continue;
+            const key = `${r}-${g}-${b}`;
+            colorCounts[key] = (colorCounts[key] || 0) + 1;
+            totalPixels++;
+         }
+
+         // 更新图片信息
+         imageInfo.innerHTML = `
+                <p><strong>尺寸:</strong> <span>${img.naturalWidth} x ${img.naturalHeight} px</span></p>
+                <p><strong>总像素 (不透明):</strong> <span>${totalPixels.toLocaleString()}</span></p>
+            `;
+
+         if (totalPixels === 0) {
+            showError('图片中没有找到不透明的像素。');
+            return;
+         }
+
+         const colorData = Object.entries(colorCounts).map(([key, count]) => {
+            const [r, g, b] = key.split('-').map(Number);
+            return { r, g, b, percentage: (count / totalPixels) * 100 };
+         });
+
+         colorData.sort((a, b) => b.percentage - a.percentage);
+
+         lastAnalysisData = colorData;
+         renderHistogram(colorData);
+
+         loader.classList.add('hidden');
+         statusText.textContent = `分析完成！共找到 ${colorData.length} 种不同颜色。`;
+      }
+
+      function rgbToHex(r, g, b) {
+         const toHex = c => ('0' + c.toString(16)).slice(-2);
+         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      }
+
+      /**
+       * 将分析结果渲染成色块图
+       * @param {Array} data - 排序后的颜色数据
+       */
+      function renderHistogram(data) {
+         histogramContainer.innerHTML = '';
+         const isHex = colorToggle.checked;
+
+         if (data.length === 0) {
+            histogramContainer.innerHTML = '<p class="text-gray-400">未检测到任何颜色。</p>';
+            return;
+         }
+
+         const infoText = document.createElement('p');
+         infoText.className = 'text-sm text-gray-500 mb-4';
+         infoText.textContent = '下图展示了图片中的主要颜色区块。色块上方的小条长度代表其相对占比，悬停可查看详细数字。';
+         histogramContainer.appendChild(infoText);
+
+         const gridContainer = document.createElement('div');
+         gridContainer.className = 'flex flex-wrap gap-x-2 gap-y-3';
+         histogramContainer.appendChild(gridContainer);
+
+         let tooltip = document.getElementById('color-tooltip');
+         if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'color-tooltip';
+            tooltip.className = 'fixed hidden bg-gray-900 text-white text-sm rounded-md shadow-lg p-2 z-50 pointer-events-none transition-opacity duration-200';
+            document.body.appendChild(tooltip);
+         }
+
+         const topColors = data.slice(0, 200);
+         const maxPercentage = data[0]?.percentage || 100; // 获取占比最高的颜色百分比，用于归一化
+
+         topColors.forEach(item => {
+            const { r, g, b, percentage } = item;
+            const rgbColor = `rgb(${r},${g},${b})`;
+
+            // 每个颜色项的容器
+            const itemContainer = document.createElement('div');
+            itemContainer.className = 'flex flex-col items-center w-8 group cursor-pointer';
+
+            // 顶部的进度条
+            const progressBarWrapper = document.createElement('div');
+            progressBarWrapper.className = 'w-full h-1 bg-gray-200 rounded-full mb-1';
+
+            const progressBar = document.createElement('div');
+            progressBar.className = 'h-full bg-indigo-500 rounded-full';
+            const normalizedWidth = (percentage / maxPercentage) * 100;
+            progressBar.style.width = `${normalizedWidth}%`;
+
+            progressBarWrapper.appendChild(progressBar);
+
+            // 下方的颜色块
+            const swatch = document.createElement('div');
+            swatch.className = 'w-8 h-8 rounded-md border border-gray-200 transition-transform duration-150 group-hover:scale-110 group-hover:shadow-lg';
+            swatch.style.backgroundColor = rgbColor;
+
+            itemContainer.appendChild(progressBarWrapper);
+            itemContainer.appendChild(swatch);
+
+            // 将事件监听器附加到整个容器上
+            itemContainer.addEventListener('mouseenter', (e) => {
+               const colorValue = isHex ? rgbToHex(r, g, b) : rgbColor;
+               tooltip.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 rounded-full border-2 border-white shadow" style="background-color: ${rgbColor};"></div>
+                            <div class="font-mono">
+                                <div>${colorValue}</div>
+                                <div class="text-xs text-gray-300">${percentage.toFixed(3)}%</div>
+                            </div>
+                        </div>
+                    `;
+               tooltip.classList.remove('hidden');
+               tooltip.style.opacity = 1;
+            });
+
+            itemContainer.addEventListener('mousemove', (e) => {
+               tooltip.style.left = `${e.pageX + 15}px`;
+               tooltip.style.top = `${e.pageY + 15}px`;
+            });
+
+            itemContainer.addEventListener('mouseleave', () => {
+               tooltip.style.opacity = 0;
+               setTimeout(() => tooltip.classList.add('hidden'), 200);
+            });
+
+            gridContainer.appendChild(itemContainer);
+         });
+
+         if (data.length > 200) {
+            const notice = document.createElement('p');
+            notice.className = 'text-center text-sm text-gray-500 mt-4';
+            notice.textContent = `为提高性能，仅显示前 200 种颜色。`;
+            histogramContainer.appendChild(notice);
+         }
+      }
+
+      function showError(message) {
+         loader.classList.add('hidden');
+         statusText.textContent = message;
+         statusText.classList.add('text-red-500');
+         histogramContainer.innerHTML = `<p class="text-red-400">${message}</p>`;
+         imageInfo.innerHTML = `<p><strong>尺寸:</strong> <span>N/A</span></p><p><strong>总像素 (不透明):</strong> <span>N/A</span></p>`;
+      }
+
+   </script>
+</body>
+
+</html>

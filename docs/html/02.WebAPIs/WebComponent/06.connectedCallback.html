@@ -1,0 +1,22 @@
+<script>
+   class MyHighlight extends HTMLElement {
+      constructor() {
+         super()
+         debugger
+         this.attachShadow({
+            mode: 'open'
+         })
+         const content = this.getAttribute('content') || '默认内容'
+         this.shadowRoot.innerHTML = `<strong style="color: red;">${content}</strong>`
+      }
+
+      connectedCallback() {
+         debugger
+         const content = this.getAttribute('content') || '默认内容'
+         this.shadowRoot.innerHTML = `<strong style="color: red;">${content}</strong>`
+      }
+   }
+   customElements.define('my-highlight', MyHighlight)
+</script>
+<!-- 显示为默认内容而不是 hello world -->
+<my-highlight content="hello world"></my-highlight>
