@@ -157,7 +157,7 @@ shadowroot 内部的样式和外部完全隔离不会相互影响
 
 因此自定义元素提供了 `connectedCallback` 确保在元素标签完全解析，并且插入到 DOM 树后才触发。
 
-<<< ./06.connectedCallback
+<<< ./06.connectedCallback.html
 
 可以打开断点查看示例，会先显示默认内容，然后触发 `connectedCallback` 获取到
 
@@ -248,14 +248,14 @@ if (this.ownerDocument === document) {
 
 slot 支持 name 属性插入多个插槽，在自定义组件内部使用 `slot` 属性制定具体的插入点
 
-<<< ./13.nameSlot.html
+<<< ./13.name-slot.html
 
 ### duplicate slot
 
 你可以在 template 中定义多个同名的插槽，但是浏览器只会默认使用第一个插槽，
 在自定义元素中，你也可以同时插入多个同名的插槽，浏览器会自动根据插槽的 name 属性匹配，一次插入对应位置。
 
-<<< ./14.duplicateSlot.html
+<<< ./14.duplicate-slot.html
 
 :::tip
 

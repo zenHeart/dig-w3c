@@ -10,9 +10,13 @@
 
 ## Node
 
-节点类型，详见 [NodeType](./examples/dom/nodeTypes.html)
+### 节点类型
 
-节点树结构, 参考 [nodeTree](./examples/dom/nodeTree.html)
+<<< ./examples/dom/nodeTypes.html
+
+### 节点树结构
+
+<<< ./examples/dom/nodeTree.html
 
 1. **childNodes** 子节点数组，注意文本节点例如换行导致的 `\n` 节点
 2. **firstChild** 第一个子节点
