@@ -1,0 +1,15 @@
+<script>
+   class MyHighlight extends HTMLElement {
+      constructor() {
+         super()
+      }
+
+      connectedCallback() {
+         const content = this.getAttribute('content') || '默认内容'
+         this.innerHTML = `<strong style="color: red;">${content}</strong>`
+      }
+   }
+
+   customElements.define('my-highlight', MyHighlight)
+</script>
+<my-highlight onclick="alert(1)"></my-highlight>

@@ -1,0 +1,31 @@
+<template id="my-element">
+   <style>
+      ::part(title) {
+         color: red;
+         font-weight: bold;
+      }
+   </style>
+   <h1 part="title">
+      <slot></slot>
+   </h1>
+</template>
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+         const template = document.getElementById('my-element');
+         const templateContent = template.content;
+         const shadowRoot = this.attachShadow({ mode: 'open' });
+         shadowRoot.appendChild(templateContent.cloneNode(true));
+      }
+   }
+   customElements.define('my-element', MyElement);
+</script>
+<style>
+   #custom::part(title) {
+      color: blue;
+      font-weight: normal;
+   }
+</style>
+<my-element>默认样式</my-element>
+<my-element id="custom">覆盖 part 后样式</my-element>

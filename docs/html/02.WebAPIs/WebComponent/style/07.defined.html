@@ -1,0 +1,134 @@
+<!-- 07.defined.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<meta charset="UTF-8" />
+<title>:defined 解决自定义元素 FOUC 示例</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  h1 {
+    margin-top: 0;
+  }
+
+  section {
+    margin-bottom: 32px;
+  }
+
+  fouc-panel,
+  fixed-panel {
+    display: block;
+    margin: 12px 0;
+  }
+
+  /* 方案 A：直接隐藏未定义元素，避免看到“原始未升级内容”闪烁 */
+  fixed-panel:not(:defined) {
+    visibility: hidden;
+  }
+
+  /* 方案 B：骨架占位（带 skeleton 类的才使用），覆盖上面的隐藏规则 */
+  fixed-panel.skeleton:not(:defined) {
+    visibility: visible;
+    position: relative;
+  }
+
+  fixed-panel.skeleton:not(:defined)::before {
+    content: '加载中…';
+    display: block;
+    padding: 16px;
+    background: #f2f3f5;
+    color: #888;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    animation: pulse 1s linear infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: .45;
+    }
+  }
+</style>
+
+<h1>:defined 解决 FOUC（样式闪烁 / 内容闪现）</h1>
+
+<section>
+  <h2>对比演示</h2>
+  <ol>
+    <li>无处理：会先短暂显示「原始未升级内容」，随后被 Shadow DOM 替换，发生 FOUC。</li>
+    <li>隐藏方案：用 :not(:defined) 隐藏，升级后再显示，避免闪烁。</li>
+    <li>骨架方案：未定义前显示占位骨架，升级后自动替换成真正内容。</li>
+  </ol>
+</section>
+
+<h3>1. 无处理（会 FOUC）</h3>
+<fouc-panel title="未做处理">原始未升级内容（会闪一下）</fouc-panel>
+
+<h3>2. 使用 :not(:defined) 隐藏（无闪烁）</h3>
+<fixed-panel title="隐藏避免闪烁">原始未升级内容（不会看到）</fixed-panel>
+
+<h3>3. 使用骨架占位（平滑过渡）</h3>
+<fixed-panel class="skeleton" title="骨架占位">原始未升级内容（被骨架遮挡）</fixed-panel>
+
+<script>
+  // 延迟注册，模拟网络/代码分片加载
+  setTimeout(() => {
+    class BasePanel extends HTMLElement {
+      constructor() {
+        super();
+        const root = this.attachShadow({ mode: 'open' });
+        const title = this.getAttribute('title') || '默认标题';
+        root.innerHTML = `
+          <style>
+            :host {
+              display:block;
+              border:1px solid #409eff;
+              padding:14px 16px 16px;
+              border-radius:8px;
+              background:#f8fbff;
+              box-shadow:0 2px 4px rgba(0,0,0,.08);
+              font-size:14px;
+              color:#444;
+              animation:fade .28s;
+            }
+            h2 {
+              margin:0 0 8px;
+              font-size:16px;
+              color:#1f2d3d;
+            }
+            p { margin:0; }
+            @keyframes fade {
+              from { opacity:0; transform:translateY(4px); }
+              to { opacity:1; transform:translateY(0); }
+            }
+          </style>
+          <h2>${title}</h2>
+          <p>这是组件升级后的正式内容。</p>
+        `;
+      }
+    }
+
+    // fouc-panel：未使用任何 :defined 预处理
+    customElements.define('fouc-panel', class extends BasePanel { });
+
+    // fixed-panel：页面级样式使用 :not(:defined) 做隐藏或骨架
+    customElements.define('fixed-panel', class extends BasePanel { });
+  }, 1200);
+</script>
+
+<!-- 说明：
+1. :not(:defined) 仅在自定义元素尚未注册时匹配，注册后元素立即匹配 :defined，隐藏/骨架规则失效，显示 Shadow DOM。
+2. 隐藏方案最简单；骨架方案提供视觉占位，减少布局跳动与空白。
+3. 两个标签 fouc-panel 与 fixed-panel 的区别只在“未定义时期的样式处理”。 -->
+
+</html>

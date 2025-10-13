@@ -1,0 +1,73 @@
+<!-- 12.slotted.html 演示 ::slotted 对匿名(默认)和具名插槽的样式设置 -->
+<template id="my-element">
+   <style>
+      /* 匿名插槽(默认插槽)内所有分发元素的基础样式 */
+      ::slotted(*) {
+         font-family: sans-serif;
+         color: #444;
+      }
+
+      /* 匿名插槽中特定类名的元素 */
+      ::slotted(.highlight) {
+         color: crimson;
+         font-weight: bold;
+      }
+
+      /* 具名插槽 subtitle 中的所有分发元素 */
+      ::slotted([slot=subtitle]) {
+         color: steelblue;
+         font-size: 14px;
+         letter-spacing: 1px;
+      }
+
+      /* 具名插槽中特定更细粒度的匹配 */
+      ::slotted(span[slot=subtitle].warn) {
+         color: orange;
+      }
+   </style>
+   <h1>
+      <slot></slot> <!-- 匿名(默认)插槽 -->
+   </h1>
+   <h2>
+      <slot name="subtitle"></slot> <!-- 具名插槽 -->
+   </h2>
+</template>
+
+<script>
+   class MyElement extends HTMLElement {
+      constructor() {
+         super();
+         const tpl = document.getElementById('my-element');
+         const shadowRoot = this.attachShadow({ mode: 'open' });
+         shadowRoot.appendChild(tpl.content.cloneNode(true));
+      }
+   }
+   customElements.define('my-element', MyElement);
+</script>
+
+<!-- 用例 1：最基本 -->
+<my-element>
+   默认标题
+   <span slot="subtitle">默认副标题</span>
+</my-element>
+
+<hr>
+
+<!-- 用例 2：匿名插槽中的高亮样式 -->
+<my-element>
+   <span class="highlight">高亮的主标题</span>
+   <span slot="subtitle">普通副标题</span>
+</my-element>
+
+<hr>
+
+<!-- 用例 3：具名插槽中更细粒度选择器 -->
+<my-element>
+   普通主标题
+   <span slot="subtitle" class="warn">警告副标题</span>
+</my-element>
+
+<!-- 说明：
+1. ::slotted 只能写在 Shadow DOM 内部样式表中，且仅作用于直接分发进插槽的顶层节点。
+2. 不能通过 ::slotted 选择分发元素的后代，如 ::slotted(div span) 无效。
+3. [slot=subtitle] 仅匹配放入 name="subtitle" 插槽的顶层元素。 -->

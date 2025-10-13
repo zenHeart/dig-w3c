@@ -1,0 +1,20 @@
+<style>
+   body {
+      color: red;
+      font-weight: bold;
+   }
+</style>
+<div id="root"></div>
+<script>
+   const el = document.getElementById('root');
+   el.attachShadow({ mode: 'open' });
+   // 通过设置 all: initial 避免了 body 的样式由于是继承属性，对 shadow DOM 内部的影响
+   el.shadowRoot.innerHTML = `
+   <style>
+      :host {
+         all: initial;
+      }
+   </style>
+   <span>继承样式</span>
+`;
+</script>

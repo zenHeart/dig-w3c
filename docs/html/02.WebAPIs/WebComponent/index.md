@@ -83,6 +83,32 @@ shadowroot 内部的样式和外部完全隔离不会相互影响
 
 <<< ./style/02.link.html
 
+#### 继承属性
+
+#### custom properties {#custom-properties}
+
+虽然 shadow DOM 内部的样式和外部完全隔离，但是 shadow dom 内部元素任然可以通过属性集成和 custom properties 继承外部的样式。
+
+详细的继承属性可以参考 [继承属性](https://web.dev/learn/css/inheritance) 参看示例， font-size 和 color 作为继承属性， shadow DOM 内部的元素可以继承外部的样式
+
+<<< ./style/08.inherit.html
+
+:::tip
+
+页面可能引用了全局的重置样式，为了避免这些外部重置样式对 shadow DOM 内部的影响，可以通过 `all: initial` 重置 shadow DOM 内部的样式，避免受到属性继承导致的影响
+
+<<< ./style/09.inherit-reset.html
+
+示例中的 `:host` 用来表示 shadow DOM 的宿主元素， 此处为 `<div id="root">` 元素， 后续会讲解
+
+:::
+
+由于继承属性的副作用，对于 shadow dom 元素更标准的策略是采用自定义属性控制内部元素的核心样式。
+
+<<< ./style/10.custom-property.html
+
+### 伪元素
+
 为了实现对 shadow DOM 内部样式的控制，浏览器提供了一系列伪元素
 
 #### :host
@@ -117,10 +143,6 @@ shadowroot 内部的样式和外部完全隔离不会相互影响
 :::warning
 参考 [MDN :host-context](https://developer.mozilla.org/en-US/docs/Web/CSS/:host-context) 该属性后续可能会被废弃不推荐使用
 :::
-
-#### :defined
-
-`:defined` 伪类选择器用于选择已经定义的自定义元素，可以通过 `:defined` 选择器为已经定义的自定义元素设置样式。一般通过该元素解决样式闪烁问题
 
 ## 自定义元素
 
@@ -188,6 +210,12 @@ insertBefore 方法添加元素，则不会触发 connectedMoveCallback 钩子�
 
 为了实现修改属性的时候，触发内容也实时变化可以采用 `attributeChangedCallback` 钩子。监听属性的修改。
 
+<<< 10.attributeChangedCallback.html
+
+#### observedAttributes
+
+为了优化性能，示例中必须采用 `observedAttributes`  属性定义需要监听的属性，只有在 `observedAttributes` 定义的属性修改时才会触发 `attributeChangedCallback` 钩子。
+
 ### adoptedCallback
 
 当自定义元素被移动到新的文档时，会触发 `adoptedCallback` 钩子。
@@ -209,7 +237,7 @@ if (this.ownerDocument === document) {
 
 :::
 
-### 总结
+### hooks 总结
 
 整个自定义元素的生命周期如下
 
@@ -219,6 +247,46 @@ if (this.ownerDocument === document) {
 4. **disconnectedCallback** 从 DOM 树移除元素时触发
 5. **connectedMoveCallback** 通过 moveBefore 方法移动元素时触发
 6. **adoptedCallback** 元素被移动到新的文档时触发， 注意由于移动到新的 document 会重新触发 `connectedCallback` 钩子, 可以利用 `this.ownerDocument` 判断是否是主文档，避免重复渲染
+
+### attribute vs prperty
+
+- **attribute**  属于 HTML 标签上定义的属性，可以通过 `getAttribute、setAttribute、removeAttribute` 方法访问和修改
+- **property** 采用自定义元素时实例上的属性，可以通过 `this.xx` 访问和修改
+
+HTML 规范在处理 attribute 和 property 上有一系列规则，可以阅读 [HTML attributes vs DOM properties](https://jakearchibald.com/2024/attributes-vs-properties/) 了解细节
+
+#### 属性反射 {#attribute-reflect}
+
+除了直接通过 `getAttribute、setAttribute、removeAttribute` 方法访问和修改属性之外，你也可以直接修改
+`this.xx` 的值，值的改变会同步到 attribute 上， 这种行为称为属性反射。详细资料可以参考 [attribute reflection](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Reflected_attributes)
+
+<<< ./10.1.attributeReflect.html
+
+可以看到当修改元素上内置属性 `id` 的时候，属性值会同步到 attribute 上
+
+但是针对 content 采用 `this.content` 修改并不会触发内容更新。
+核心的原因在于 `attributeChangedCallback`  只会监听采用 `setAttribute` 等方式来修改属性，为了实现属性反射的效果，可以额外添加
+`content` 的 setter 和 getter 方法,结合 `attributeChangedCallback` 实现属性反射
+
+<<< ./10.3.reflect-content.html
+
+### 事件处理
+
+由于自定义元素继承自 HTMLElement, 因此根元素上的可以直接绑定事件，参看示例
+
+<<< ./event/rootEvent.html
+
+#### 自定义事件
+
+对于内部元素可以使用 `dispatchEvent` 触发自定义事件，参看示例
+
+<<< ./event/dispatchEvent.html
+
+:::tip
+
+由于内置事件属性例如 `onclick` 会自动处理绑定的表达式，而自定义事件没有此功能，可以通过监听属性绑定结合属性反射的功能实现支持在属性上绑定事件表达式， 此外需要设置 `bubbles: true, composed: true` 使得事件可以冒泡到 shadow DOM 外部。注意内部元素会被隐藏所以，事件的  target 始终为 shadow host
+
+:::
 
 ## template 和 slot
 
@@ -268,21 +336,39 @@ slot 支持 name 属性插入多个插槽，在自定义组件内部使用 `slot
 
 :::
 
-### 使用
+### ::part
 
-### 创建模版
+除了之前介绍的 [custom properties](#custom-properties) 之外，shadow DOM 还提供了 `part` 属性来实现对 shadow DOM 内部元素的样式控制, 你可以在 元素上定义 part 属性， 然后通过  `::part(xx)` 伪元素选择器控制 shadow dom 内部元素样式
 
-### 注入样式
+<<< ./style/11.part.html
 
-### 添加自定义属性
+### ::slotted
 
-### 添加生命周期模版
+此外可以通过 `::slotted(xx)` 伪元素选择器控制插入到 slot 内部的元素样式
 
-### 使用插槽
-
-### 注意事项
+<<< ./style/12.slotted.html
 
 ## 最佳实践
+
+### 组件设计
+
+### 结构定义
+
+### attribute 和 property
+
+### 样式控制
+
+#### :defined
+
+采用 `:defined` 伪类解决自定义组件 FOUC 问题
+
+`:defined` 伪类选择器用于选择已经定义的自定义元素，可以通过 `:defined` 选择器为已经定义的自定义元素设置样式。一般通过该元素解决样式闪烁问题
+
+<<< ./style/07.defined.html
+
+### 事件处理
+
+## 库和框架
 
 ## 总结
 
@@ -325,6 +411,6 @@ slot 支持 name 属性插入多个插槽，在自定义组件内部使用 `slot
 - [Shadow tree](https://dom.spec.whatwg.org/#shadow-trees) Shadow tree
 - [custome element](https://html.spec.whatwg.org/multipage/custom-elements.html)
 - [声明式 Shadow DOM](https://web.dev/articles/declarative-shadow-dom)
-- [声明式 shadow dom](https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md)
+- [声明式 shadow dom 规范](https://github.com/mfreed7/declarative-shadow-dom/blob/master/README.md)
 - [可构造样式表](https://web.dev/articles/constructable-stylesheets?hl=zh-cn)
 - [css shadow parts](https://www.w3.org/TR/css-shadow-parts-1/?utm_source=chatgpt.com)

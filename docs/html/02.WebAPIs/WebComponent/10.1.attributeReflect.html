@@ -1,0 +1,23 @@
+<script>
+  class MyHighlight extends HTMLElement {
+    constructor() {
+      super();
+      // 创建 shadow DOM
+      this.attachShadow({ mode: 'open' });
+    }
+    connectedCallback() {
+      const content = this.getAttribute('content') || '默认内容';
+      this.shadowRoot.innerHTML = `<strong  style="color: red;">${content}</strong>`;
+    }
+  }
+  customElements.define('my-highlight', MyHighlight);
+</script>
+<my-highlight id="my-highlight" content="hello world"></my-highlight>
+<script>
+  const el = document.getElementById('my-highlight');
+  console.log('id', el.id)
+  setTimeout(() => {
+    el.setAttribute('id', 'my-highlight-modified');
+    console.log('id modified', el.id)
+  }, 2000);
+</script>

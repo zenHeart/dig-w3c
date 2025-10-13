@@ -1,0 +1,31 @@
+<script>
+   class MyHighlight extends HTMLElement {
+      constructor() {
+         super()
+      }
+
+      connectedCallback() {
+         this.attachShadow({ mode: 'open' })
+         const content = this.getAttribute('content') || '默认内容'
+         this.shadowRoot.innerHTML = `<strong style="color: red;">${content}</strong>`
+         const strongEl = this.shadowRoot.querySelector('strong')
+         strongEl.addEventListener('click', (e) => {
+            this.dispatchEvent(new CustomEvent('highlight-click', {
+               detail: {
+                  message: 'highlight clicked'
+               },
+               bubbles: true,
+               composed: true
+            }))
+         })
+      }
+   }
+
+   customElements.define('my-highlight', MyHighlight)
+</script>
+<my-highlight></my-highlight>
+<script>
+   document.body.addEventListener('highlight-click', (e) => {
+      console.log(e)
+   })
+</script>

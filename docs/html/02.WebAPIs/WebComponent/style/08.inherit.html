@@ -1,0 +1,12 @@
+<style>
+   #root {
+      color: red;
+      font-weight: bold;
+   }
+</style>
+<div id="root"></div>
+<script>
+   const el = document.getElementById('root');
+   el.attachShadow({ mode: 'open' });
+   el.shadowRoot.innerHTML = `<span>继承样式</h1>`;
+</script>
