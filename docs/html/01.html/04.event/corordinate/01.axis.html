@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+   <meta charset="UTF-8" />
+   <title>鼠标坐标体系示例</title>
+   <style>
+      * {
+         box-sizing: border-box;
+      }
+
+      body {
+         margin: 0;
+         font: 14px/1.4 system-ui, sans-serif;
+      }
+
+      header {
+         position: sticky;
+         top: 0;
+         background: #222;
+         color: #fff;
+         padding: 8px 12px;
+         z-index: 10;
+      }
+
+      main {
+         padding: 16px;
+      }
+
+      .playground {
+         width: 600px;
+         height: 400px;
+         background: repeating-conic-gradient(#fafafa 0deg, #fafafa 20deg, #f0f0f0 20deg, #f0f0f0 40deg);
+         border: 3px solid #0b57d0;
+         position: relative;
+         margin-bottom: 800px;
+         /* 强制页面可滚动 */
+         overflow: auto;
+      }
+
+      .inner {
+         width: 900px;
+         height: 700px;
+         background: linear-gradient(135deg, #ffe8cc, #ffd1dc);
+         border: 2px dashed #ff6a00;
+         position: relative;
+         padding: 20px;
+      }
+
+      .target {
+         width: 200px;
+         height: 140px;
+         background: rgba(0, 150, 255, .18);
+         border: 2px solid #0096ff;
+         position: absolute;
+         top: 300px;
+         left: 400px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         font-weight: 600;
+         color: #024;
+      }
+
+      #panel {
+         position: fixed;
+         right: 12px;
+         top: 12px;
+         width: 300px;
+         max-height: calc(100vh - 24px);
+         overflow: auto;
+         background: #ffffffdd;
+         backdrop-filter: blur(4px);
+         border: 1px solid #ccc;
+         padding: 10px;
+         font-family: monospace;
+         font-size: 12px;
+         white-space: pre;
+      }
+
+      .note {
+         font-size: 12px;
+         color: #555;
+         margin-top: 8px;
+         line-height: 1.5;
+      }
+
+      .highlight {
+         outline: 3px solid #ff2a6d;
+         outline-offset: -3px;
+      }
+   </style>
+</head>
+
+<body>
+   <header>鼠标/滚动坐标体系演示 (移动鼠标 / 滚动页面 / 点击目标)</header>
+   <main>
+      <p>演示以下属性: event.clientX/Y, event.pageX/Y, event.offsetX/Y, event.screenX/Y, window.scrollX/Y (scroolX/scroolY
+         常见拼写错误). offsetX/Y 相对事件目标元素左上角。</p>
+      <div class="playground" id="playground">
+         <div class="inner" id="inner">
+            <div class="target" id="target">目标元素</div>
+         </div>
+      </div>
+      <p class="note">
+         简要说明:
+         1. clientX/Y: 视口内(不含页面已滚动部分)左上角为(0,0)。
+         2. pageX/Y: 整个文档左上角为(0,0)，包含滚动偏移。
+         3. offsetX/Y: 相对事件接收元素(当前 target)内容盒左上角。
+         4. screenX/Y: 相对物理屏幕左上角。
+         5. scrollX/Y: window 当前水平/垂直滚动偏移。
+      </p>
+   </main>
+
+   <pre id="panel"></pre>
+
+   <script>
+      (function () {
+         const panel = document.getElementById('panel');
+         const target = document.getElementById('target');
+         const playground = document.getElementById('playground');
+
+         function fmt(e) {
+            const rectT = target.getBoundingClientRect();
+            const rectP = playground.getBoundingClientRect();
+            return [
+               '时间: ' + new Date().toLocaleTimeString(),
+               '--- 事件基础 ---',
+               'type: ' + e.type,
+               'button: ' + ('button' in e ? e.button : '-'),
+               'ctrl/meta/alt/shift: ' + [e.ctrlKey, e.metaKey, e.altKey, e.shiftKey].map(b => b ? 1 : 0).join(','),
+               '',
+               '--- 坐标属性 (event) ---',
+               'clientX / clientY : ' + e.clientX + ', ' + e.clientY,
+               'pageX   / pageY   : ' + e.pageX + ', ' + e.pageY,
+               'offsetX / offsetY : ' + e.offsetX + ', ' + e.offsetY,
+               'screenX / screenY : ' + e.screenX + ', ' + e.screenY,
+               '',
+               '--- 页面滚动 ---',
+               'window.scrollX / scrollY: ' + window.scrollX + ', ' + window.scrollY,
+               'document.documentElement.scrollTop: ' + document.documentElement.scrollTop,
+               '',
+               '--- 目标元素 (target) getBoundingClientRect() ---',
+               'x,y,width,height: ' + rectT.x.toFixed(1) + ', ' + rectT.y.toFixed(1) + ', ' + rectT.width.toFixed(1) + ', ' + rectT.height.toFixed(1),
+               'top,left,bottom,right: ' + [rectT.top, rectT.left, rectT.bottom, rectT.right].map(v => v.toFixed(1)).join(', '),
+               '',
+               '--- playground 容器 rect ---',
+               'x,y,width,height: ' + rectP.x.toFixed(1) + ', ' + rectP.y.toFixed(1) + ', ' + rectP.width.toFixed(1) + ', ' + rectP.height.toFixed(1),
+               '',
+               '说明:',
+               'client + scroll = page (在多数标准场景).',
+               'offset 相对当前事件目标左上角(注意冒泡阶段 target 不变).',
+               'screen 受操作系统多显示器/缩放影响。',
+               'scrollX/Y 为窗口滚动偏移; pageY = clientY + scrollY (简化理解).'
+            ].join('\n');
+         }
+
+         function update(e) {
+            panel.textContent = fmt(e);
+         }
+
+         ['mousemove', 'click'].forEach(type => {
+            document.addEventListener(type, update, { passive: true });
+         });
+
+         // 高亮当前事件目标 (click)
+         document.addEventListener('click', e => {
+            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+            if (e.target instanceof HTMLElement) {
+               e.target.classList.add('highlight');
+            }
+         });
+
+         // 初始化
+         panel.textContent = '移动鼠标到页面查看坐标...';
+      })();
+   </script>
+</body>
+
+</html>
