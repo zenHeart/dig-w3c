@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Safari 弹窗拦截解决方案 - Vue 3</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 20px;
+      }
+      button {
+        padding: 10px 16px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 16px;
+      }
+      .btn-cancel {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .btn-goto {
+        background: #1890ff;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Safari 弹窗拦截解决方案 - Vue 3</h1>
+      <p>点击按钮测试（延迟打开，自动跳转，可取消）</p>
+      <button @click="test">延迟打开链接</button>
+
+      <div class="modal" :class="{ active: isOpen }">
+        <div class="modal-box">
+          <p>页面将在 <strong>{{ countdown }}</strong> 秒后跳转</p>
+          <div class="buttons">
+            <button class="btn-cancel" @click="close">取消</button>
+            <button class="btn-goto" @click="goto">立即跳转</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp, ref } = Vue;
+
+      createApp({
+        setup() {
+          const isOpen = ref(false);
+          const countdown = ref(3);
+          const url = ref(null);
+          let timer = null;
+
+          const open = (targetUrl, delay = 3) => {
+            url.value = targetUrl;
+            countdown.value = delay;
+            isOpen.value = true;
+            timer = setInterval(() => {
+              countdown.value--;
+              if (countdown.value <= 0) {
+                clearInterval(timer);
+                window.location.href = url.value;
+              }
+            }, 1000);
+          };
+
+          const close = () => {
+            clearInterval(timer);
+            isOpen.value = false;
+          };
+
+          const goto = () => {
+            clearInterval(timer);
+            window.location.href = url.value;
+          };
+
+          const test = () =>
+            setTimeout(() => open("https://baidu.com", 3), 2000);
+
+          return { isOpen, countdown, test, close, goto };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

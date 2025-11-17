@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>示例：修复 Safari window.open 拦截问题</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Helvetica Neue", Arial;
+        padding: 20px;
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 16px;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .modal-content p {
+        margin: 16px 0;
+        font-size: 14px;
+      }
+      .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .modal-buttons button {
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+      }
+      .btn-cancel {
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      .btn-confirm {
+        background-color: #1890ff;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>修复方案：Safari 延迟打开链接</h1>
+    <p>点击按钮，2秒后通过自定义 modal 跳转（不使用 window.open）</p>
+    <button id="btn">延迟打开</button>
+
+    <!-- 自定义 Modal 组件 -->
+    <div id="confirmModal" class="modal">
+      <div class="modal-content">
+        <p id="modalMessage">确认跳转到外部链接？</p>
+        <div class="modal-buttons">
+          <button class="btn-cancel" id="cancelBtn">取消</button>
+          <button class="btn-confirm" id="confirmBtn">确认跳转</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const confirmModal = document.getElementById("confirmModal");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const confirmBtn = document.getElementById("confirmBtn");
+      const modalMessage = document.getElementById("modalMessage");
+
+      let pendingUrl = null;
+
+      // 显示 Modal 对话框
+      function showConfirmModal(url, message = "确认打开此链接？") {
+        pendingUrl = url;
+        modalMessage.textContent = message;
+        confirmModal.classList.add("show");
+      }
+
+      // 隐藏 Modal 对话框
+      function hideConfirmModal() {
+        confirmModal.classList.remove("show");
+        pendingUrl = null;
+      }
+
+      // 确认跳转
+      confirmBtn.onclick = function () {
+        if (pendingUrl) {
+          // 修复策略：直接使用 location.href 而不是 window.open
+          // 这样可以避免 Safari 的弹出窗口拦截
+          window.location.href = pendingUrl;
+        }
+        hideConfirmModal();
+      };
+
+      // 取消跳转
+      cancelBtn.onclick = function () {
+        hideConfirmModal();
+      };
+
+      // 点击背景关闭 Modal（可选）
+      confirmModal.onclick = function (e) {
+        if (e.target === confirmModal) {
+          hideConfirmModal();
+        }
+      };
+
+      // 按钮事件处理
+      document.getElementById("btn").onclick = function () {
+        setTimeout(() => {
+          // 使用自定义 Modal 而不是 window.open
+          showConfirmModal("https://baidu.com", "将在 2 秒后跳转到百度");
+        }, 2000);
+      };
+    </script>
+  </body>
+</html>

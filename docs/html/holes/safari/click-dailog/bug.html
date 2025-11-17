@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>示例：window.open 打开 baidu</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Helvetica Neue", Arial;
+        padding: 20px;
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>定时器打开百度， safari 拦截示例 blank</h1>
+    <button id="btn">延迟打开</button>
+    <script>
+      document.getElementById("btn").onclick = function () {
+        setTimeout(() => {
+          debugger;
+          window.open("https://baidu.com", "blank");
+        }, 2000);
+      };
+    </script>
+  </body>
+</html>
