@@ -15,3 +15,5 @@ safari 浏览器的行为如下
 ## 修复策略
 
 不使用 window.open 通过自定义 modal 组件，利用动态添加一个重定向策略来跳转
+
+注意该修复策略只对 url 有效，对于自定义 custom schema link 任然会弹出弹窗，阻止此行为

@@ -101,7 +101,9 @@
           };
 
           const test = () =>
-            setTimeout(() => open("https://baidu.com", 3), 2000);
+            // setTimeout(() => open("https://baidu.com", 3), 2000);
+            // setTimeout(() => open("nn://https://web.nn.com/home", 3), 2000);
+            setTimeout(() => open("nn:///home", 3), 2000);
 
           return { isOpen, countdown, test, close, goto };
         },
