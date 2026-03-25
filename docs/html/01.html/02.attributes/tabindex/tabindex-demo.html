@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tabindex 交互演示</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    .demo-box { background: white; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .focus-demo { padding: 15px; border: 2px solid #ddd; border-radius: 6px; margin: 10px 0; transition: all 0.2s; cursor: pointer; }
+    .focus-demo:focus { outline: 3px solid #007bff; border-color: #007bff; background: #e7f3ff; }
+    .focus-demo.negative { border-color: #ffc107; }
+    .focus-demo.zero { border-color: #28a745; }
+    .focus-demo.positive { border-color: #dc3545; }
+    .result-log { background: #1a1a2e; color: #0f0; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 200px; overflow-y: auto; }
+    .tab-order-list { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+    .tab-order-item { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-size: 14px; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .info-table th, .info-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    .info-table th { background: #f8f9fa; }
+    .nav-hint { background: #fff3cd; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ffc107; }
+    .section-tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+    .section-tab { padding: 8px 16px; border: none; background: #e9ecef; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .section-tab:hover { background: #dee2e6; }
+    .section-tab.active { background: #007bff; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    .badge-negative { background: #ffc107; color: #333; }
+    .badge-zero { background: #28a745; color: white; }
+    .badge-positive { background: #dc3545; color: white; }
+    code { background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+<h1>🔍 tabindex 交互演示</h1>
+
+<div class="nav-hint">
+  <strong>💡 操作提示：</strong>按 <kbd>Tab</kbd> 键在下方元素间切换导航顺序，观察不同 tabindex 值的行为差异。
+</div>
+
+<div class="section-tabs">
+  <button class="section-tab active" onclick="showSection('overview')">📋 概述</button>
+  <button class="section-tab" onclick="showSection('positive')">🔢 正整数 tabindex</button>
+  <button class="section-tab" onclick="showSection('zero')">🟢 tabindex="0"</button>
+  <button class="section-tab" onclick="showSection('negative')">🟡 tabindex="-1"</button>
+  <button class="section-tab" onclick="showSection('aria')">♿ ARIA 无障碍</button>
+  <button class="section-tab" onclick="showSection('best')">✅ 最佳实践</button>
+</div>
+
+<!-- 概述 -->
+<div id="overview" class="tab-content active">
+  <h2>tabindex 取值对照表</h2>
+  <table class="info-table">
+    <tr><th>取值</th><th>Tab 键可聚焦</th><th>JS focus() 可聚焦</th><th>使用场景</th></tr>
+    <tr><td><span class="badge badge-negative">-1</span></td><td>❌</td><td>✅</td><td>ARIA 组件、自定义按钮</td></tr>
+    <tr><td><span class="badge badge-zero">0</span></td><td>✅</td><td>✅</td><td>将 div 变为可聚焦</td></tr>
+    <tr><td><span class="badge badge-positive">1,2,3...</span></td><td>✅（优先）</td><td>✅</td><td>❌ 不推荐</td></tr>
+  </table>
+
+  <h2>Tab 键遍历顺序</h2>
+  <div class="demo-box">
+    <p><strong>遍历规则：</strong>正整数按从小到大 → tabindex="0" 和无 tabindex</p>
+    <div class="focus-demo positive" tabindex="3">tabindex="3" <span class="badge badge-positive">3</span></div>
+    <div class="focus-demo positive" tabindex="1">tabindex="1" <span class="badge badge-positive">1</span></div>
+    <div class="focus-demo positive" tabindex="2">tabindex="2" <span class="badge badge-positive">2</span></div>
+    <div class="focus-demo zero" tabindex="0">tabindex="0" <span class="badge badge-zero">0</span></div>
+    <div class="focus-demo" style="border-color: #6c757d;">无 tabindex（自然顺序）<span class="badge" style="background:#6c757d;color:white;">自然</span></div>
+    <p style="color:#666;font-size:14px;">💡 按 Tab 键测试：顺序是 1 → 2 → 3 → 0 → 自然</p>
+  </div>
+</div>
+
+<!-- 正整数 tabindex -->
+<div id="positive" class="tab-content">
+  <h2>正整数 tabindex（❌ 不推荐）</h2>
+  <div class="demo-box">
+    <p>正整数会打乱自然的 DOM 顺序，维护困难。</p>
+    <div class="focus-demo positive" tabindex="3">第三个元素 tabindex="3"</div>
+    <div class="focus-demo positive" tabindex="1">第一个元素 tabindex="1"</div>
+    <div class="focus-demo positive" tabindex="2">第二个元素 tabindex="2"</div>
+    <p style="color:#dc3545;font-size:14px;">⚠️ 问题：HTML 中的顺序是 3→1→2，但 Tab 键顺序是 1→2→3，容易混乱</p>
+  </div>
+  <h3>为什么避免正整数？</h3>
+  <ul>
+    <li>维护困难：新元素该用哪个数字？</li>
+    <li>顺序不直观：需要记住所有元素的 tabindex 值</li>
+    <li>DOM 顺序更灵活：依靠文档结构决定顺序</li>
+  </ul>
+</div>
+
+<!-- tabindex="0" -->
+<div id="zero" class="tab-content">
+  <h2>tabindex="0" — 自然顺序聚焦</h2>
+  <div class="demo-box">
+    <p>tabindex="0" 让元素参与自然的 Tab 顺序（与 DOM 顺序一致）。</p>
+    <div class="focus-demo zero" tabindex="0">第一个 div <span class="badge badge-zero">0</span></div>
+    <div class="focus-demo zero" tabindex="0">第二个 div <span class="badge badge-zero">0</span></div>
+    <div class="focus-demo zero" tabindex="0">第三个 div <span class="badge badge-zero">0</span></div>
+    <p style="color:#28a745;font-size:14px;">✅ 按 DOM 顺序遍历，与普通按钮/链接一致</p>
+  </div>
+  <h3>使用场景</h3>
+  <ul>
+    <li>将 div/section 变为可聚焦，配合 onClick/onKeyDown 使用</li>
+    <li>自定义卡片组件需要键盘导航时</li>
+    <li>需要用键盘访问的可视化组件</li>
+  </ul>
+</div>
+
+<!-- tabindex="-1" -->
+<div id="negative" class="tab-content">
+  <h2>tabindex="-1" — 仅 JS 聚焦</h2>
+  <div class="demo-box">
+    <p>tabindex="-1" 元素<strong>不能</strong>通过 Tab 键聚焦，但可以用 JavaScript 的 <code>focus()</code> 方法聚焦。</p>
+    <div class="focus-demo negative" tabindex="-1">tabindex="-1" - 可用 JS 聚焦 <span class="badge badge-negative">-1</span></div>
+    <div class="focus-demo" style="border-color: #dee2e6; background: #f8f9fa;">无 tabindex - 普通 div <span class="badge" style="background:#dee2e6;color:#333;">不可聚焦</span></div>
+    <button onclick="focusNegative()">点击用 JS 聚焦上面的 -1 元素</button>
+    <button onclick="focusAll()">点击聚焦所有 -1 元素</button>
+  </div>
+  <h3>使用场景</h3>
+  <ul>
+    <li>实现"跳转到主要内容"的链接（视觉隐藏，JS 控制聚焦）</li>
+    <li>自定义下拉菜单的选项（用方向键导航，tabindex="-1" 选项）</li>
+    <li>模态框中的关闭按钮（打开时聚焦，Tab 不遍历）</li>
+  </ul>
+</div>
+
+<!-- ARIA 无障碍 -->
+<div id="aria" class="tab-content">
+  <h2>ARIA 无障碍应用</h2>
+  <div class="demo-box">
+    <h3>自定义按钮（无障碍）</h3>
+    <p>使用 <code>role="button"</code> + <code>tabindex="-1"</code> + <code>onKeyDown</code> 实现键盘可访问的自定义组件：</p>
+    <div class="focus-demo" role="button" tabindex="-1" onkeydown="if(event.key==='Enter'||event.key===' '){alert('按钮被激活！');event.preventDefault();}" onclick="alert('按钮被点击！')" style="text-align:center;cursor:pointer;">
+      自定义按钮（按 Enter 或 空格键触发）
+    </div>
+    <p style="color:#666;font-size:14px;">💡 tabindex="-1" 使 div 可被 JS 聚焦；role="button" 告诉屏幕阅读器这是按钮</p>
+  </div>
+
+  <div class="demo-box">
+    <h3>跳转到主要内容链接</h3>
+    <a href="#main-content" tabindex="-1" style="position:absolute;left:-9999px;" onfocus="this.style.left='10px';this.style.top='10px';">跳过导航</a>
+    <nav style="background:#e9ecef;padding:15px;border-radius:6px;">
+      导航菜单1 | 导航菜单2 | 导航菜单3 | 导航菜单4
+    </nav>
+    <main id="main-content" tabindex="-1" class="focus-demo" style="margin-top:15px;">
+      主要内容区域（按 Tab 跳过导航后聚焦到这里）
+    </main>
+  </div>
+
+  <div class="demo-box">
+    <h3>自定义下拉菜单</h3>
+    <div role="menu" style="display:flex;gap:10px;">
+      <div class="focus-demo" role="menuitem" tabindex="0">文件</div>
+      <div class="focus-demo" role="menuitem" tabindex="0">编辑</div>
+      <div class="focus-demo" role="menuitem" tabindex="0">视图</div>
+    </div>
+    <p style="color:#666;font-size:14px;">💡 方向键导航需要额外的 JavaScript 处理（onKeyDown）</p>
+  </div>
+</div>
+
+<!-- 最佳实践 -->
+<div id="best" class="tab-content">
+  <h2>✅ 最佳实践</h2>
+  <table class="info-table">
+    <tr><th>场景</th><th>推荐</th><th>原因</th></tr>
+    <tr><td>普通可交互元素</td><td>不需要 tabindex</td><td>button/input 默认可聚焦</td></tr>
+    <tr><td>自定义可聚焦组件</td><td><span class="badge badge-zero">tabindex="0"</span></td><td>参与自然 Tab 顺序</td></tr>
+    <tr><td>需要 JS 聚焦但不需要 Tab 遍历</td><td><span class="badge badge-negative">tabindex="-1"</span></td><td>ARIA 组件常用模式</td></tr>
+    <tr><td>跳转到主要内容</td><td><span class="badge badge-negative">tabindex="-1"</span></td><td>视觉隐藏，仅 JS 聚焦</td></tr>
+    <tr><td>**任何情况**</td><td><span class="badge badge-positive">正整数</span></td><td>❌ 绝对不要使用</td></tr>
+  </table>
+
+  <h3>代码规范检查清单</h3>
+  <div class="demo-box">
+    <ul>
+      <li>✅ 优先使用原生元素（button, a, input）</li>
+      <li>✅ 自定义组件使用 tabindex="0"</li>
+      <li>✅ 需要程序聚焦时使用 tabindex="-1"</li>
+      <li>❌ 不要使用 tabindex > 0</li>
+      <li>❌ 不要对可聚焦元素（button, a）添加 tabindex</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 事件日志 -->
+<h2 style="margin-top:40px;">📜 聚焦事件日志</h2>
+<div id="resultLog" class="result-log">
+  <div>> 等待聚焦事件...</div>
+</div>
+<button onclick="clearLog()" style="margin-top:10px;padding:8px 16px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;">清除日志</button>
+
+<script>
+  const log = document.getElementById('resultLog');
+
+  function logEvent(msg) {
+    const time = new Date().toLocaleTimeString();
+    const div = document.createElement('div');
+    div.textContent = `> [${time}] ${msg}`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  document.querySelectorAll('.focus-demo').forEach(el => {
+    el.addEventListener('focus', () => logEvent(`聚焦: ${el.textContent.trim().split('\n')[0]}`));
+    el.addEventListener('blur', () => logEvent(`失焦: ${el.textContent.trim().split('\n')[0]}`));
+  });
+
+  function focusNegative() {
+    document.querySelector('#negative .focus-demo[tabindex="-1"]').focus();
+    logEvent('JS focus() 触发');
+  }
+
+  function focusAll() {
+    document.querySelectorAll('#negative .focus-demo[tabindex="-1"]').forEach(el => el.focus());
+    logEvent('JS focus() 批量触发');
+  }
+
+  function clearLog() {
+    log.innerHTML = '<div>> 日志已清除</div>';
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.section-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  logEvent('页面加载完成，请按 Tab 键测试');
+</script>
+
+</body>
+</html>
