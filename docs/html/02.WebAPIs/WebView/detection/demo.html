@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebView 检测 — 交互演示</title>
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --card: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e0e0e8;
+      --text-muted: #8888a0;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .status-badge.webview {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .status-badge.browser {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* UA Display */
+    .ua-string {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      word-break: break-all;
+      color: #a0a0b8;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    /* Result Grid */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .result-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .result-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .result-value.green { color: var(--green); }
+    .result-value.yellow { color: var(--yellow); }
+    .result-value.muted { color: var(--text-muted); }
+
+    /* Pattern List */
+    .pattern-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pattern-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .pattern-name {
+      color: var(--text);
+    }
+
+    .pattern-regex {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .pattern-status {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .pattern-status.found {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--green);
+    }
+
+    .pattern-status.miss {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    /* Function Code */
+    .code-block {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      white-space: pre;
+      color: #c0c0d0;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .code-block .keyword { color: #c792ea; }
+    .code-block .string { color: #c3e88d; }
+    .code-block .comment { color: #546e7a; font-style: italic; }
+    .code-block .function { color: #82aaff; }
+    .code-block .number { color: #f78c6c; }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn.primary:hover {
+      background: #5558e3;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WebView 检测</h1>
+    <p class="subtitle">实时检测当前环境是否为 App WebView，支持微信/微博/小红书/Twitter/Facebook 等</p>
+
+    <!-- Current Status -->
+    <div class="card">
+      <div class="card-title">当前环境状态</div>
+      <div id="status-area" style="margin-bottom: 16px;">
+        <span class="status-badge browser" id="status-badge">
+          <span class="status-dot"></span>
+          <span id="status-text">检测中...</span>
+        </span>
+      </div>
+      <div class="card-title">navigator.userAgent</div>
+      <div class="ua-string" id="ua-display">—</div>
+      <div class="btn-group">
+        <button class="btn" onclick="copyUA()">复制 UA</button>
+        <button class="btn" onclick="simulateWeChat()">模拟微信 UA</button>
+        <button class="btn" onclick="simulateSafari()">模拟 Safari UA</button>
+        <button class="btn" onclick="simulateAndroidWV()">模拟 Android WebView</button>
+        <button class="btn primary" onclick="runDetection()">重新检测</button>
+      </div>
+    </div>
+
+    <!-- Detection Results -->
+    <div class="card">
+      <div class="card-title">检测结果</div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-label">是否 WebView</div>
+          <div class="result-value" id="result-is">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">App 名称</div>
+          <div class="result-value" id="result-name">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">平台</div>
+          <div class="result-value" id="result-platform">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">OS</div>
+          <div class="result-value" id="result-os">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">浏览器引擎</div>
+          <div class="result-value" id="result-engine">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">注入接口数</div>
+          <div class="result-value" id="result-interfaces">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pattern Matching -->
+    <div class="card">
+      <div class="card-title">UA 特征匹配（当前环境）</div>
+      <div class="pattern-list" id="pattern-list">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+
+    <!-- Source Code -->
+    <div class="card">
+      <div class="card-title">isWebView() 完整实现</div>
+      <div class="code-block" id="source-code">/* Loading... */</div>
+    </div>
+
+    <div class="footer">
+      <p>基于 W3C Browser API 研究 · <a href="index.html">返回文档</a></p>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // isWebView() 完整实现
+    // ============================================================
+    const sourceCode = `/**
+ * 检测当前环境是否为 App WebView
+ * @returns {Object} { is, name, platform, os, engine }
+ */
+function isWebView() {
+  const ua = navigator.userAgent;
+  
+  // ---- App UA 特征检测 ----
+  const appPatterns = [
+    { regex: /MicroMessenger\\//,          name: 'wechat' },
+    { regex: /Weibo/i,                     name: 'weibo' },
+    { regex: /小红书|Xiaotuxian/i,          name: 'xiaohongshu' },
+    { regex: /Twitter for iPhone/i,        name: 'twitter-ios' },
+    { regex: /Twitter for Android/i,       name: 'twitter-android' },
+    { regex: /FBAN\\/FBAV|\\[FBAN\\/FBAV/i, name: 'facebook' },
+    { regex: /Instagram/i,                 name: 'instagram' },
+    { regex: /QQ\\//i,                      name: 'qq' },
+    { regex: /AlipayClient/i,               name: 'alipay' },
+    { regex: /AliApp\\(/i,                  name: 'taobao' },
+    { regex: /JDJR|JingDong/i,              name: 'jd' },
+    { regex: /BaiduApp/i,                   name: 'baidu' },
+  ];
+  
+  for (const p of appPatterns) {
+    if (p.regex.test(ua)) {
+      const platform = /iPhone|iPad|iPod/.test(ua) ? 'ios' : 
+                       /Android/.test(ua) ? 'android' : 'unknown';
+      return { is: true, name: p.name, platform, os: detectOS(ua), engine: detectEngine(ua) };
+    }
+  }
+  
+  // ---- iOS WKWebView 检测 ----
+  if (/iPhone|iPad|iPod/.test(ua)) {
+    // 检查 -webkit-search-decoration 特性
+    const div = document.createElement('div');
+    div.style.cssText = '-webkit-appearance:search-decoration';
+    const hasSearchDecoration = div.style.webkitAppearance !== '';
+    
+    if (!hasSearchDecoration && /AppleWebKit/.test(ua)) {
+      return { is: true, name: 'wkwebview', platform: 'ios', os: detectOS(ua), engine: 'WebKit' };
+    }
+  }
+  
+  // ---- Android WebView 检测 ----
+  if (/Android/.test(ua)) {
+    if (/wv/.test(ua)) {
+      return { is: true, name: 'android-webview', platform: 'android', os: 'Android', engine: detectEngine(ua) };
+    }
+  }
+  
+  return { is: false, name: null, platform: null, os: detectOS(ua), engine: detectEngine(ua) };
+}
+
+function detectOS(ua) {
+  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Windows/.test(ua)) return 'Windows';
+  if (/Mac/.test(ua)) return 'macOS';
+  if (/Linux/.test(ua)) return 'Linux';
+  return 'Unknown';
+}
+
+function detectEngine(ua) {
+  if (/AppleWebKit/.test(ua)) return 'WebKit';
+  if (/Gecko/.test(ua)) return 'Gecko';
+  if (/Trident|MSIE/.test(ua)) return 'Trident';
+  return 'Unknown';
+}
+
+// ---- 注入接口检测（辅助）----
+function detectInjectedInterfaces() {
+  const known = [
+    'WeixinJSCore', 'WXWebviewObject', 'TBAppJsInterface',
+    'AlipayJsInterface', 'ReactNativeWebView'
+  ];
+  return known.filter(name => window[name] !== undefined);
+}`;
+
+    // Display source code
+    document.getElementById('source-code').textContent = sourceCode;
+
+    // ============================================================
+    // Pattern definitions
+    // ============================================================
+    const patterns = [
+      { name: '微信 (WeChat)', regex: /MicroMessenger\// },
+      { name: '微博 (Weibo)', regex: /Weibo/i },
+      { name: '小红书 (Xiaohongshu)', regex: /小红书|Xiaotuxian/i },
+      { name: 'Twitter / X (iOS)', regex: /Twitter for iPhone/i },
+      { name: 'Twitter / X (Android)', regex: /Twitter for Android/i },
+      { name: 'Facebook', regex: /FBAN\/FBAV|\[FBAN\/FBAV/i },
+      { name: 'Instagram', regex: /Instagram/i },
+      { name: 'QQ', regex: /QQ\//i },
+      { name: '支付宝 (Alipay)', regex: /AlipayClient/i },
+      { name: '淘宝/天猫', regex: /AliApp\(/i },
+      { name: '京东 (JD)', regex: /JDJR|JingDong/i },
+      { name: '百度 (Baidu)', regex: /BaiduApp/i },
+      { name: 'Android WebView', regex: /Android.*wv|Android.*WebView/i },
+      { name: 'iOS WKWebView 特征', regex: /iPhone.*AppleWebKit.*Mobile.*Safari/i },
+    ];
+
+    // ============================================================
+    // Detection functions
+    // ============================================================
+    function isWebView() {
+      const ua = navigator.userAgent;
+      
+      // App UA patterns
+      const appPatterns = [
+        { regex: /MicroMessenger\//, name: 'wechat' },
+        { regex: /Weibo/i, name: 'weibo' },
+        { regex: /小红书|Xiaotuxian/i, name: 'xiaohongshu' },
+        { regex: /Twitter for iPhone/i, name: 'twitter-ios' },
+        { regex: /Twitter for Android/i, name: 'twitter-android' },
+        { regex: /FBAN\/FBAV|\[FBAN\/FBAV/i, name: 'facebook' },
+        { regex: /Instagram/i, name: 'instagram' },
+        { regex: /QQ\//i, name: 'qq' },
+        { regex: /AlipayClient/i, name: 'alipay' },
+        { regex: /AliApp\(/i, name: 'taobao' },
+        { regex: /JDJR|JingDong/i, name: 'jd' },
+        { regex: /BaiduApp/i, name: 'baidu' },
+      ];
+      
+      for (const p of appPatterns) {
+        if (p.regex.test(ua)) {
+          const platform = /iPhone|iPad|iPod/.test(ua) ? 'ios' : 
+                           /Android/.test(ua) ? 'android' : 'unknown';
+          return { is: true, name: p.name, platform, os: detectOS(ua), engine: detectEngine(ua) };
+        }
+      }
+      
+      // iOS WKWebView detection
+      if (/iPhone|iPad|iPod/.test(ua)) {
+        const div = document.createElement('div');
+        div.style.cssText = '-webkit-appearance:search-decoration';
+        const hasSearchDecoration = div.style.webkitAppearance !== '';
+        if (!hasSearchDecoration && /AppleWebKit/.test(ua)) {
+          return { is: true, name: 'wkwebview', platform: 'ios', os: 'iOS', engine: 'WebKit' };
+        }
+      }
+      
+      // Android WebView
+      if (/Android/.test(ua)) {
+        if (/wv/.test(ua)) {
+          return { is: true, name: 'android-webview', platform: 'android', os: 'Android', engine: detectEngine(ua) };
+        }
+      }
+      
+      return { is: false, name: null, platform: null, os: detectOS(ua), engine: detectEngine(ua) };
+    }
+
+    function detectOS(ua) {
+      if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+      if (/Android/.test(ua)) return 'Android';
+      if (/Windows/.test(ua)) return 'Windows';
+      if (/Mac/.test(ua)) return 'macOS';
+      if (/Linux/.test(ua)) return 'Linux';
+      return 'Unknown';
+    }
+
+    function detectEngine(ua) {
+      if (/AppleWebKit/.test(ua)) return 'WebKit';
+      if (/Gecko/.test(ua)) return 'Gecko';
+      if (/Trident|MSIE/.test(ua)) return 'Trident';
+      return 'Unknown';
+    }
+
+    function detectInjectedInterfaces() {
+      const known = ['WeixinJSCore', 'WXWebviewObject', 'TBAppJsInterface', 'AlipayJsInterface', 'ReactNativeWebView'];
+      return known.filter(name => window[name] !== undefined);
+    }
+
+    // ============================================================
+    // UI Update functions
+    // ============================================================
+    function runDetection() {
+      const ua = navigator.userAgent;
+      const result = isWebView();
+      const interfaces = detectInjectedInterfaces();
+      
+      // Update status badge
+      const badge = document.getElementById('status-badge');
+      const statusText = document.getElementById('status-text');
+      if (result.is) {
+        badge.className = 'status-badge webview';
+        statusText.textContent = `WebView: ${result.name || 'unknown'}`;
+      } else {
+        badge.className = 'status-badge browser';
+        statusText.textContent = '普通浏览器';
+      }
+      
+      // Update UA display
+      document.getElementById('ua-display').textContent = ua;
+      
+      // Update results
+      const setResult = (id, value, isGood) => {
+        const el = document.getElementById(id);
+        el.textContent = value;
+        el.className = 'result-value' + (isGood === true ? ' green' : isGood === false ? ' yellow' : ' muted');
+      };
+      
+      setResult('result-is', result.is ? '是 ✓' : '否 ✗', result.is ? true : false);
+      setResult('result-name', result.name || '—', null);
+      setResult('result-platform', result.platform || '—', null);
+      setResult('result-os', result.os, null);
+      setResult('result-engine', result.engine, null);
+      setResult('result-interfaces', interfaces.length > 0 ? interfaces.join(', ') : '无', interfaces.length > 0 ? true : null);
+      
+      // Update pattern list
+      const patternList = document.getElementById('pattern-list');
+      patternList.innerHTML = patterns.map(p => {
+        const found = p.regex.test(ua);
+        return '<div class="pattern-item">' +
+          '<span class="pattern-name">' + p.name + '</span>' +
+          '<span class="pattern-regex">' + p.regex.toString() + '</span>' +
+          '<span class="pattern-status ' + (found ? 'found' : 'miss') + '">' +
+            (found ? '✓ 匹配' : '✗ 未匹配') +
+          '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    // ============================================================
+    // Simulation functions
+    // ============================================================
+    function simulateWeChat() {
+      Object.defineProperty(navigator, 'userAgent', {
+        writable: true,
+        value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.48(0x18003030) NetType/WIFI Language/zh_CN'
+      });
+      runDetection();
+    }
+
+    function simulateSafari() {
+      Object.defineProperty(navigator, 'userAgent', {
+        writable: true,
+        value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+      });
+      runDetection();
+    }
+
+    function simulateAndroidWV() {
+      Object.defineProperty(navigator, 'userAgent', {
+        writable: true,
+        value: 'Mozilla/5.0 (Linux; Android 10; SM-G960U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.33 Mobile Safari/537.36'
+      });
+      runDetection();
+    }
+
+    function copyUA() {
+      navigator.clipboard.writeText(navigator.userAgent).then(() => {
+        alert('UA 已复制到剪贴板');
+      });
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+    runDetection();
+  </script>
+</body>
+</html>
