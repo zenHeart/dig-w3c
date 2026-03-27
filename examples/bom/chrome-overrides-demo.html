@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome DevTools Overrides - 交互演示</title>
+  <style>
+    :root {
+      --primary: #4285f4;
+      --success: #34a853;
+      --warning: #fbbc04;
+      --error: #ea4335;
+      --bg: #ffffff;
+      --surface: #f8f9fa;
+      --border: #e0e0e0;
+      --text: #202124;
+      --text-secondary: #5f6368;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+    .tab-nav {
+      display: flex;
+      background: var(--bg);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      overflow: hidden;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 14px 22px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn:hover { background: #f1f3f4; color: var(--text); }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #e8f0fe;
+    }
+
+    .tab-content {
+      background: var(--bg);
+      border-radius: 0 0 12px 12px;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 28px 32px;
+      min-height: 480px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--text); }
+    h3 { font-size: 1rem; margin: 20px 0 10px; color: var(--text); }
+
+    p { margin-bottom: 12px; color: var(--text-secondary); }
+
+    .card {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .step-list { list-style: none; }
+    .step-list li {
+      padding: 10px 0;
+      padding-left: 32px;
+      position: relative;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .step-list li:last-child { border-bottom: none; }
+
+    .step-list li::before {
+      content: attr(data-num);
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 22px;
+      height: 22px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    code {
+      background: #e8f0fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--primary);
+    }
+
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 12px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:nth-child(even) td { background: var(--surface); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-primary { background: #e8f0fe; color: var(--primary); }
+    .badge-success { background: #e6f4ea; color: var(--success); }
+    .badge-warning { background: #fef7e0; color: #f9a825; }
+
+    .diagram {
+      background: linear-gradient(135deg, #e8f0fe 0%, #f8f9fa 100%);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      border: 1px solid #c2d7fe;
+    }
+
+    .diagram .label { color: var(--primary); font-weight: 600; }
+    .diagram .arrow { color: var(--text-secondary); }
+    .diagram .box {
+      background: white;
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 4px 0;
+      display: inline-block;
+    }
+
+    .interactive-zone {
+      background: #fff8e1;
+      border: 2px dashed #ffc107;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover { background: #3367d6; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover { background: #2d8e47; }
+
+    .result-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      min-height: 60px;
+    }
+
+    .result-box.success { border-color: var(--success); background: #e6f4ea; }
+    .result-box.warning { border-color: var(--warning); background: #fef7e0; }
+    .result-box.error { border-color: var(--error); background: #fce8e6; }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status-indicator.active { background: #e6f4ea; color: var(--success); }
+    .status-indicator.inactive { background: #f1f3f4; color: var(--text-secondary); }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .compare-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .compare-card h4 {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+
+    .quiz-section { margin-top: 20px; }
+
+    .quiz-item {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .quiz-question { font-weight: 500; margin-bottom: 12px; font-size: 0.92rem; }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:hover { border-color: var(--primary); background: #e8f0fe; }
+    .quiz-option.selected { border-color: var(--primary); background: #e8f0fe; }
+    .quiz-option.correct { border-color: var(--success); background: #e6f4ea; }
+    .quiz-option.wrong { border-color: var(--error); background: #fce8e6; }
+
+    .quiz-feedback {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.correct { background: #e6f4ea; color: var(--success); }
+    .quiz-feedback.wrong { background: #fce8e6; color: var(--error); }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🔧 Chrome DevTools Overrides</h1>
+  <p class="subtitle">Chrome 远程文件本地替换功能 — 交互式学习演示</p>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="overview">📖 概念总览</button>
+  <button class="tab-btn" data-tab="steps">📋 操作步骤</button>
+  <button class="tab-btn" data-tab="原理">🔬 持久化原理</button>
+  <button class="tab-btn" data-tab="diff">⚖️ vs Workspace</button>
+  <button class="tab-btn" data-tab="quiz">📝 自测题</button>
+</nav>
+
+<div class="tab-content">
+
+<!-- Tab 1: 概念总览 -->
+<div class="tab-panel active" id="tab-overview">
+  <h2>什么是 Overrides？</h2>
+  <p>Chrome DevTools Overrides（覆盖）功能允许将<strong>远程网络资源</strong>映射到<strong>本地文件</strong>，修改后刷新页面仍然生效。</p>
+
+  <div class="card">
+    <div class="card-title">🎯 核心用途</div>
+    <table>
+      <tr><th>用途</th><th>说明</th></tr>
+      <tr><td>🐛 调试线上问题</td><td>不修改线上代码，直接在本地覆盖调试</td></tr>
+      <tr><td>🎨 修改线上样式</td><td>临时调整 CSS，即时预览效果</td></tr>
+      <tr><td>🧪 模拟 API 响应</td><td>后端未就绪时，返回本地 JSON 数据</td></tr>
+      <tr><td>🔓 绕过跨域限制</td><td>覆盖 API 响应，前端开发无阻</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔑 关键特性</div>
+    <table>
+      <tr><th>特性</th><th>说明</th></tr>
+      <tr><td class="badge badge-primary">持久化</td><td>映射关系跨浏览器会话保存</td></tr>
+      <tr><td class="badge badge-success">透明劫持</td><td>请求被拦截并返回本地文件</td></tr>
+      <tr><td class="badge badge-warning">覆盖范围广</td><td>支持 HTML/CSS/JS/图片/字体等所有资源</td></tr>
+      <tr><td class="badge badge-primary">无需插件</td><td>Chrome 内置功能，无需额外安装</td></tr>
+    </table>
+  </div>
+
+  <div class="diagram">
+    <div class="label">📍 工作原理简图</div>
+    <br>
+    <div>
+      <span class="box">🌐 页面请求 foo.js</span>
+    </div>
+    <div class="arrow">↓ Chrome DevTools 拦截</div>
+    <div>
+      <span class="box">📁 检查 Overrides 映射</span>
+    </div>
+    <div class="arrow">↓</div>
+    <div>
+      <span class="box">💻 返回本地覆盖文件</span>
+      <span style="color: #5f6368; margin-left: 12px;">（如有映射）</span>
+    </div>
+    <div class="arrow">↓ 无映射</div>
+    <div>
+      <span class="box">🌐 发起真实网络请求</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2: 操作步骤 -->
+<div class="tab-panel" id="tab-steps">
+  <h2>启用与使用步骤</h2>
+
+  <div class="card">
+    <div class="card-title">第一步：启用 Overrides</div>
+    <ol class="step-list">
+      <li data-num="1">打开 Chrome DevTools（<code>F12</code> 或 右键 → 检查）</li>
+      <li data-num="2">切换到 <code>Sources</code> 面板</li>
+      <li data-num="3">点击左侧 <code>Overrides</code> 标签</li>
+      <li data-num="4">点击 <code>"+ Select folder for overrides"</code></li>
+      <li data-num="5">选择一个本地目录存放覆盖文件</li>
+      <li data-num="6">确认浏览器授权提示</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">第二步：覆盖文件</div>
+    <ol class="step-list">
+      <li data-num="1">切换到 <code>Network</code> 面板</li>
+      <li data-num="2">找到要覆盖的资源（CSS/JS/JSON/图片等）</li>
+      <li data-num="3"><strong>右键点击</strong>该资源</li>
+      <li data-num="4">选择 <code>"Save for overrides"</code></li>
+      <li data-num="5">文件自动保存到之前选择的覆盖目录</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">第三步：修改并生效</div>
+    <ol class="step-list">
+      <li data-num="1">在 Sources 面板找到覆盖的文件（带紫色点）</li>
+      <li data-num="2">编辑文件内容</li>
+      <li data-num="3">刷新页面（<code>Cmd+Shift+R</code> 强制刷新效果最佳）</li>
+      <li data-num="4">页面加载时使用本地覆盖文件</li>
+    </ol>
+  </div>
+
+  <div class="interactive-zone">
+    <div class="card-title">🧪 模拟演示</div>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">点击下方按钮模拟 Overrides 的关键操作：</p>
+    <div style="display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap;">
+      <button class="btn btn-primary" id="btn-enable">启用 Overrides</button>
+      <button class="btn btn-primary" id="btn-save">保存覆盖文件</button>
+      <button class="btn btn-success" id="btn-refresh">刷新页面</button>
+      <button class="btn btn-primary" id="btn-disable">禁用 Overrides</button>
+    </div>
+    <div class="result-box" id="step-result">
+      点击上方按钮开始模拟...
+    </div>
+  </div>
+</div>
+
+<!-- Tab 3: 持久化原理 -->
+<div class="tab-panel" id="tab-原理">
+  <h2>持久化原理</h2>
+  <p>Overrides 的持久化依赖于 Chrome DevTools 内部的<strong>映射表</strong>，记录了远程 URL 到本地文件路径的对应关系。</p>
+
+  <div class="card">
+    <div class="card-title">🔍 映射表结构</div>
+    <pre>DevTools 内部映射表示例：
+
+{
+  "https://example.com/styles/main.css":
+    "/Users/你的名字/Chrome-Overrides/example.com/styles/main.css",
+
+  "https://example.com/scripts/app.js":
+    "/Users/你的名字/Chrome-Overrides/example.com/scripts/app.js",
+
+  "https://api.example.com/data.json":
+    "/Users/你的名字/Chrome-Overrides/api.example.com/data.json"
+}</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔄 请求处理流程</div>
+    <div class="diagram">
+      <div style="font-size: 0.9rem;">
+        <div><span class="label">1.</span> 页面发起网络请求 → <code>fetch('/api/data.json')</code></div>
+        <div style="margin: 8px 0;">
+<span class="arrow">↓ DevTools 拦截请求</span>
+</div>
+        <div><span class="label">2.</span> 检查 Overrides 映射表</div>
+        <div style="margin: 8px 0;">
+<span class="arrow">↓</span>
+</div>
+        <div><span class="label">3a.</span> <span style="color: #34a853;">命中映射</span> → 读取本地文件 → 返回内容</div>
+        <div style="margin: 4px 0; color: #5f6368;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ 文件不存在则清除映射，发送真实请求</div>
+        <div><span class="label">3b.</span> <span style="color: #ea4335;">未命中映射</span> → 发送真实网络请求</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💾 持久化位置</div>
+    <table>
+      <tr><th>数据</th><th>存储位置</th><th>说明</th></tr>
+      <tr><td>映射表</td><td>Chrome DevTools 配置</td><td>保存在浏览器配置中</td></tr>
+      <tr><td>覆盖文件</td><td>用户选择的本地目录</td><td>可纳入 Git 版本控制</td></tr>
+      <tr><td>启用状态</td><td>Overrides 面板勾选状态</td><td>重启浏览器后保持</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠️ 数据丢失风险</div>
+    <p>以下操作会导致 Overrides 映射丢失：</p>
+    <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.88rem;">
+      <li>清除浏览器数据（尤其是"浏览数据"）</li>
+      <li>重置 Chrome 设置</li>
+      <li>卸载并重新安装 Chrome</li>
+    </ul>
+    <p style="margin-top: 10px;"><strong>预防措施：</strong>将覆盖文件目录纳入 Git 版本控制，定期提交。</p>
+  </div>
+</div>
+
+<!-- Tab 4: vs Workspace -->
+<div class="tab-panel" id="tab-diff">
+  <h2>Overrides vs Workspace</h2>
+  <p>Chrome DevTools 提供了两种文件映射功能，适合不同场景。</p>
+
+  <div class="comparison-grid">
+    <div class="compare-card">
+      <h4>Overrides</h4>
+      <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 16px;">
+        <li>适合临时调试线上问题</li>
+        <li>文件保存在用户选择目录</li>
+        <li>DevTools 内部维护映射</li>
+        <li>跨会话持久化</li>
+        <li>不影响页面实际请求路径</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h4>Workspace</h4>
+      <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 16px;">
+        <li>适合日常开发调试</li>
+        <li>直接将本地目录映射到 URL 路径</li>
+        <li>文件变更直接生效</li>
+        <li>需要配置文件映射规则</li>
+        <li>真正替代远程资源</li>
+      </ul>
+    </div>
+  </div>
+
+  <table style="margin-top: 16px;">
+    <tr><th>维度</th><th>Overrides</th><th>Workspace</th></tr>
+    <tr><td><strong>用途</strong></td><td>临时调试线上问题</td><td>日常开发</td></tr>
+    <tr><td><strong>文件位置</strong></td><td>DevTools 内部映射</td><td>直接映射到页面路径</td></tr>
+    <tr><td><strong>持久性</strong></td><td>跨会话持久化</td><td>随配置持久化</td></tr>
+    <tr><td><strong>版本控制</strong></td><td>可纳入 Git</td><td>本身就是源码</td></tr>
+    <tr><td><strong>适合场景</strong></td><td>线上 Bug 快速修复</td><td>项目开发调试</td></tr>
+    <tr><td><strong>网络请求</strong></td><td>DevTools 拦截返回</td><td>真正替代远程资源</td></tr>
+    <tr><td><strong>多人协作</strong></td><td>需手动分享文件</td><td>可共享配置</td></tr>
+  </table>
+
+  <div class="card" style="margin-top: 16px;">
+    <div class="card-title">🎯 选择建议</div>
+    <table>
+      <tr><th>场景</th><th>推荐</th></tr>
+      <tr><td>线上 CSS 样式 Bug 调试</td><td><span class="badge badge-primary">Overrides</span></td></tr>
+      <tr><td>日常项目开发</td><td><span class="badge badge-success">Workspace</span></td></tr>
+      <tr><td>生产环境 JS 调试</td><td><span class="badge badge-primary">Overrides</span></td></tr>
+      <tr><td>需要版本控制的修改</td><td><span class="badge badge-success">Workspace</span></td></tr>
+      <tr><td>模拟 API 响应</td><td><span class="badge badge-primary">Overrides</span></td></tr>
+      <tr><td>本地开发服务器</td><td><span class="badge badge-success">Workspace</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Tab 5: 自测题 -->
+<div class="tab-panel" id="tab-quiz">
+  <h2>📝 自测题</h2>
+  <p>检验你对 Overrides 功能的理解程度。</p>
+
+  <div class="quiz-section" id="quiz-container">
+    <div class="quiz-item" data-answer="B">
+      <div class="quiz-question">1. Overrides 功能在 Chrome DevTools 的哪个面板中？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. Elements 面板</div>
+        <div class="quiz-option" data-choice="B">B. Sources 面板</div>
+        <div class="quiz-option" data-choice="C">C. Network 面板</div>
+        <div class="quiz-option" data-choice="D">D. Console 面板</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="C">
+      <div class="quiz-question">2. 保存覆盖文件的正确操作是？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. 直接拖拽文件到 DevTools</div>
+        <div class="quiz-option" data-choice="B">B. 在 Console 中输入命令</div>
+        <div class="quiz-option" data-choice="C">C. 在 Network 面板右键 → Save for overrides</div>
+        <div class="quiz-option" data-choice="D">D. 在 Elements 面板双击元素</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="A">
+      <div class="quiz-question">3. Overrides 和 Workspace 的主要区别是？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. Overrides 适合临时调试，Workspace 适合日常开发</div>
+        <div class="quiz-option" data-choice="B">B. Workspace 只能覆盖 CSS 文件</div>
+        <div class="quiz-option" data-choice="C">C. Overrides 无法持久化</div>
+        <div class="quiz-option" data-choice="D">D. 两者功能完全相同</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="B">
+      <div class="quiz-question">4. 覆盖文件后刷新页面不生效，可能的原因是？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. 文件语法错误</div>
+        <div class="quiz-option" data-choice="B">B. Overrides 未启用（面板未勾选）</div>
+        <div class="quiz-option" data-choice="C">C. 文件扩展名不对</div>
+        <div class="quiz-option" data-choice="D">D. 网络连接已断开</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="D">
+      <div class="quiz-question">5. 清除浏览器数据后，Overrides 映射会怎样？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. 自动备份到云端</div>
+        <div class="quiz-option" data-choice="B">B. 映射保留，但文件丢失</div>
+        <div class="quiz-option" data-choice="C">C. 映射和文件都保留</div>
+        <div class="quiz-option" data-choice="D">D. 映射丢失，需重新配置</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px; display: flex; gap: 12px;">
+    <button class="btn btn-primary" id="btn-check">检查答案</button>
+    <button class="btn btn-success" id="btn-reset">重新答题</button>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  Chrome DevTools Overrides 交互演示 · dig-w3c 仓库
+</footer>
+
+</div>
+
+<script>
+(function() {
+  // Tab switching
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = this.getAttribute('data-tab');
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
+      tabPanels.forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    });
+  });
+
+  // Simulate steps
+  var overridesEnabled = false;
+  var fileSaved = false;
+
+  function updateResult(msg, type) {
+    var box = document.getElementById('step-result');
+    box.textContent = msg;
+    box.className = 'result-box ' + type;
+  }
+
+  document.getElementById('btn-enable').addEventListener('click', function() {
+    overridesEnabled = true;
+    updateResult('✅ Overrides 已启用！请在 Overrides 面板选择一个本地目录。', 'success');
+  });
+
+  document.getElementById('btn-save').addEventListener('click', function() {
+    if (!overridesEnabled) {
+      updateResult('⚠️ 请先启用 Overrides', 'warning');
+      return;
+    }
+    fileSaved = true;
+    updateResult('✅ 文件已保存到覆盖目录！Network 面板中该资源会显示紫色覆盖图标。', 'success');
+  });
+
+  document.getElementById('btn-refresh').addEventListener('click', function() {
+    if (!fileSaved) {
+      updateResult('⚠️ 请先保存覆盖文件', 'warning');
+      return;
+    }
+    if (!overridesEnabled) {
+      updateResult('⚠️ Overrides 已禁用，修改不会生效', 'warning');
+      return;
+    }
+    updateResult('🔄 页面刷新中... DevTools 拦截请求，返回本地覆盖文件 ✓', 'success');
+  });
+
+  document.getElementById('btn-disable').addEventListener('click', function() {
+    overridesEnabled = false;
+    fileSaved = false;
+    updateResult('ℹ️ Overrides 已禁用，页面将正常请求远程资源。', '');
+  });
+
+  // Quiz logic
+  var quizAnswered = {};
+
+  document.querySelectorAll('.quiz-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      var item = this.closest('.quiz-item');
+      var question = item.getAttribute('data-answer');
+      var chosen = this.getAttribute('data-choice');
+
+      // Clear previous selection for this question
+      item.querySelectorAll('.quiz-option').forEach(function(o) {
+        o.classList.remove('selected', 'correct', 'wrong');
+      });
+
+      this.classList.add('selected');
+      quizAnswered[item.dataset.answer] = chosen;
+
+      var feedback = item.querySelector('.quiz-feedback');
+      feedback.classList.remove('show', 'correct', 'wrong');
+
+      if (chosen === question) {
+        this.classList.add('correct');
+        feedback.textContent = '🎉 回答正确！';
+        feedback.classList.add('show', 'correct');
+      } else {
+        this.classList.add('wrong');
+        var correctLetter = question;
+        feedback.textContent = '❌ 回答错误。正确答案是 ' + correctLetter + '。';
+        feedback.classList.add('show', 'wrong');
+      }
+    });
+  });
+
+  document.getElementById('btn-check').addEventListener('click', function() {
+    var total = document.querySelectorAll('.quiz-item').length;
+    var correct = Object.keys(quizAnswered).filter(function(k) {
+      return quizAnswered[k] === k;
+    }).length;
+    alert('你答对了 ' + correct + '/' + total + ' 题');
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    quizAnswered = {};
+    document.querySelectorAll('.quiz-option').forEach(function(o) {
+      o.classList.remove('selected', 'correct', 'wrong');
+    });
+    document.querySelectorAll('.quiz-feedback').forEach(function(f) {
+      f.classList.remove('show', 'correct', 'wrong');
+    });
+  });
+})();
+</script>
+</body>
+</html>
