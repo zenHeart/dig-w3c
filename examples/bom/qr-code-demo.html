@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码识别技术交互演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 2rem; }
+    h1 { font-size: 1.8rem; color: #fff; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.2rem; color: #00d4ff; margin: 1.5rem 0 0.8rem; }
+    h3 { font-size: 1rem; color: #ffd700; margin: 1rem 0 0.5rem; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; }
+    .tab-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+    .tab-btn.active { background: #00d4ff; color: #0a0a0a; font-weight: bold; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 1rem 0; }
+    .mini-card { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; }
+    .mini-card h4 { font-size: 0.85rem; color: #00d4ff; margin-bottom: 6px; }
+    .mini-card p { font-size: 0.8rem; color: #aaa; line-height: 1.5; }
+
+    .highlight { color: #00d4ff; font-weight: bold; }
+    .warning { color: #ff6b6b; }
+    .success { color: #4ade80; }
+
+    pre { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.8rem 0; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .comment { color: #666; }
+    .keyword { color: #ff79c6; }
+    .string { color: #f1fa8c; }
+
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+    th { background: #111; color: #00d4ff; padding: 8px 12px; text-align: left; border: 1px solid #2a2a2a; }
+    td { padding: 8px 12px; border: 1px solid #2a2a2a; color: #ccc; }
+    td:first-child { color: #ffd700; }
+
+    .btn { background: #00d4ff; color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+    .btn:hover { opacity: 0.9; }
+    .btn.danger { background: #ff6b6b; color: white; }
+    .btn.success { background: #4ade80; color: #0a0a0a; }
+    .btn.secondary { background: #333; color: #fff; }
+
+    .mt-1 { margin-top: 1rem; }
+    .text-sm { font-size: 0.85rem; }
+    .color-gray { color: #888; }
+    .mb-1 { margin-bottom: 1rem; }
+
+    .alert { background: #1a1a00; border-left: 3px solid #ffd700; padding: 10px 14px; margin: 8px 0; border-radius: 0 4px 4px 0; font-size: 0.85rem; }
+    .alert.error { background: #1a0000; border-color: #ff6b6b; }
+    .alert.success { background: #001400; border-color: #4ade80; }
+
+    #log, #consoleLog { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+    .log-entry { padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
+    .log-entry.info { color: #aaa; }
+    .log-entry.success { color: #4ade80; }
+    .log-entry.warn { color: #ffd700; }
+    .log-entry.error { color: #ff6b6b; }
+
+    .qr-display { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: 1rem 0; }
+    .qr-item { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem; text-align: center; }
+    .qr-item img { max-width: 150px; height: auto; margin-bottom: 0.5rem; }
+    .qr-item .label { font-size: 0.75rem; color: #888; }
+
+    .demo-area { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-area > div { flex: 1; min-width: 300px; }
+    .demo-area video, .demo-area canvas, .demo-area img { width: 100%; max-width: 400px; background: #000; border-radius: 6px; }
+
+    .quiz-option { display: block; width: 100%; background: #111; border: 1px solid #333; color: #ccc; padding: 10px 14px; margin: 6px 0; border-radius: 6px; text-align: left; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+    .quiz-option:hover { border-color: #00d4ff; }
+    .quiz-option.selected { border-color: #00d4ff; background: #001a1a; }
+    .quiz-option.correct { border-color: #4ade80; background: #001400; }
+    .quiz-option.incorrect { border-color: #ff6b6b; background: #1a0000; }
+
+    .api-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+    .api-badge.native { background: #001a1a; color: #00d4ff; border: 1px solid #00d4ff; }
+    .api-badge.js { background: #1a1a00; color: #ffd700; border: 1px solid #ffd700; }
+
+    .progress-bar { height: 4px; background: #333; border-radius: 2px; margin: 1rem 0; overflow: hidden; }
+    .progress-bar .fill { height: 100%; background: #00d4ff; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+  <h1>二维码（QR Code）识别技术交互演示</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">概念总览</button>
+    <button class="tab-btn" onclick="switchTab('types')">资源类型表</button>
+    <button class="tab-btn" onclick="switchTab('api-demo')">API 演示</button>
+    <button class="tab-btn" onclick="switchTab('lib-compare')">库对比</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">自测题</button>
+  </div>
+
+  <!-- Tab 1: 概念总览 -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="card">
+      <h2>QR 码结构</h2>
+      <div style="display: flex; justify-content: center; margin: 1rem 0;">
+        <svg width="200" height="200" viewBox="0 0 200 200" style="background: white; border-radius: 8px;">
+          <rect x="10" y="10" width="40" height="40" fill="#000"/>
+          <rect x="15" y="15" width="30" height="30" fill="white"/>
+          <rect x="20" y="20" width="20" height="20" fill="#000"/>
+
+          <rect x="150" y="10" width="40" height="40" fill="#000"/>
+          <rect x="155" y="15" width="30" height="30" fill="white"/>
+          <rect x="160" y="20" width="20" height="20" fill="#000"/>
+
+          <rect x="10" y="150" width="40" height="40" fill="#000"/>
+          <rect x="15" y="155" width="30" height="30" fill="white"/>
+          <rect x="20" y="160" width="20" height="20" fill="#000"/>
+
+          <rect x="60" y="60" width="20" height="20" fill="#000"/>
+
+          <rect x="90" y="10" width="5" height="5" fill="#000"/>
+          <rect x="100" y="10" width="5" height="5" fill="#000"/>
+          <rect x="110" y="10" width="5" height="5" fill="#000"/>
+          <rect x="120" y="10" width="5" height="5" fill="#000"/>
+          <rect x="130" y="10" width="5" height="5" fill="#000"/>
+
+          <rect x="60" y="90" width="5" height="5" fill="#000"/>
+          <rect x="70" y="90" width="5" height="5" fill="#000"/>
+          <rect x="80" y="90" width="5" height="5" fill="#000"/>
+          <rect x="90" y="90" width="5" height="5" fill="#000"/>
+          <rect x="100" y="90" width="5" height="5" fill="#000"/>
+
+          <rect x="120" y="60" width="5" height="5" fill="#000"/>
+          <rect x="130" y="60" width="5" height="5" fill="#000"/>
+          <rect x="140" y="60" width="5" height="5" fill="#000"/>
+          <rect x="150" y="60" width="5" height="5" fill="#000"/>
+          <rect x="160" y="60" width="5" height="5" fill="#000"/>
+          <rect x="170" y="60" width="5" height="5" fill="#000"/>
+          <rect x="180" y="60" width="5" height="5" fill="#000"/>
+
+          <rect x="60" y="120" width="5" height="5" fill="#000"/>
+          <rect x="70" y="120" width="5" height="5" fill="#000"/>
+          <rect x="80" y="120" width="5" height="5" fill="#000"/>
+          <rect x="90" y="120" width="5" height="5" fill="#000"/>
+          <rect x="100" y="120" width="5" height="5" fill="#000"/>
+          <rect x="110" y="120" width="5" height="5" fill="#000"/>
+          <rect x="120" y="120" width="5" height="5" fill="#000"/>
+          <rect x="130" y="120" width="5" height="5" fill="#000"/>
+          <rect x="140" y="120" width="5" height="5" fill="#000"/>
+
+          <rect x="90" y="150" width="5" height="5" fill="#000"/>
+          <rect x="100" y="150" width="5" height="5" fill="#000"/>
+          <rect x="110" y="150" width="5" height="5" fill="#000"/>
+          <rect x="120" y="150" width="5" height="5" fill="#000"/>
+          <rect x="130" y="150" width="5" height="5" fill="#000"/>
+          <rect x="140" y="150" width="5" height="5" fill="#000"/>
+          <rect x="150" y="150" width="5" height="5" fill="#000"/>
+          <rect x="160" y="150" width="5" height="5" fill="#000"/>
+          <rect x="170" y="150" width="5" height="5" fill="#000"/>
+
+          <rect x="100" y="180" width="5" height="5" fill="#000"/>
+          <rect x="110" y="180" width="5" height="5" fill="#000"/>
+          <rect x="120" y="180" width="5" height="5" fill="#000"/>
+          <rect x="130" y="180" width="5" height="5" fill="#000"/>
+          <rect x="140" y="180" width="5" height="5" fill="#000"/>
+          <rect x="150" y="180" width="5" height="5" fill="#000"/>
+          <rect x="160" y="180" width="5" height="5" fill="#000"/>
+          <rect x="170" y="180" width="5" height="5" fill="#000"/>
+        </svg>
+      </div>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>定位图形</h4>
+          <p>三个角落的方块，用于定位 QR 码位置</p>
+        </div>
+        <div class="mini-card">
+          <h4>校正图形</h4>
+          <p>帮助校正角度和位置，版本 2+ 出现</p>
+        </div>
+        <div class="mini-card">
+          <h4>数据和纠错</h4>
+          <p>存储实际数据及 Reed-Solomon 纠错码</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>纠错级别</h2>
+      <table>
+        <tr><th>级别</th><th>可恢复</th><th>特点</th></tr>
+        <tr><td>L (Low)</td><td>7%</td><td>最大容量，适合干净环境</td></tr>
+        <tr><td>M (Medium)</td><td>15%</td><td>平衡之选（默认）</td></tr>
+        <tr><td>Q (Quartile)</td><td>25%</td><td>适合可能受损的场景</td></tr>
+        <tr><td>H (High)</td><td>30%</td><td>最高可靠性，工业用途</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>BarcodeDetector API <span class="api-badge native">原生</span></h2>
+      <p class="text-sm color-gray mb-1">Chrome 83+ 引入的原生条形码检测 API，无需第三方库。</p>
+      <pre><code>const detector = new BarcodeDetector({ formats: ['qr_code'] });
+const barcodes = await detector.detect(imageSource);
+console.log(barcodes[0].rawValue);</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>jsQR 库 <span class="api-badge js">JS</span></h2>
+      <p class="text-sm color-gray mb-1">纯 JavaScript 实现的 QR 码解析库，兼容所有浏览器。</p>
+      <pre><code>const code = jsQR(imageData, width, height);
+if (code) console.log(code.data);</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 2: 资源类型表 -->
+  <div id="tab-types" class="tab-content">
+    <div class="card">
+      <h2>QR 码支持的资源类型</h2>
+      <table>
+        <tr><th>类型</th><th>前缀/格式</th><th>示例</th></tr>
+        <tr><td>URL</td><td>http:// 或 https://</td><td>https://example.com</td></tr>
+        <tr><td>文本</td><td>无前缀</td><td>Hello World</td></tr>
+        <tr><td>电话</td><td>tel:</td><td>tel:+86-138-0000-0000</td></tr>
+        <tr><td>短信</td><td>sms:</td><td>sms:+86-138-0000-0000</td></tr>
+        <tr><td>邮件</td><td>mailto:</td><td>mailto:info@example.com</td></tr>
+        <tr><td>WiFi</td><td>WIFI:</td><td>WIFI:T:WPA;S:MyWiFi;P:password;;</td></tr>
+        <tr><td>vCard</td><td>BEGIN:VCARD</td><td>标准联系人格式</td></tr>
+        <tr><td>VEVENT</td><td>BEGIN:VCALENDAR</td><td>日历事件格式</td></tr>
+        <tr><td>MECARD</td><td>MECARD:</td><td>简化联系人格式</td></tr>
+        <tr><td>Bitcoin</td><td>bitcoin:</td><td>bitcoin:1AaBo3Ziv...</td></tr>
+        <tr><td>地理位置</td><td>geo:</td><td>geo:40.7128,-74.0060</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>WiFi 格式详解</h2>
+      <pre><code>WIFI:T:WPA;S:MyNetwork;P:password;;
+  │  │      │            │
+  │  │      │            └─ 密码
+  │  │      └─ SSID（网络名称）
+  │  └─ 加密类型（WPA/WEP/nopass）
+  └─ WiFi 前缀</code></pre>
+      <table>
+        <tr><th>加密类型 (T:)</th><th>说明</th></tr>
+        <tr><td>WPA</td><td>WPA/WPA2 安全</td></tr>
+        <tr><td>WEP</td><td>WEP 安全（已淘汰）</td></tr>
+        <tr><td>nopass</td><td>无密码（开放网络）</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>vCard 联系人格式</h2>
+      <pre><code>BEGIN:VCARD
+VERSION:3.0
+FN:张三
+TEL:+86-138-0000-0000
+EMAIL:zhangsan@example.com
+ORG:公司名称
+TITLE:工程师
+URL:https://example.com
+END:VCARD</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>类型检测代码</h2>
+      <pre><code>function detectQRType(data) {
+  if (/^https?:\/\//.test(data)) return 'URL';
+  if (/^tel:/.test(data)) return '电话';
+  if (/^sms:/.test(data)) return '短信';
+  if (/^mailto:/.test(data)) return '邮件';
+  if (/^WIFI:/.test(data)) return 'WiFi';
+  if (/^BEGIN:VCARD/.test(data)) return 'vCard';
+  if (/^BEGIN:VCALENDAR/.test(data)) return '日历事件';
+  if (/^MECARD:/.test(data)) return 'MECARD';
+  if (/^bitcoin:/.test(data)) return 'Bitcoin';
+  if (/^geo:/.test(data)) return '地理位置';
+  return '文本';
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 3: API 演示 -->
+  <div id="tab-api-demo" class="tab-content">
+    <div class="card">
+      <h2>BarcodeDetector API 检测 <span class="api-badge native">原生</span></h2>
+      <p class="text-sm color-gray mb-1">使用浏览器原生 API 检测 QR 码</p>
+
+      <div class="demo-area">
+        <div>
+          <video id="video" autoplay playsinline style="display: none;"></video>
+          <canvas id="canvas"></canvas>
+          <img id="staticQR" src="" alt="Static QR Code" style="display: none; max-width: 300px;">
+        </div>
+        <div>
+          <div id="detectionResult" class="alert" style="display: none;"></div>
+
+          <div class="mt-1">
+            <button class="btn" onclick="startCamera()">开启摄像头</button>
+            <button class="btn danger" onclick="stopCamera()">停止</button>
+            <button class="btn secondary" onclick="loadSampleQR()">加载示例 QR</button>
+          </div>
+
+          <div id="cameraStatus" class="mt-1 text-sm color-gray"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>API 返回值结构</h2>
+      <pre><code>BarcodeDetectorResult {
+  rawValue: "https://example.com",  // 解码后的数据
+  format: "qr_code",                  // 格式类型
+  boundingBox: DOMRectReadOnly {      // 边界框
+    x, y, width, height
+  },
+  cornerPoints: [                    // 四个角点坐标
+    { x, y },  // 左上
+    { x, y },  // 右上
+    { x, y },  // 右下
+    { x, y }   // 左下
+  ]
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>实时检测代码</h2>
+      <pre><code>const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let detector;
+let isRunning = false;
+
+async function startDetection() {
+  // 1. 获取摄像头
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment' }
+  });
+  video.srcObject = stream;
+
+  // 2. 创建检测器
+  detector = new BarcodeDetector({ formats: ['qr_code'] });
+  isRunning = true;
+
+  // 3. 检测循环
+  detectLoop();
+}
+
+async function detectLoop() {
+  if (!isRunning) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0);
+
+  const barcodes = await detector.detect(canvas);
+  if (barcodes.length > 0) {
+    console.log('检测到:', barcodes[0].rawValue);
+  }
+
+  requestAnimationFrame(detectLoop);
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 4: 库对比 -->
+  <div id="tab-lib-compare" class="tab-content">
+    <div class="card">
+      <h2>原生 API vs JS 库对比</h2>
+      <table>
+        <tr><th>维度</th><th>BarcodeDetector <span class="api-badge native">原生</span></th><th>jsQR <span class="api-badge js">JS</span></th></tr>
+        <tr><td>浏览器支持</td><td>Chrome/Edge 83+</td><td>所有现代浏览器</td></tr>
+        <tr><td>性能</td><td>原生优化，更快</td><td>依赖 JS 引擎</td></tr>
+        <tr><td>准确率</td><td>高</td><td>较高</td></tr>
+        <tr><td>离线使用</td><td>需浏览器实现</td><td>可打包进网站</td></tr>
+        <tr><td>维护</td><td>浏览器厂商</td><td>社区维护</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>选择建议</h2>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>使用原生 API</h4>
+          <p>仅需支持 Chrome/Edge，追求性能和准确性</p>
+        </div>
+        <div class="mini-card">
+          <h4>使用 jsQR</h4>
+          <p>需要跨浏览器兼容，离线环境使用</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>jsQR 基本用法 <span class="api-badge js">JS</span></h2>
+      <pre><code>// 引入 jsQR
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+// 检测 QR 码
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+ctx.drawImage(imageSource, 0, 0);
+
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+if (code) {
+  console.log('检测到:', code.data);
+  console.log('位置:', code.location);
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>实际应用场景</h2>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>扫码登录</h4>
+          <p>PC 网站展示二维码，手机扫码确认登录</p>
+        </div>
+        <div class="mini-card">
+          <h4>扫码支付</h4>
+          <p>扫描商家二维码完成支付</p>
+        </div>
+        <div class="mini-card">
+          <h4>扫码连 WiFi</h4>
+          <p>扫描餐厅/酒店的 WiFi 二维码自动连接</p>
+        </div>
+        <div class="mini-card">
+          <h4>扫码分享</h4>
+          <p>分享联系人、日历事件、地理位置等</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 5: 自测题 -->
+  <div id="tab-quiz" class="tab-content">
+    <div class="card">
+      <h2>QR 码知识自测</h2>
+      <p class="text-sm color-gray mb-1">测试你对 QR 码技术的理解程度</p>
+
+      <div id="quizContainer">
+        <!-- Q1 -->
+        <div class="quiz-question" id="q1">
+          <h3>问题 1：QR 码有三个定位图形，分别位于哪里？</h3>
+          <button class="quiz-option" onclick="selectAnswer(1, 'A')">A. 三个角落</button>
+          <button class="quiz-option" onclick="selectAnswer(1, 'B')">B. 上下左右边缘中央</button>
+          <button class="quiz-option" onclick="selectAnswer(1, 'C')">C. 顶部两个，底部一个</button>
+          <button class="quiz-option" onclick="selectAnswer(1, 'D')">D. 随机分布</button>
+        </div>
+        <div class="quiz-result" id="q1-result"></div>
+
+        <!-- Q2 -->
+        <div class="quiz-question mt-1" id="q2">
+          <h3>问题 2：BarcodeDetector API 在哪个版本的 Chrome 中引入？</h3>
+          <button class="quiz-option" onclick="selectAnswer(2, 'A')">A. Chrome 70</button>
+          <button class="quiz-option" onclick="selectAnswer(2, 'B')">B. Chrome 83</button>
+          <button class="quiz-option" onclick="selectAnswer(2, 'C')">C. Chrome 90</button>
+          <button class="quiz-option" onclick="selectAnswer(2, 'D')">D. Chrome 100</button>
+        </div>
+        <div class="quiz-result" id="q2-result"></div>
+
+        <!-- Q3 -->
+        <div class="quiz-question mt-1" id="q3">
+          <h3>问题 3：以下哪个不是 WiFi 二维码的正确前缀？</h3>
+          <button class="quiz-option" onclick="selectAnswer(3, 'A')">A. WIFI:T:WPA;</button>
+          <button class="quiz-option" onclick="selectAnswer(3, 'B')">B. WIFI:T:WEP;</button>
+          <button class="quiz-option" onclick="selectAnswer(3, 'C')">C. WIFI:T:SSL;</button>
+          <button class="quiz-option" onclick="selectAnswer(3, 'D')">D. WIFI:T:nopass;</button>
+        </div>
+        <div class="quiz-result" id="q3-result"></div>
+
+        <!-- Q4 -->
+        <div class="quiz-question mt-1" id="q4">
+          <h3>问题 4：QR 码的纠错级别 H（High）可以恢复多少数据？</h3>
+          <button class="quiz-option" onclick="selectAnswer(4, 'A')">A. 7%</button>
+          <button class="quiz-option" onclick="selectAnswer(4, 'B')">B. 15%</button>
+          <button class="quiz-option" onclick="selectAnswer(4, 'C')">C. 25%</button>
+          <button class="quiz-option" onclick="selectAnswer(4, 'D')">D. 30%</button>
+        </div>
+        <div class="quiz-result" id="q4-result"></div>
+
+        <!-- Q5 -->
+        <div class="quiz-question mt-1" id="q5">
+          <h3>问题 5：BarcodeDetector API 返回的 cornerPoints 数组有几个元素？</h3>
+          <button class="quiz-option" onclick="selectAnswer(5, 'A')">A. 1</button>
+          <button class="quiz-option" onclick="selectAnswer(5, 'B')">B. 2</button>
+          <button class="quiz-option" onclick="selectAnswer(5, 'C')">C. 4</button>
+          <button class="quiz-option" onclick="selectAnswer(5, 'D')">D. 9</button>
+        </div>
+        <div class="quiz-result" id="q5-result"></div>
+      </div>
+
+      <div class="mt-1">
+        <button class="btn success" onclick="checkAllAnswers()">查看结果</button>
+        <button class="btn secondary" onclick="resetQuiz()">重置</button>
+      </div>
+
+      <div id="quizSummary" class="mt-1" style="display: none;">
+        <div class="progress-bar">
+          <div class="fill" id="quizProgress"></div>
+        </div>
+        <div id="quizScore" class="text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-1">
+    <h2>Console 日志</h2>
+    <div id="consoleLog"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script>
+    // Quiz answers
+    const answers = {
+      1: 'A',
+      2: 'B',
+      3: 'C',
+      4: 'D',
+      5: 'C'
+    };
+
+    const selectedAnswers = {};
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('consoleLog');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+      logDiv.insertBefore(entry, logDiv.firstChild);
+    }
+
+    // BarcodeDetector Demo
+    let detector = null;
+    let videoStream = null;
+    let isDetecting = false;
+    let animationId = null;
+
+    function checkBarcodeDetectorSupport() {
+      if ('BarcodeDetector' in window) {
+        log('BarcodeDetector API 可用', 'success');
+        return true;
+      } else {
+        log('BarcodeDetector API 不可用，请使用 Chrome 83+', 'error');
+        return false;
+      }
+    }
+
+    async function startCamera() {
+      const video = document.getElementById('video');
+      const cameraStatus = document.getElementById('cameraStatus');
+
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        video.srcObject = videoStream;
+        video.style.display = 'block';
+        document.getElementById('canvas').style.display = 'none';
+        document.getElementById('staticQR').style.display = 'none';
+
+        await video.play();
+
+        // Create detector
+        if (!detector) {
+          detector = new BarcodeDetector({ formats: ['qr_code'] });
+        }
+
+        isDetecting = true;
+        cameraStatus.textContent = '摄像头已开启，正在检测...';
+        log('摄像头已开启', 'success');
+
+        // Start detection loop
+        detectLoop();
+      } catch (error) {
+        log('摄像头开启失败: ' + error.message, 'error');
+        cameraStatus.textContent = '摄像头开启失败: ' + error.message;
+      }
+    }
+
+    function stopCamera() {
+      isDetecting = false;
+
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+
+      const video = document.getElementById('video');
+      video.srcObject = null;
+      video.style.display = 'none';
+
+      document.getElementById('cameraStatus').textContent = '摄像头已停止';
+      log('摄像头已停止', 'info');
+    }
+
+    async function detectLoop() {
+      if (!isDetecting) return;
+
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.style.display = 'block';
+        ctx.drawImage(video, 0, 0);
+
+        try {
+          // Try BarcodeDetector first
+          if (detector) {
+            const barcodes = await detector.detect(canvas);
+            if (barcodes.length > 0) {
+              showDetectionResult(barcodes[0].rawValue, 'BarcodeDetector');
+            }
+          }
+        } catch (e) {
+          // Fallback to jsQR
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code) {
+              showDetectionResult(code.data, 'jsQR');
+            }
+          } catch (e2) {
+            // Silent fail
+          }
+        }
+      }
+
+      animationId = requestAnimationFrame(detectLoop);
+    }
+
+    function showDetectionResult(data, source) {
+      const resultDiv = document.getElementById('detectionResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'alert success';
+      resultDiv.innerHTML = '<strong>检测到 QR 码 [' + source + ']:</strong><br>' + escapeHtml(data);
+      log('检测到: ' + data, 'success');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load sample QR code
+    function loadSampleQR() {
+      stopCamera();
+
+      // Generate a simple QR code using Google Charts API
+      const data = 'https://example.com';
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(data);
+
+      const img = document.getElementById('staticQR');
+      img.src = qrUrl;
+      img.style.display = 'block';
+      document.getElementById('canvas').style.display = 'none';
+      document.getElementById('cameraStatus').textContent = '示例 QR 码已加载';
+
+      log('加载示例 QR 码: ' + data, 'info');
+    }
+
+    // Quiz functions
+    function selectAnswer(questionNum, answer) {
+      selectedAnswers[questionNum] = answer;
+
+      const options = document.querySelectorAll('#q' + questionNum + ' .quiz-option');
+      options.forEach(opt => {
+        opt.classList.remove('selected', 'correct', 'incorrect');
+        if (opt.textContent.startsWith(answer)) {
+          opt.classList.add('selected');
+        }
+      });
+
+      log('问题 ' + questionNum + ' 选择: ' + answer, 'info');
+    }
+
+    function checkAllAnswers() {
+      let correct = 0;
+
+      for (let i = 1; i <= 5; i++) {
+        const resultDiv = document.getElementById('q' + i + '-result');
+        const selected = selectedAnswers[i];
+
+        if (selected === answers[i]) {
+          correct++;
+          resultDiv.innerHTML = '<span class="success">正确！</span>';
+        } else if (selected) {
+          resultDiv.innerHTML = '<span class="error">错误！正确答案是: ' + answers[i] + '</span>';
+        } else {
+          resultDiv.innerHTML = '<span class="warning">未作答，正确答案是: ' + answers[i] + '</span>';
+        }
+      }
+
+      const summary = document.getElementById('quizSummary');
+      summary.style.display = 'block';
+
+      const progress = (correct / 5) * 100;
+      document.getElementById('quizProgress').style.width = progress + '%';
+      document.getElementById('quizScore').textContent = '得分: ' + correct + '/5 (' + progress + '%)';
+
+      log('测验完成，得分: ' + correct + '/5', correct === 5 ? 'success' : 'warn');
+    }
+
+    function resetQuiz() {
+      for (let i = 1; i <= 5; i++) {
+        selectedAnswers[i] = null;
+        const options = document.querySelectorAll('#q' + i + ' .quiz-option');
+        options.forEach(opt => opt.classList.remove('selected', 'correct', 'incorrect'));
+        document.getElementById('q' + i + '-result').innerHTML = '';
+      }
+      document.getElementById('quizSummary').style.display = 'none';
+      log('测验已重置', 'info');
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      checkBarcodeDetectorSupport();
+      log('QR 码演示页面已加载', 'success');
+    });
+  </script>
+</body>
+</html>
