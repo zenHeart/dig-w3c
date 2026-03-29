@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>点击容器外部检测 - 交互式演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #e0e0e0;
+      padding: 4px;
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: #d0d0d0;
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tab-content {
+      display: none;
+      background: #fff;
+      padding: 24px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .demo-section {
+      margin-bottom: 30px;
+    }
+
+    .demo-section h3 {
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    /* 演示容器样式 */
+    .demo-container {
+      position: relative;
+      width: 300px;
+      height: 200px;
+      background: #f0f0f0;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .target-box {
+      width: 120px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .target-box.active {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      transform: scale(1.05);
+    }
+
+    .target-box::after {
+      content: "点击我";
+    }
+
+    .target-box.active::after {
+      content: "激活中";
+    }
+
+    /* 结果显示 */
+    .result-display {
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-family: monospace;
+      margin-top: 15px;
+    }
+
+    .result-item {
+      display: flex;
+      margin-bottom: 8px;
+    }
+
+    .result-label {
+      width: 150px;
+      color: #666;
+    }
+
+    .result-value {
+      color: #333;
+      font-weight: bold;
+    }
+
+    /* 事件日志 */
+    .event-log {
+      height: 150px;
+      overflow-y: auto;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .log-entry.click-outside {
+      background: #f5576c;
+      color: #fff;
+    }
+
+    .log-entry.click-inside {
+      background: #4ecdc4;
+      color: #fff;
+    }
+
+    /* 场景演示样式 */
+    .scenario-demo {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .scenario-item {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    /* 下拉菜单演示 */
+    .demo-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-trigger {
+      padding: 10px 20px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      min-width: 180px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s;
+      z-index: 100;
+    }
+
+    .dropdown-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .dropdown-item:first-child {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .dropdown-item:last-child {
+      border-radius: 0 0 8px 8px;
+    }
+
+    .dropdown-item:hover {
+      background: #f5f5f5;
+    }
+
+    /* 模态框演示 */
+    .demo-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .demo-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .demo-modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: #e0e0e0;
+    }
+
+    /* 工具提示演示 */
+    .demo-tooltip-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip-trigger {
+      padding: 10px 20px;
+      background: #764ba2;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tooltip-box {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .tooltip-box::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #333;
+    }
+
+    .tooltip-box.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 方法对比表 */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .comparison-table th {
+      background: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .comparison-table tr:hover {
+      background: #fafafa;
+    }
+
+    .star {
+      color: #fbbf24;
+    }
+
+    /* 代码块样式 */
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: "Consolas", "Monaco", monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .code-block .keyword {
+      color: #569cd6;
+    }
+
+    .code-block .string {
+      color: #ce9178;
+    }
+
+    .code-block .comment {
+      color: #6a9955;
+    }
+
+    .code-block .function {
+      color: #dcdcaa;
+    }
+
+    /* 自测题 */
+    .quiz-question {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .quiz-question h4 {
+      margin: 0 0 12px 0;
+      color: #333;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quiz-option {
+      padding: 10px 16px;
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:hover {
+      border-color: #667eea;
+    }
+
+    .quiz-option.correct {
+      border-color: #10b981;
+      background: #d1fae5;
+    }
+
+    .quiz-option.incorrect {
+      border-color: #ef4444;
+      background: #fee2e2;
+    }
+
+    .quiz-result {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .quiz-result.show {
+      display: block;
+    }
+
+    .quiz-result.pass {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .quiz-result.fail {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .reset-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      background: #5a6fd6;
+    }
+  </style>
+</head>
+<body>
+  <h1>🖱️ 点击容器外部检测 - 交互式演示</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">概念总览</button>
+    <button class="tab-btn" data-tab="contains">contains() 方法</button>
+    <button class="tab-btn" data-tab="closest">closest() 方法</button>
+    <button class="tab-btn" data-tab="bounding">getBoundingRect</button>
+    <button class="tab-btn" data-tab="scenarios">场景演示</button>
+    <button class="tab-btn" data-tab="comparison">方法对比</button>
+    <button class="tab-btn" data-tab="quiz">自测题</button>
+  </div>
+
+  <!-- 概念总览 -->
+  <div class="tab-content active" id="overview">
+    <div class="demo-section">
+      <h3>📚 什么是点击外部检测？</h3>
+      <p>点击外部检测是一种常见的前端交互模式，用于判断用户的点击事件是否发生在某个特定容器/元素的外部。</p>
+      <p><strong>核心问题：</strong>当用户点击页面上的任意位置时，如何快速判断这个点击是否发生在指定的容器区域外？</p>
+    </div>
+
+    <div class="demo-section">
+      <h3>🎯 四大检测方法</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>描述</th>
+            <th>推荐度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>element.contains()</code></td>
+            <td>检查节点是否为另一个节点的后代</td>
+            <td><span class="star">⭐⭐⭐⭐⭐</span></td>
+          </tr>
+          <tr>
+            <td><code>closest()</code></td>
+            <td>查找最近的匹配祖先元素</td>
+            <td><span class="star">⭐⭐⭐⭐</span></td>
+          </tr>
+          <tr>
+            <td><code>getBoundingClientRect()</code></td>
+            <td>获取元素边界矩形</td>
+            <td><span class="star">⭐⭐⭐</span></td>
+          </tr>
+          <tr>
+            <td><code>target vs currentTarget</code></td>
+            <td>对比事件目标与绑定目标</td>
+            <td><span class="star">⭐⭐⭐</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="demo-section">
+      <h3>🖱️ 点击测试区域</h3>
+      <p>点击下方灰色区域（容器外部）或彩色方块（容器内部），观察事件日志：</p>
+      <div class="demo-container" id="overviewContainer">
+        <div class="target-box" id="overviewBox"></div>
+      </div>
+
+      <div class="result-display">
+        <div class="result-item">
+          <span class="result-label">点击目标 (e.target):</span>
+          <span class="result-value" id="overviewTarget">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">是否在容器内:</span>
+          <span class="result-value" id="overviewInside">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">检测方法:</span>
+          <span class="result-value">contains()</span>
+        </div>
+      </div>
+
+      <div class="event-log" id="overviewLog" style="margin-top: 15px;"></div>
+    </div>
+  </div>
+
+  <!-- contains() 方法 -->
+  <div class="tab-content" id="contains">
+    <div class="demo-section">
+      <h3>🔍 element.contains() 方法</h3>
+      <p><code>Node.contains()</code> 返回一个 Boolean 值，表示传入的节点是否为该节点的后代节点。</p>
+
+      <div class="code-block">
+<span class="keyword">document</span>.addEventListener(<span class="string">"click"</span>, (e) => {
+  <span class="keyword">const</span> container = document.querySelector(<span class="string">".container"</span>);
+  <span class="keyword">if</span> (!container.contains(e.target)) {
+    <span class="comment">// 点击在容器外部</span>
+    container.classList.remove(<span class="string">"active"</span>);
+  }
+});
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h3>🧪 交互演示</h3>
+      <div class="demo-container" id="containsContainer">
+        <div class="target-box" id="containsBox"></div>
+      </div>
+
+      <div class="result-display">
+        <div class="result-item">
+          <span class="result-label">e.target.classList.contains('target-box'):</span>
+          <span class="result-value" id="containsResult">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">contains() 返回值:</span>
+          <span class="result-value" id="containsContains">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- closest() 方法 -->
+  <div class="tab-content" id="closest">
+    <div class="demo-section">
+      <h3>🔍 closest() 方法</h3>
+      <p><code>Element.closest()</code> 方法返回当前元素最近的祖先元素（包含自身），如果不存在则返回 <code>null</code>。</p>
+
+      <div class="code-block">
+<span class="keyword">document</span>.addEventListener(<span class="string">"click"</span>, (e) => {
+  <span class="comment">// 查找点击元素最近的 .target-box 祖先</span>
+  <span class="keyword">const</span> closestBox = e.target.closest(<span class="string">".target-box"</span>);
+  <span class="keyword">if</span> (!closestBox) {
+    <span class="comment">// 点击不在任何 .target-box 及其内部</span>
+    document.querySelector(<span class="string">".target-box"</span>).classList.remove(<span class="string">"active"</span>);
+  }
+});
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h3>🧪 交互演示</h3>
+      <div class="demo-container" id="closestContainer">
+        <div class="target-box" id="closestBox">
+          <span style="font-size: 12px;">内部嵌套</span>
+        </div>
+      </div>
+
+      <div class="result-display">
+        <div class="result-item">
+          <span class="result-label">e.target.closest('.target-box'):</span>
+          <span class="result-value" id="closestResult">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">返回值是否为 null:</span>
+          <span class="result-value" id="closestNull">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- getBoundingClientRect() 方法 -->
+  <div class="tab-content" id="bounding">
+    <div class="demo-section">
+      <h3>🔍 getBoundingClientRect() 方法</h3>
+      <p><code>Element.getBoundingClientRect()</code> 返回元素的大小及其相对于视口的位置，通过比较点击坐标与边界可以判断是否在外部。</p>
+
+      <div class="code-block">
+<span class="keyword">function</span> <span class="function">isOutsideClick</span>(element, event) {
+  <span class="keyword">const</span> rect = element.getBoundingClientRect();
+  <span class="keyword">return</span> (
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom
+  );
+}
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h3>🧪 交互演示</h3>
+      <div class="demo-container" id="boundingContainer">
+        <div class="target-box" id="boundingBox"></div>
+      </div>
+
+      <div class="result-display">
+        <div class="result-item">
+          <span class="result-label">容器边界:</span>
+          <span class="result-value" id="boundingRect">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">点击坐标 (clientX, clientY):</span>
+          <span class="result-value" id="boundingCoords">—</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">判断结果:</span>
+          <span class="result-value" id="boundingResult">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 场景演示 -->
+  <div class="tab-content" id="scenarios">
+    <div class="scenario-demo">
+      <!-- 下拉菜单 -->
+      <div class="scenario-item">
+        <h3>🍔 下拉菜单</h3>
+        <p>点击按钮切换菜单，点击外部关闭</p>
+        <div class="demo-dropdown">
+          <button class="dropdown-trigger" id="dropdownTrigger">下拉菜单</button>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <div class="dropdown-item">选项 1</div>
+            <div class="dropdown-item">选项 2</div>
+            <div class="dropdown-item">选项 3</div>
+          </div>
+        </div>
+        <p id="dropdownStatus" style="margin-top: 10px; color: #666;">状态: 已关闭</p>
+      </div>
+
+      <!-- 模态框 -->
+      <div class="scenario-item">
+        <h3>📋 模态框</h3>
+        <p>点击遮罩层关闭，点击内容区域保持打开</p>
+        <button class="dropdown-trigger" id="modalOpenBtn" style="background: #764ba2;">打开模态框</button>
+        <div class="demo-modal-overlay" id="modalOverlay">
+          <div class="demo-modal">
+            <div class="modal-header">
+              <h3 class="modal-title">模态框标题</h3>
+              <button class="modal-close" id="modalCloseBtn">×</button>
+            </div>
+            <p>这是一个模态框内容区域。点击灰色遮罩层或按下 ESC 键可以关闭。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 工具提示 -->
+      <div class="scenario-item">
+        <h3>💬 工具提示</h3>
+        <p>点击触发器显示提示，点击外部隐藏</p>
+        <div class="demo-tooltip-container">
+          <button class="tooltip-trigger" id="tooltipTrigger">悬停查看提示</button>
+          <div class="tooltip-box" id="tooltipBox">这是一条提示信息！</div>
+        </div>
+        <p id="tooltipStatus" style="margin-top: 10px; color: #666;">状态: 已隐藏</p>
+      </div>
+    </div>
+
+    <div class="demo-section" style="margin-top: 30px;">
+      <h3>📝 事件日志</h3>
+      <div class="event-log" id="scenarioLog"></div>
+    </div>
+  </div>
+
+  <!-- 方法对比 -->
+  <div class="tab-content" id="comparison">
+    <div class="demo-section">
+      <h3>📊 四种方法详细对比</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>性能</th>
+            <th>代码简洁度</th>
+            <th>浏览器兼容</th>
+            <th>适用场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>contains()</code></td>
+            <td><span class="star">⭐⭐⭐⭐⭐</span> O(1)</td>
+            <td><span class="star">⭐⭐⭐⭐</span></td>
+            <td>所有浏览器</td>
+            <td>通用首选</td>
+          </tr>
+          <tr>
+            <td><code>closest()</code></td>
+            <td><span class="star">⭐⭐⭐⭐</span> O(n)</td>
+            <td><span class="star">⭐⭐⭐⭐⭐</span></td>
+            <td>IE9+</td>
+            <td>动态选择器</td>
+          </tr>
+          <tr>
+            <td><code>getBoundingClientRect()</code></td>
+            <td><span class="star">⭐⭐⭐</span> 涉及计算</td>
+            <td><span class="star">⭐⭐</span></td>
+            <td>所有浏览器</td>
+            <td>需精确边界</td>
+          </tr>
+          <tr>
+            <td><code>target vs currentTarget</code></td>
+            <td><span class="star">⭐⭐⭐⭐⭐</span> O(1)</td>
+            <td><span class="star">⭐⭐⭐</span></td>
+            <td>所有浏览器</td>
+            <td>事件在容器本身</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="demo-section">
+      <h3>💡 选型建议</h3>
+      <div class="code-block">
+<span class="comment">// 1. 通用场景 → 使用 contains()</span>
+<span class="keyword">if</span> (!container.contains(e.target)) {
+  <span class="comment">// 点击在外部</span>
+}
+
+<span class="comment">// 2. 动态选择器 → 使用 closest()</span>
+<span class="keyword">if</span> (!e.target.closest(<span class="string">".dynamic-target"</span>)) {
+  <span class="comment">// 点击不在动态元素内</span>
+}
+
+<span class="comment">// 3. 需要自定义边界 → 使用 getBoundingClientRect()</span>
+<span class="keyword">const</span> rect = el.getBoundingClientRect();
+<span class="comment">// 扩展 10px 检测区域</span>
+<span class="keyword">if</span> (e.clientX &lt; rect.left - <span class="number">10</span> || ...) {}
+
+<span class="comment">// 4. 事件绑定在容器本身 → 使用 target === currentTarget</span>
+element.addEventListener(<span class="string">'click'</span>, (e) => {
+  <span class="keyword">if</span> (e.target === e.currentTarget) {
+    <span class="comment">// 点击恰好在元素上</span>
+  }
+});
+      </div>
+    </div>
+  </div>
+
+  <!-- 自测题 -->
+  <div class="tab-content" id="quiz">
+    <div class="demo-section">
+      <h3>📝 自测题</h3>
+      <p>检验你对点击外部检测的理解</p>
+
+      <div class="quiz-question" data-correct="a">
+        <h4>Q1: 哪种方法性能最好？</h4>
+        <div class="quiz-options">
+          <div class="quiz-option" data-option="a">A. element.contains()</div>
+          <div class="quiz-option" data-option="b">B. getBoundingClientRect()</div>
+          <div class="quiz-option" data-option="c">C. closest()</div>
+          <div class="quiz-option" data-option="d">D. target vs currentTarget</div>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+
+      <div class="quiz-question" data-correct="b">
+        <h4>Q2: closest() 方法在找不到匹配祖先时返回什么？</h4>
+        <div class="quiz-options">
+          <div class="quiz-option" data-option="a">A. false</div>
+          <div class="quiz-option" data-option="b">B. null</div>
+          <div class="quiz-option" data-option="c">C. undefined</div>
+          <div class="quiz-option" data-option="d">D. 抛出错误</div>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+
+      <div class="quiz-question" data-correct="c">
+        <h4>Q3: 下拉菜单关闭最推荐使用哪种方法？</h4>
+        <div class="quiz-options">
+          <div class="quiz-option" data-option="a">A. getBoundingClientRect()</div>
+          <div class="quiz-option" data-option="b">B. target === currentTarget</div>
+          <div class="quiz-option" data-option="c">C. contains() 或 closest()</div>
+          <div class="quiz-option" data-option="d">D. 都需要</div>
+        </div>
+        <div class="quiz-result"></div>
+      </div>
+
+      <button class="reset-btn" onclick="resetQuiz()">重置答题</button>
+    </div>
+  </div>
+
+  <script>
+    // Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 概览演示 - contains()
+    const overviewContainer = document.getElementById('overviewContainer');
+    const overviewBox = document.getElementById('overviewBox');
+    const overviewTarget = document.getElementById('overviewTarget');
+    const overviewInside = document.getElementById('overviewInside');
+    const overviewLog = document.getElementById('overviewLog');
+
+    overviewContainer.addEventListener('click', (e) => {
+      overviewTarget.textContent = e.target.id || e.target.className;
+      const isInside = overviewBox.contains(e.target);
+      overviewInside.textContent = isInside ? '是' : '否';
+      overviewBox.classList.toggle('active', isInside);
+
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${isInside ? 'click-inside' : 'click-outside'}`;
+      logEntry.textContent = `${new Date().toLocaleTimeString()} - ${isInside ? '容器内' : '容器外'} - ${e.target.id || e.target.className}`;
+      overviewLog.prepend(logEntry);
+      if (overviewLog.children.length > 20) overviewLog.lastChild.remove();
+    });
+
+    // contains() 演示
+    const containsContainer = document.getElementById('containsContainer');
+    const containsBox = document.getElementById('containsBox');
+    const containsResult = document.getElementById('containsResult');
+    const containsContains = document.getElementById('containsContains');
+
+    containsContainer.addEventListener('click', (e) => {
+      const hasClass = e.target.classList.contains('target-box');
+      const contains = containsBox.contains(e.target);
+      containsResult.textContent = hasClass ? 'true' : 'false';
+      containsContains.textContent = contains ? 'true（在容器内）' : 'false（在容器外）';
+      containsBox.classList.toggle('active', contains);
+    });
+
+    // closest() 演示
+    const closestContainer = document.getElementById('closestContainer');
+    const closestBox = document.getElementById('closestBox');
+    const closestResult = document.getElementById('closestResult');
+    const closestNull = document.getElementById('closestNull');
+
+    closestContainer.addEventListener('click', (e) => {
+      const closestBoxEl = e.target.closest('.target-box');
+      closestResult.textContent = closestBoxEl ? '找到匹配元素' : 'null';
+      closestNull.textContent = closestBoxEl === null ? '是' : '否';
+      closestBox.classList.toggle('active', closestBoxEl !== null);
+    });
+
+    // getBoundingClientRect() 演示
+    const boundingContainer = document.getElementById('boundingContainer');
+    const boundingBox = document.getElementById('boundingBox');
+    const boundingRect = document.getElementById('boundingRect');
+    const boundingCoords = document.getElementById('boundingCoords');
+    const boundingResult = document.getElementById('boundingResult');
+
+    boundingContainer.addEventListener('click', (e) => {
+      const rect = boundingBox.getBoundingClientRect();
+      boundingRect.textContent = `left: ${Math.round(rect.left)}, right: ${Math.round(rect.right)}, top: ${Math.round(rect.top)}, bottom: ${Math.round(rect.bottom)}`;
+      boundingCoords.textContent = `(${Math.round(e.clientX)}, ${Math.round(e.clientY)})`;
+
+      const isOutside =
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom;
+
+      boundingResult.textContent = isOutside ? '在容器外部' : '在容器内部';
+      boundingBox.classList.toggle('active', !isOutside);
+    });
+
+    // 场景演示 - 下拉菜单
+    const dropdownTrigger = document.getElementById('dropdownTrigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    const dropdownStatus = document.getElementById('dropdownStatus');
+    const scenarioLog = document.getElementById('scenarioLog');
+
+    dropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('open');
+      dropdownStatus.textContent = `状态: ${dropdownMenu.classList.contains('open') ? '已打开' : '已关闭'}`;
+      logScenario('下拉菜单', dropdownMenu.classList.contains('open') ? '打开' : '关闭');
+    });
+
+    // 场景演示 - 模态框
+    const modalOpenBtn = document.getElementById('modalOpenBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    modalOpenBtn.addEventListener('click', () => {
+      modalOverlay.classList.add('open');
+      logScenario('模态框', '打开');
+    });
+
+    modalCloseBtn.addEventListener('click', () => {
+      modalOverlay.classList.remove('open');
+      logScenario('模态框', '关闭');
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('open');
+        logScenario('模态框', '点击遮罩关闭');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('open')) {
+        modalOverlay.classList.remove('open');
+        logScenario('模态框', 'ESC 键关闭');
+      }
+    });
+
+    // 场景演示 - 工具提示
+    const tooltipTrigger = document.getElementById('tooltipTrigger');
+    const tooltipBox = document.getElementById('tooltipBox');
+    const tooltipStatus = document.getElementById('tooltipStatus');
+
+    tooltipTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      tooltipBox.classList.toggle('visible');
+      tooltipStatus.textContent = `状态: ${tooltipBox.classList.contains('visible') ? '已显示' : '已隐藏'}`;
+      logScenario('工具提示', tooltipBox.classList.contains('visible') ? '显示' : '隐藏');
+    });
+
+    // 场景演示通用点击外部检测
+    document.addEventListener('click', (e) => {
+      // 下拉菜单
+      if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        if (dropdownMenu.classList.contains('open')) {
+          dropdownMenu.classList.remove('open');
+          dropdownStatus.textContent = '状态: 已关闭';
+          logScenario('下拉菜单', '点击外部关闭');
+        }
+      }
+
+      // 工具提示
+      if (!tooltipTrigger.contains(e.target) && !tooltipBox.contains(e.target)) {
+        if (tooltipBox.classList.contains('visible')) {
+          tooltipBox.classList.remove('visible');
+          tooltipStatus.textContent = '状态: 已隐藏';
+          logScenario('工具提示', '点击外部隐藏');
+        }
+      }
+    });
+
+    function logScenario(component, action) {
+      const logEntry =
