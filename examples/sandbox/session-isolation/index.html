@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>浏览器沙箱与 Session 隔离 - 交互演示</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 24px; line-height: 1.6; }
+    h1 { font-size: 1.8em; margin-bottom: 8px; color: var(--primary); }
+    h2 { font-size: 1.3em; margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 1.1em; margin: 16px 0 8px; color: var(--warning); }
+    .tab-bar { display: flex; gap: 4px; margin: 20px 0 12px; flex-wrap: wrap; }
+    .tab { padding: 8px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.2s; }
+    .tab:hover { border-color: var(--primary); }
+    .tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+    .panel.active { display: block; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 12px 0; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-right: 6px; }
+    .tag-green { background: #052e16; color: var(--success); border: 1px solid var(--success); }
+    .tag-red { background: #450a0a; color: var(--danger); border: 1px solid var(--danger); }
+    .tag-yellow { background: #451a03; color: var(--warning); border: 1px solid var(--warning); }
+    .tag-blue { background: #172554; color: var(--primary); border: 1px solid var(--primary); }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; }
+    th { background: #0f172a; color: var(--primary); }
+    code { background: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.9em; color: var(--warning); }
+    pre { background: #0f172a; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.88em; line-height: 1.5; border: 1px solid var(--border); margin: 12px 0; }
+    pre code { background: none; padding: 0; color: var(--text); }
+    .highlight { color: var(--primary); font-weight: bold; }
+    .warning { border-left: 4px solid var(--warning); padding-left: 12px; background: #451a03; border-radius: 0 8px 8px 0; padding: 12px; margin: 12px 0; }
+    .success-box { border-left: 4px solid var(--success); padding-left: 12px; background: #052e16; border-radius: 0 8px 8px 0; padding: 12px; margin: 12px 0; }
+    .diagram { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin: 16px 0; text-align: center; }
+    .diagram-row { display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0; }
+    .box { padding: 12px 20px; border-radius: 6px; font-size: 0.9em; font-weight: bold; }
+    .box-origin { background: var(--primary); color: white; }
+    .box-session { background: var(--success); color: white; }
+    .box-isolated { background: var(--warning); color: black; }
+    .box-shared { background: var(--danger); color: white; }
+    .arrow { font-size: 1.5em; color: var(--muted); }
+    .quiz { background: #0f172a; border: 1px solid var(--primary); border-radius: 8px; padding: 16px; margin: 16px 0; }
+    .quiz h4 { color: var(--primary); margin-bottom: 8px; }
+    .quiz label { display: block; padding: 8px 12px; margin: 4px 0; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; }
+    .quiz label:hover { border-color: var(--primary); background: #172554; }
+    .quiz label.selected-correct { border-color: var(--success); background: #052e16; }
+    .quiz label.selected-wrong { border-color: var(--danger); background: #450a0a; }
+    .quiz-result { margin-top: 12px; padding: 12px; border-radius: 6px; display: none; }
+    .quiz-result.show { display: block; }
+    .quiz-result.correct { background: #052e16; border: 1px solid var(--success); }
+    .quiz-result.wrong { background: #450a0a; border: 1px solid var(--danger); }
+    button.run-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em; margin: 8px 4px; transition: all 0.2s; }
+    button.run-btn:hover { background: #2563eb; }
+    .output { background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin: 8px 0; font-family: monospace; font-size: 0.85em; min-height: 40px; max-height: 200px; overflow-y: auto; }
+    .output .log-line { color: var(--success); margin: 2px 0; }
+    .output .warn-line { color: var(--warning); margin: 2px 0; }
+    .output .error-line { color: var(--danger); margin: 2px 0; }
+    .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.75em; background: var(--card); border: 1px solid var(--border); margin-left: 8px; vertical-align: middle; }
+    .note { background: #172554; border: 1px solid var(--primary); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.9em; }
+    .intro { font-size: 1.05em; color: var(--muted); margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<h1>🛡️ 浏览器沙箱与 Session 隔离</h1>
+<p class="intro">深入分析：Web 页面嵌入第三方 URL 时，如何实现类似 Electron sessionStorage 的登录态隔离效果</p>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('concept')">概念总览</button>
+  <button class="tab" onclick="showTab('mechanism')">隔离机制</button>
+  <button class="tab" onclick="showTab('solution')">解决方案</button>
+  <button class="tab" onclick="showTab('demo')">模拟演示</button>
+  <button class="tab" onclick="showTab('quiz')">自测题</button>
+</div>
+
+<!-- Tab 1: 概念总览 -->
+<div id="panel-concept" class="panel active">
+  <h2>一、背景：为什么需要 Session 隔离？</h2>
+  <div class="card">
+    <h3>场景描述</h3>
+    <p>Web 页面内部嵌入第三方 URL，切换 Tab 时需要支持<strong>不同登录态</strong>。类似于 Electron 的 sessionStorage 隔离效果——每个 BrowserWindow 有独立的 Session。</p>
+    <div class="warning" style="margin-top:12px;">
+      <strong>核心问题：</strong>传统 Web 中，sessionStorage 按 <code>origin</code> 划分。同 origin 下的不同"身份"默认共享同一份 sessionStorage。
+    </div>
+  </div>
+
+  <h2>核心概念</h2>
+  <div class="card">
+    <h3>Origin（源）</h3>
+    <pre><code>origin = protocol + "//" + host + ":" + port
+Example: https://example.com:443</code></pre>
+    <p>sessionStorage/localStorage/cookies 按 origin 隔离。不同 origin 之间无法互相访问存储。</p>
+  </div>
+
+  <div class="card">
+    <h3>Electron vs Web</h3>
+    <table>
+      <tr><th>维度</th><th>Electron</th><th>传统 Web</th></tr>
+      <tr><td>Session 隔离单位</td><td>BrowserWindow（独立 Partition）</td><td>Origin</td></tr>
+      <tr><td>sessionStorage</td><td>每个窗口独立</td><td>同 Origin 共享</td></tr>
+      <tr><td>Cookies</td><td>每个 Session 独立</td><td>每个 Origin 独立</td></tr>
+      <tr><td>Storage Partition</td><td>显式配置</td><td>浏览器隐式管理</td></tr>
+    </table>
+  </div>
+
+  <div class="diagram">
+    <h3 style="color:var(--primary);margin-bottom:16px;">Electron 隔离模型</h3>
+    <div class="diagram-row">
+      <div class="box box-session">Window A (Session A)<br><small>sessionStorage-A</small></div>
+      <div class="box box-session">Window B (Session B)<br><small>sessionStorage-B</small></div>
+      <div class="box box-session">Window C (Session C)<br><small>sessionStorage-C</small></div>
+    </div>
+    <p style="margin-top:12px;color:var(--muted);font-size:0.85em;">每个窗口拥有完全独立的 Session 和 sessionStorage</p>
+  </div>
+
+  <div class="diagram">
+    <h3 style="color:var(--warning);margin-bottom:16px;">传统 Web（同 Origin）</h3>
+    <div class="diagram-row">
+      <div class="box box-shared">Tab A<br><small>→ sessionStorage (共享)</small></div>
+      <div class="box box-shared">Tab B<br><small>→ sessionStorage (共享)</small></div>
+      <div class="box box-shared">iframe<br><small>→ sessionStorage (共享)</small></div>
+    </div>
+    <p style="margin-top:12px;color:var(--muted);font-size:0.85em;">同 Origin 下所有上下文共享同一份 sessionStorage</p>
+  </div>
+</div>
+
+<!-- Tab 2: 隔离机制 -->
+<div id="panel-mechanism" class="panel">
+  <h2>二、关键隔离机制</h2>
+
+  <h3>2.1 Sandbox 属性</h3>
+  <div class="card">
+    <p><code>&lt;iframe sandbox&gt;</code> 通过指令控制隔离级别：</p>
+    <table>
+      <tr><th>sandbox 值</th><th>效果</th></tr>
+      <tr><td>（无 sandbox）</td><td><span class="tag tag-red">继承父页面全部权限</span></td></tr>
+      <tr><td><code>allow-same-origin</code></td><td>将 iframe 视为同源（可访问父页面 DOM）</td></tr>
+      <tr><td>无 allow-same-origin</td><td><span class="tag tag-green">iframe 成为 unique origin</span></td></tr>
+      <tr><td><code>allow-scripts</code></td><td>允许执行脚本</td></tr>
+      <tr><td><code>allow-forms</code></td><td>允许表单提交</td></tr>
+    </table>
+  </div>
+
+  <h3>2.2 COOP（Cross-Origin-Opener-Policy）</h3>
+  <div class="card">
+    <p>控制窗口之间的关系，决定是否共享 Browsing Context Group：</p>
+    <pre><code>Cross-Origin-Opener-Policy: same-origin | same-origin-allow-popups | unsafe-none</code></pre>
+    <table>
+      <tr><th>值</th><th>效果</th><th>sessionStorage 隔离</th></tr>
+      <tr><td><code>same-origin</code></td><td>强制独立 BC Group</td><td><span class="tag tag-green">✅ 完全隔离</span></td></tr>
+      <tr><td><code>same-origin-allow-popups</code></td><td>允许与跨域 popup 通信</td><td><span class="tag tag-yellow">⚠️ 部分隔离</span></td></tr>
+      <tr><td><code>unsafe-none</code></td><td>默认，允许跨域访问</td><td><span class="tag tag-red">❌ 共享</span></td></tr>
+    </table>
+    <div class="success-box">
+      <strong>COOP same-origin 核心效果：</strong>即使 top-level origin 相同，设置了 COOP 的文档会进入独立 BC Group，sessionStorage 完全隔离。
+    </div>
+  </div>
+
+  <h3>2.3 COEP（Cross-Origin-Embedder-Policy）</h3>
+  <div class="card">
+    <pre><code>Cross-Origin-Embedder-Policy: require-corp | credentialless</code></pre>
+    <p><code>credentialless</code> 让 iframe 以无凭证模式加载（不携带 cookies），适合隐私隔离。</p>
+  </div>
+
+  <h3>2.4 Storage Partitioning（存储分区）</h3>
+  <div class="card">
+    <p>现代浏览器为防止追踪，对存储按 top-level origin 分区：</p>
+    <pre><code>顶级页面: partition_key = (top-level origin, agentClusterId)
+第三方 iframe: partition_key = (top-level origin, nav-site, agentClusterId)</code></pre>
+    <p>这意味着即使 iframe 内 URL 相同，不同顶级页面下的 iframe 也有<strong>不同的存储空间</strong>。</p>
+  </div>
+
+  <h3>2.5 Storage Access API</h3>
+  <div class="card">
+    <p>允许被嵌入的第三方 iframe 在用户交互后访问 cookies：</p>
+    <pre><code>// 在 iframe 内调用
+const granted = await document.requestStorageAccess();
+if (granted) {
+  // 可以访问 cookies / sessionStorage / localStorage
+}</code></pre>
+    <div class="warning">限制：需要用户交互触发，浏览器可能拒绝。</div>
+  </div>
+
+  <div class="diagram">
+    <h3 style="color:var(--primary);margin-bottom:16px;">COOP 隔离效果</h3>
+    <div class="diagram-row">
+      <div>
+        <div class="box box-origin" style="margin-bottom:8px;">主页面 (top-level)</div>
+        <div style="font-size:0.8em;color:var(--muted);">COOP: same-origin</div>
+      </div>
+      <div class="arrow">≠</div>
+      <div>
+        <div class="box box-isolated" style="margin-bottom:8px;">COOP 隔离 iframe</div>
+        <div style="font-size:0.8em;color:var(--muted);">独立 BC Group</div>
+      </div>
+    </div>
+    <p style="margin-top:16px;color:var(--muted);font-size:0.85em;">BC Group 不同 → sessionStorage 互相不可见</p>
+  </div>
+</div>
+
+<!-- Tab 3: 解决方案 -->
+<div id="panel-solution" class="panel">
+  <h2>三、解决方案对比</h2>
+
+  <table>
+    <tr><th>方案</th><th>隔离强度</th><th>用户体验</th><th>复杂度</th><th>sessionStorage 隔离</th></tr>
+    <tr><td>多个 window.open</td><td>⭐⭐</td><td>⭐⭐⭐⭐</td><td>低</td><td><span class="tag tag-red">❌ 同 origin 共享</span></td></tr>
+    <tr><td>sandbox iframe</td><td>⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>中</td><td><span class="tag tag-red">❌ 依赖父页面</span></td></tr>
+    <tr><td>COOP same-origin</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>中</td><td><span class="tag tag-green">✅ 真正隔离</span></td></tr>
+    <tr><td>COOP + 匿名 iframe</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>中高</td><td><span class="tag tag-green">✅ 隔离 + 隐私</span></td></tr>
+    <tr><td>动态子域名</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐</td><td>高</td><td><span class="tag tag-green">✅ 完全隔离</span></td></tr>
+  </table>
+
+  <h3>方案 A：COOP + 多 iframe 实例</h3>
+  <div class="card">
+    <p><strong>步骤：</strong></p>
+    <ol style="margin:8px 0 8px 20px;">
+      <li>第三方应用配置 <code>Cross-Origin-Opener-Policy: same-origin</code></li>
+      <li>宿主页面为每个会话创建独立 iframe</li>
+      <li>通过 postMessage / BroadcastChannel 通信</li>
+    </ol>
+    <pre><code>&lt;!-- 宿主页面 --&gt;
+&lt;script&gt;
+function createSession(sessionId) {
+  const iframe = document.createElement('iframe');
+  iframe.sandbox = 'allow-scripts allow-forms allow-popups';
+  iframe.src = `https://third-party.com/app?session=${sessionId}`;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  return iframe;
+}
+&lt;/script&gt;</code></pre>
+  </div>
+
+  <h3>方案 B：动态子域名</h3>
+  <div class="card">
+    <p>为每个登录态分配独立子域名，实现完全 origin 隔离：</p>
+    <pre><code>session-a.third-party.com  → 登录态甲
+session-b.third-party.com  → 登录态乙
+session-c.third-party.com  → 登录态丙</code></pre>
+    <div class="note"><strong>优点：</strong>完全同标准浏览器行为隔离，无需特殊 Header<br><strong>缺点：</strong>需要服务端配置多子域名</div>
+  </div>
+
+  <h3>方案 C：Electron 类比方案</h3>
+  <div class="card">
+    <p>模拟 Electron 的多窗口多 Session 模型：</p>
+    <pre><code>// 每个"登录态" = 一个独立 window
+const sessions = {
+  'user-A': window.open('https://third-party.com', 'winA'),
+  'user-B': window.open('https://third-party.com', 'winB'),
+};
+
+// 切换时隐藏/显示对应窗口
+function switchSession(sessionId) {
+  Object.entries(sessions).forEach(([id, win]) => {
+    if (id === sessionId) {
+      win.focus();
+    }
+  });
+}</code></pre>
+    <div class="warning">注意：sessionStorage 仍按 origin 共享，与 Electron 不同。</div>
+  </div>
+
+  <h3>跨实例通信</h3>
+  <div class="card">
+    <p>隔离后需要通信的场景：</p>
+    <table>
+      <tr><th>方式</th><th>适用场景</th><th>限制</th></tr>
+      <tr><td>BroadcastChannel</td><td>同 BC Group 内文档通信</td><td>需同 BC Group</td></tr>
+      <tr><td>postMessage</td><td>父子 iframe 通信</td><td>需知道目标 origin</td></tr>
+      <tr><td>MessageChannel</td><td>端到端通道</td><td>需通过 postMessage 建立通道</td></tr>
+      <tr><td>SharedWorker</td><td>跨标签页/窗口通信</td><td>需同 origin</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Tab 4: 模拟演示 -->
+<div id="panel-demo" class="panel">
+  <h2>四、浏览器 API 模拟演示</h2>
+
+  <h3>4.1 Origin 检测</h3>
+  <div class="card">
+    <p>当前页面的 Origin 信息：</p>
+    <div class="output" id="origin-output">点击按钮查看...</div>
+    <button class="run-btn" onclick="detectOrigin()">检测 Origin</button>
+    <button class="run-btn" onclick="detectSessionStorage()">检测 sessionStorage</button>
+    <button class="run-btn" onclick="detectSandboxSupport()">检测 Sandbox 支持</button>
+  </div>
+
+  <h3>4.2 存储隔离模拟</h3>
+  <div class="card">
+    <p>模拟不同隔离状态下的存储访问：</p>
+    <input type="text" id="storage-key" placeholder="Key" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:6px 10px;border-radius:4px;margin-right:8px;">
+    <input type="text" id="storage-value" placeholder="Value" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:6px 10px;border-radius:4px;margin-right:8px;">
+    <div style="margin-top:8px;">
+      <button class="run-btn" onclick="simSet()">写入</button>
+      <button class="run-btn" onclick="simGet()">读取</button>
+      <button class="run-btn" onclick="simClear()">清除</button>
+    </div>
+    <div class="output" id="storage-output">等待操作...</div>
+    <div class="warning" style="margin-top:12px;">
+      <strong>模拟说明：</strong>由于演示在同页面，无法真实模拟跨窗口隔离。实际操作需要多窗口或带 COOP 的 iframe。
+    </div>
+  </div>
+
+  <h3>4.3 COOP/COEP Header 演示</h3>
+  <div class="card">
+    <p>模拟不同 Header 配置下的隔离效果：</p>
+    <select id="coop-select" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:6px 10px;border-radius:4px;margin-right:8px;">
+      <option value="unsafe-none">COOP: unsafe-none（默认）</option>
+      <option value="same-origin-allow-popups">COOP: same-origin-allow-popups</option>
+      <option value="same-origin">COOP: same-origin（强制隔离）</option>
+    </select>
+    <select id="coep-select" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:6px 10px;border-radius:4px;margin-right:8px;">
+      <option value="none">COEP: none</option>
+      <option value="credentialless">COEP: credentialless</option>
+      <option value="require-corp">COEP: require-corp</option>
+    </select>
+    <button class="run-btn" onclick="simulateHeaders()">模拟</button>
+    <div class="output" id="coop-output">选择配置后点击模拟...</div>
+    <table style="margin-top:12px;">
+      <tr><th>Header 配置</th><th>BC Group</th><th>sessionStorage</th><th>Cookies</th></tr>
+      <tr><td>COOP: unsafe-none</td><td>共享</td><td>共享</td><td>共享</td></tr>
+      <tr><td>COOP: same-origin</td><td><strong>独立</strong></td><td><strong>隔离</strong></td><td>隔离</td></tr>
+      <tr><td>credentialless</td><td>独立</td><td>独立</td><td>无</td></tr>
+    </table>
+  </div>
+
+  <h3>4.4 Sandbox 属性检测</h3>
+  <div class="card">
+    <p>当前环境支持的 Sandbox 特性：</p>
+    <div class="output" id="sandbox-output">点击检测...</div>
+  </div>
+</div>
+
+<!-- Tab 5: 自测题 -->
+<div id="panel-quiz" class="panel">
+  <h2>五、自测题</h2>
+
+  <div class="quiz">
+    <h4>Q1: 以下哪种方案可以真正实现 sessionStorage 隔离（Electron 效果）？</h4>
+    <label onclick="selectQuiz(this, 'wrong')">A. 使用两个 window.open() 打开同源页面</label>
+    <label onclick="selectQuiz(this, 'correct')">B. 第三方页面设置 COOP: same-origin，创建多个 iframe 实例</label>
+    <label onclick="selectQuiz(this, 'wrong')">C. 使用 sandbox="allow-scripts" 的 iframe</label>
+    <label onclick="selectQuiz(this, 'wrong')">D. 使用 postMessage 在两个窗口间传递数据</label>
+    <div class="quiz-result" id="quiz1-result"></div>
+  </div>
+
+  <div class="quiz">
+    <h4>Q2: COOP: same-origin 的核心作用是什么？</h4>
+    <label onclick="selectQuiz(this, 'wrong')">A. 禁止跨域资源共享</label>
+    <label onclick="selectQuiz(this, 'correct')">B. 强制文档进入独立 Browsing Context Group</label>
+    <label onclick="selectQuiz(this, 'wrong')">C. 禁止 iframe 加载跨域内容</label>
+    <label onclick="selectQuiz(this, 'wrong')">D. 清除页面所有 cookies</label>
+    <div class="quiz-result" id="quiz2-result"></div>
+  </div>
+
+  <div class="quiz">
+    <h4>Q3: credentialless iframe 的特点是？</h4>
+    <label onclick="selectQuiz(this, 'wrong')">A. 完全禁用 JavaScript</label>
+    <label onclick="selectQuiz(this, 'correct')">B. 以无凭证（匿名）模式加载，不携带 cookies</label>
+    <label onclick="selectQuiz(this, 'wrong')">C. 允许访问父页面的 DOM</label>
+    <label onclick="selectQuiz(this, 'wrong')">D. 禁用所有网络请求</label>
+    <div class="quiz-result" id="quiz3-result"></div>
+  </div>
+
+  <div class="quiz">
+    <h4>Q4: Storage Access API 的限制是？</h4>
+    <label onclick="selectQuiz(this, 'wrong')">A. 无任何限制，任何 iframe 都可以调用</label>
+    <label onclick="selectQuiz(this, 'wrong')">B. 只能在主窗口调用</label>
+    <label onclick="selectQuiz(this, 'correct')">C. 需要用户交互触发，浏览器可能拒绝</label>
+    <label onclick="selectQuiz(this, 'wrong')">D. 只在 Chrome 中可用</label>
+    <div class="quiz-result" id="quiz4-result"></div>
+  </div>
+
+  <div class="quiz">
+    <h4>Q5: sandbox 属性中，哪个值会让 iframe 成为 unique origin？</h4>
+    <label onclick="selectQuiz(this, 'wrong')">A. sandbox="allow-same-origin"</label>
+    <label onclick="selectQuiz(this, 'correct')">B. 不设置 allow-same-origin</label>
+    <label onclick="selectQuiz(this, 'wrong')">C. sandbox="allow-scripts"</label>
+    <label onclick="selectQuiz(this, 'wrong')">D. sandbox="allow-forms"</label>
+    <div class="quiz-result" id="quiz5-result"></div>
+  </div>
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function detectOrigin() {
+  const output = document.getElementById('origin-output');
+  const info = [
+    `<span class="log-line">🔍 Origin 检测结果：</span>`,
+    `<span class="log-line">• location.origin: ${location.origin}</span>`,
+    `<span class="log-line">• location.protocol: ${location.protocol}</span>`,
+    `<span class="log-line">• location.host: ${location.host}</span>`,
+    `<span class="log-line">• location.port: ${location.port || '(default)'}</span>`,
+    `<span class="log-line">• document.domain: ${document.domain || '(not set)'}</span>`,
+    `<span class="log-line">• 来源页面 Referrer: ${document.referrer || '(direct)'}</span>`,
+  ];
+  output.innerHTML = info.join('\n');
+}
+
+function detectSessionStorage() {
+  const output = document.getElementById('origin-output');
+  try {
+    const keys = Object.keys(sessionStorage);
+    const items = keys.length ? keys.map(k => `${k}=${sessionStorage.getItem(k)}`).join(', ') : '(empty)';
+    output.innerHTML = [
+      `<span class="log-line">🔍 sessionStorage 检测结果：</span>`,
+      `<span class="log-line">• 可访问: ✅ 是</span>`,
+      `<span class="log-line">• 当前存储项: ${keys.length}</span>`,
+      `<span class="log-line">• 内容: ${items}</span>`,
+      `<span class="log-line">• storageArea: ${navigator.storage ? '✅ 可用' : '❌ 不可用'}</span>`,
+    ].join('\n');
+  } catch (e) {
+    output.innerHTML = `<span class="error-line">❌ sessionStorage 不可访问: ${e.message}</span>`;
+  }
+}
+
+function detectSandboxSupport() {
+  const output = document.getElementById('sandbox-output');
+  const iframe = document.createElement('iframe');
+  const div = document.createElement('div');
+  iframe.sandbox = 'allow-scripts';
+  iframe.style.display = 'none';
+  iframe.onload = () => {
+    const supportsSandbox = iframe.sandbox;
+    output.innerHTML = [
+      `<span class="log-line">🔍 Sandbox 特性检测：</span>`,
+      `<span class="log-line">• sandbox 属性支持: ✅ 是</span>`,
+      `<span class="log-line">• allow-scripts: ✅ 支持</span>`,
+      `<span class="log-line">• allow-forms: ⚠️ 需测试</span>`,
+      `<span class="log-line">• allow-same-origin: ⚠️ 需测试</span>`,
+      `<span class="log-line">• credentialless: ${'credentialless' in iframe ? '✅ 支持' : '❌ 不支持'}</span>`,
+    ].join('\n');
+  };
+  iframe.src = 'about:blank';
+  document.body.appendChild(iframe);
+}
+
+function simSet() {
+  const key = document.getElementById('storage-key').value;
+  const val = document.getElementById('storage-value').value;
+  if (!key) { alert('请输入 Key'); return; }
+  sessionStorage.setItem(key, val);
+  const output = document.getElementById('storage-output');
+  output.innerHTML = `<span class="log-line">✅ 写入: sessionStorage['${key}'] = '${val}'</span>\n<span class="log-line">（注：当前页面演示，实际跨窗口隔离需 COOP 配置）</span>`;
+}
+
+function simGet() {
+  const key = document.getElementById('storage-key').value;
+  if (!key) { alert('请输入 Key'); return; }
+  const val = sessionStorage.getItem(key);
+  const output = document.getElementById('storage-output');
+  if (val !== null) {
+    output.innerHTML = `<span class="log-line">✅ 读取: sessionStorage['${key}'] = '${val}'</span>`;
+  } else {
+    output.innerHTML = `<span class="warn-line">⚠️ Key '${key}' 不存在</span>`;
+  }
+}
+
+function simClear() {
+  sessionStorage.clear();
+  const output = document.getElementById('storage-output');
+  output.innerHTML = `<span class="log-line">✅ sessionStorage 已清除</span>`;
+}
+
+function simulateHeaders() {
+  const coop = document.getElementById('coop-select').value;
+  const coep = document.getElementById('coep-select').value;
+  const output = document.getElementById('coop-output');
+
+  const configs = {
+    'unsafe-none': {
+      bcGroup: '共享（与父页面同组）',
+      sessionStorage: '共享（可互相访问）',
+      cookies: '共享',
+      note: '默认行为，父子页面可互相访问'
+    },
+    'same-origin-allow-popups': {
+      bcGroup: '部分隔离',
+      sessionStorage: '部分隔离',
+      cookies: '部分隔离',
+      note: '允许 popup 通信，但不与 opener 共享 BC Group'
+    },
+    'same-origin': {
+      bcGroup: '完全独立',
+      sessionStorage: '完全隔离',
+      cookies: '完全隔离',
+      note: '强制创建独立 BC Group，Electron 类隔离效果'
+    }
+  };
+
+  const c = configs[coop];
+  const coepDesc = coep === 'credentialless' ? '无 cookies（匿名）' : coep === 'require-corp' ? '需 CORP 头' : '无限制';
+  output.innerHTML = [
+    `<span class="log-line">📋 当前配置模拟结果：</span>`,
+    `<span class="log-line">• COOP: ${coop}</span>`,
+    `<span class="log-line">• COEP: ${coepDesc}</span>`,
+    `<span class="log-line">• Browsing Context Group: <strong>${c.bcGroup}</strong></span>`,
+    `<span class="log-line">• sessionStorage: <strong>${c.sessionStorage}</strong></span>`,
+    `<span class="log-line">• Cookies: <strong>${c.cookies}</strong></span>`,
+    `<span class="warn-line">💡 ${c.note}</span>`,
+    coep === 'credentialless' ? `<span class="log-line">• credentialless 模式：不携带 cookies，适合隐私隔离场景</span>` : '',
+  ].filter(Boolean).join('\n');
+}
+
+function selectQuiz(label, answer) {
+  const quiz = label.parentElement;
+  const labels = quiz.querySelectorAll('label');
+  labels.forEach(l => {
+    l.classList.remove('selected-correct', 'selected-wrong');
+    l.style.pointerEvents = 'none';
+  });
+  if (answer === 'correct') {
+    label.classList.add('selected-correct');
+  } else {
+    label.classList.add('selected-wrong');
+    labels.forEach(l => {
+      if (l.onclick.toString().includes("'correct'")) {
+        l.classList.add('selected-correct');
+      }
+    });
+  }
+  const resultId = quiz.querySelector('.quiz-result').id;
+  const resultDiv = document.getElementById(resultId);
+  resultDiv.className = 'quiz-result show ' + (answer === 'correct' ? 'correct' : 'wrong');
+  resultDiv.innerHTML = answer === 'correct' 
+    ? '✅ 回答正确！COOP same-origin 强制创建独立 BC Group，真正实现 sessionStorage 隔离。'
+    : '❌ 回答错误。正确答案已标记为绿色。';
+}
+</script>
+</body>
+</html>
