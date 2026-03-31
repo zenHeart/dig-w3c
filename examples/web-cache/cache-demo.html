@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache API 交互式演示</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.875rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem; }
+    .subtitle { color: var(--gray-500); margin-bottom: 2rem; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 1.25rem;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    .section-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 0.5rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    textarea { resize: vertical; font-family: 'Monaco', 'Menlo', monospace; }
+    .row { display: flex; gap: 1rem; }
+    .row > * { flex: 1; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--error); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-warning:hover { background: #d97706; }
+    .btn-outline { background: white; color: var(--gray-700); border: 1px solid var(--gray-300); }
+    .btn-outline:hover { background: var(--gray-50); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+    .output {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .output-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .log-entry { padding: 0.25rem 0; border-bottom: 1px solid var(--gray-700); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.success { color: #34d399; }
+    .log-entry.info { color: #60a5fa; }
+    .log-entry.warning { color: #fbbf24; }
+    .log-entry .timestamp { color: var(--gray-500); margin-right: 0.5rem; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .info-item { background: var(--gray-50); padding: 0.75rem; border-radius: 6px; }
+    .info-label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.25rem; }
+    .info-value { font-size: 0.875rem; font-weight: 600; color: var(--gray-800); }
+    .cache-list {
+      background: var(--gray-50);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .cache-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .cache-item:last-child { border-bottom: none; }
+    .cache-item-url { font-family: monospace; font-size: 0.8125rem; color: var(--gray-700); word-break: break-all; }
+    .cache-item-badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
+    .badge-primary { background: #e0e7ff; color: #4338ca; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 0.5rem; }
+    .status-dot.online { background: var(--success); }
+    .status-dot.offline { background: var(--error); }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
+    .checkbox-item input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); }
+    .checkbox-item label { font-size: 0.875rem; color: var(--gray-700); }
+    .loading { display: inline-flex; align-items: center; gap: 0.5rem; }
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .strategy-diagram {
+      background: var(--gray-50);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .strategy-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      font-size: 0.875rem;
+    }
+    .strategy-label { font-weight: 600; min-width: 160px; color: var(--gray-700); }
+    .strategy-arrow { color: var(--gray-400); }
+    .strategy-text { color: var(--gray-600); font-size: 0.8125rem; }
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+    .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid var(--warning); }
+    .alert-info { background: #e0e7ff; color: #4338ca; border-left: 4px solid var(--primary); }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .row { flex-direction: column; }
+      .btn-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Cache API 交互式演示</h1>
+    <p class="subtitle"><span class="status-dot online" id="headerStatus"></span>基于 Web Cache API 的离线缓存能力</p>
+
+    <div class="card">
+      <div class="card-title">缓存状态概览</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">CacheStorage 支持</div>
+          <div class="info-value" id="supportStatus">检测中...</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">已打开缓存</div>
+          <div class="info-value" id="openCacheName">-</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">缓存条目数</div>
+          <div class="info-value" id="cacheCount">0</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">网络状态</div>
+          <div class="info-value" id="networkStatus"><span class="status-dot online"></span>在线</div>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="initCacheBtn"><span>打开/创建缓存</span></button>
+        <button class="btn btn-outline" id="refreshStatusBtn"><span>刷新状态</span></button>
+      </div>
+      <div id="cacheInitAlert" class="alert alert-warning" style="display:none; margin-top:1rem;">
+        Cache API 不受支持，请使用现代浏览器（Chrome 43+、Firefox 39+、Safari 11.1+）。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">缓存策略对比</div>
+      <div class="strategy-diagram">
+        <div class="strategy-row">
+          <span class="strategy-label">Cache First</span>
+          <span class="strategy-arrow">-&gt;</span>
+          <span class="strategy-text">缓存优先，未命中再请求网络。适合静态资源</span>
+        </div>
+        <div class="strategy-row">
+          <span class="strategy-label">Network First</span>
+          <span class="strategy-arrow">-&gt;</span>
+          <span class="strategy-text">网络优先，失败时回退缓存。适合 API 数据</span>
+        </div>
+        <div class="strategy-row">
+          <span class="strategy-label">Stale-While-Revalidate</span>
+          <span class="strategy-arrow">-&gt;</span>
+          <span class="strategy-text">立即返回缓存，同时后台更新。适合读多写少</span>
+        </div>
+        <div class="strategy-row">
+          <span class="strategy-label">Cache Only / Network Only</span>
+          <span class="strategy-arrow">-&gt;</span>
+          <span class="strategy-text">纯缓存或纯网络</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">添加资源到缓存</div>
+      <div class="section-label">输入 URL</div>
+      <input type="text" id="addUrl" value="https://jsonplaceholder.typicode.com/posts/1" placeholder="输入 URL">
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="addFromNetwork" checked>
+          <label for="addFromNetwork">从网络获取并缓存</label>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="addToCacheBtn"><span>添加缓存</span></button>
+        <button class="btn btn-warning" id="addAllBtn"><span>批量添加示例</span></button>
+      </div>
+      <div class="output" id="addLog">
+        <div class="output-title">操作日志</div>
+        <div id="addLogContent">等待添加...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">读取缓存</div>
+      <div class="section-label">输入要查询的 URL</div>
+      <input type="text" id="readUrl" value="https://jsonplaceholder.typicode.com/posts/1" placeholder="输入 URL">
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="readIgnoreSearch">
+          <label for="readIgnoreSearch">ignoreSearch: 忽略查询参数</label>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-success" id="readCacheBtn"><span>查询缓存</span></button>
+        <button class="btn btn-outline" id="readAllBtn"><span>列出所有键</span></button>
+      </div>
+      <div id="readResultInfo" style="display:none; margin-top:1rem;">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Status</div>
+            <div class="info-value" id="readStatus">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Content-Type</div>
+            <div class="info-value" id="readContentType">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">来源</div>
+            <div class="info-value" id="readSource">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="output" id="readLog">
+        <div class="output-title">查询结果</div>
+        <div id="readLogContent">等待查询...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">删除缓存条目</div>
+      <div class="section-label">输入要删除的 URL</div>
+      <input type="text" id="deleteUrl" placeholder="输入 URL（留空则清空所有）">
+      <div class="btn-group">
+        <button class="btn btn-danger" id="deleteOneBtn"><span>删除单条</span></button>
+        <button class="btn btn-danger" id="deleteAllBtn"><span>清空所有缓存</span></button>
+      </div>
+      <div class="output" id="deleteLog">
+        <div class="output-title">删除日志</div>
+        <div id="deleteLogContent">等待操作...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">当前缓存内容</div>
+      <div class="btn-group">
+        <button class="btn btn-outline" id="listCacheBtn"><span>刷新列表</span></button>
+      </div>
+      <div class="cache-list" id="cacheListContent">
+        <div style="color:var(--gray-400); text-align:center; padding:1rem;">暂无缓存数据</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">缓存策略演示</div>
+      <div class="section-label">选择策略</div>
+      <select id="strategySelect">
+        <option value="cacheFirst">Cache First（缓存优先）</option>
+        <option value="networkFirst">Network First（网络优先）</option>
+        <option value="staleWhileRevalidate">Stale-While-Revalidate</option>
+      </select>
+      <div class="section-label" style="margin-top:1rem;">请求 URL</div>
+      <input type="text" id="strategyUrl" value="https://jsonplaceholder.typicode.com/posts/1" placeholder="输入 URL">
+      <div class="btn-group">
+        <button class="btn btn-primary" id="runStrategyBtn"><span>执行策略</span></button>
+      </div>
+      <div class="output" id="strategyLog">
+        <div class="output-title">策略执行日志</div>
+        <div id="strategyLogContent">等待执行...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CACHE_NAME = 'demo-cache-v1';
+    const isCacheSupported = typeof caches !== 'undefined';
+    let currentCache = null;
+
+    function formatTime() {
+      return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function logEl(content, message, type) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.innerHTML = '<span class="timestamp">[' + formatTime() + ']</span>' + message;
+      content.appendChild(entry);
+      content.parentElement.scrollTop = content.parentElement.scrollHeight;
+    }
+
+    function clearLogEl(content, msg) {
+      content.parentElement.innerHTML = '<div class="output-title">操作日志</div><div id="' + content.id + '"><span class="timestamp">[' + formatTime() + ']</span><span style="color:var(--gray-500)">' + msg + '</span></div>';
+    }
+
+    function init() {
+      const supportEl = document.getElementById('supportStatus');
+      if (!isCacheSupported) {
+        supportEl.innerHTML = '<span style="color:var(--error)">不支持</span>';
+        document.getElementById('cacheInitAlert').style.display = 'block';
+        document.querySelectorAll('button').forEach(b => b.disabled = true);
+        return;
+      }
+      supportEl.innerHTML = '<span style="color:var(--success)">支持</span>';
+      updateNetworkStatus();
+      window.addEventListener('online', updateNetworkStatus);
+      window.addEventListener('offline', updateNetworkStatus);
+      refreshStatus();
+    }
+
+    function updateNetworkStatus() {
+      const el = document.getElementById('networkStatus');
+      const hEl = document.getElementById('headerStatus');
+      if (navigator.onLine) {
+        el.innerHTML = '<span class="status-dot online"></span>在线';
+        hEl.className = 'status-dot online';
+      } else {
+        el.innerHTML = '<span class="status-dot offline"></span>离线';
+        hEl.className = 'status-dot offline';
+      }
+    }
+
+    async function openCache() {
+      currentCache = await caches.open(CACHE_NAME);
+      document.getElementById('openCacheName').textContent = CACHE_NAME;
+      return currentCache;
+    }
+
+    async function refreshStatus() {
+      if (!isCacheSupported) return;
+      const names = await caches.keys();
+      if (names.length > 0) {
+        document.getElementById('openCacheName').textContent = names.join(', ');
+        currentCache = await caches.open(names[0]);
+        const keys = await currentCache.keys();
+        document.getElementById('cacheCount').textContent = keys.length;
+      }
+    }
+
+    // init cache button
+    document.getElementById('initCacheBtn').addEventListener('click', async function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"><span class="spinner"></span>打开中...</span>';
+      try {
+        await openCache();
+        await refreshStatus();
+        const logContent = document.getElementById('addLogContent');
+        clearLogEl(logContent, '缓存已打开: ' + CACHE_NAME);
+        logEl(logContent, '缓存创建成功', 'success');
+      } catch(e) {
+        logEl(document.getElementById('addLogContent'), '失败: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>打开/创建缓存</span>';
+      }
+    });
+
+    document.getElementById('refreshStatusBtn').addEventListener('click', refreshStatus);
+
+    // add to cache
+    document.getElementById('addToCacheBtn').addEventListener('click', async function() {
+      const url = document.getElementById('addUrl').value;
+      const content = document.getElementById('addLogContent');
+      if (!url) { logEl(content, '请输入 URL', 'error'); return; }
+      this.disabled = true;
+      this.innerHTML = '<span class="loading"><span class="spinner"></span>缓存中...</span>';
+      clearLogEl(content, '');
+      try {
+        const cache = await openCache();
+        if (document.getElementById('addFromNetwork').checked) {
+          logEl(content, '从网络获取: ' + url, 'info');
+          const resp = await fetch(url);
+          if (resp.ok) { await cache.put(url, resp); logEl(content, '已缓存 (HTTP ' + resp.status + ')', 'success'); }
+          else { logEl(content, 'HTTP 错误: ' + resp.status, 'error'); }
+        } else {
+          const r = new Response('Cached at ' + new Date().toISOString(), { headers: { 'Content-Type': 'text/plain' } });
+          await cache.put(url, r);
+          logEl(content, '自定义响应已缓存', 'success');
+        }
+        await refreshStatus();
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+      finally { this.disabled = false; this.innerHTML = '<span>添加缓存</span>'; }
+    });
+
+    document.getElementById('addAllBtn').addEventListener('click', async function() {
+      const urls = ['https://jsonplaceholder.typicode.com/posts/1','https://jsonplaceholder.typicode.com/posts/2','https://jsonplaceholder.typicode.com/users/1'];
+      const content = document.getElementById('addLogContent');
+      this.disabled = true; this.innerHTML = '<span class="loading"><span class="spinner"></span>批量添加...</span>';
+      clearLogEl(content, '');
+      try {
+        const cache = await openCache();
+        logEl(content, '批量添加 ' + urls.length + ' 个...', 'info');
+        for (const url of urls) {
+          try {
+            const r = await fetch(url);
+            if (r.ok) { await cache.put(url, r); logEl(content, '已缓存: ' + url.split('/').pop(), 'success'); }
+          } catch(e) { logEl(content, '失败: ' + url, 'error'); }
+        }
+        await refreshStatus();
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+      finally { this.disabled = false; this.innerHTML = '<span>批量添加示例</span>'; }
+    });
+
+    // read cache
+    document.getElementById('readCacheBtn').addEventListener('click', async function() {
+      const url = document.getElementById('readUrl').value;
+      const content = document.getElementById('readLogContent');
+      if (!url) { logEl(content, '请输入 URL', 'error'); return; }
+      this.disabled = true; this.innerHTML = '<span class="loading"><span class="spinner"></span>查询中...</span>';
+      clearLogEl(content, '');
+      document.getElementById('readResultInfo').style.display = 'none';
+      try {
+        const cache = await openCache();
+        const opts = document.getElementById('readIgnoreSearch').checked ? { ignoreSearch: true } : {};
+        logEl(content, '查询: ' + url, 'info');
+        const cached = await cache.match(url, opts);
+        if (cached) {
+          document.getElementById('readResultInfo').style.display = 'block';
+          document.getElementById('readStatus').textContent = cached.status;
+          document.getElementById('readContentType').textContent = cached.headers.get('content-type') || '-';
+          document.getElementById('readSource').textContent = 'Cache';
+          const text = await cached.text();
+          logEl(content, '命中缓存', 'success');
+          logEl(content, '内容: ' + text.substring(0, 200) + (text.length > 200 ? '...' : ''), 'info');
+        } else {
+          logEl(content, '未命中，尝试网络...', 'warning');
+          const r = await fetch(url);
+          if (r.ok) {
+            await cache.put(url, r.clone());
+            document.getElementById('readResultInfo').style.display = 'block';
+            document.getElementById('readStatus').textContent = r.status;
+            document.getElementById('readContentType').textContent = r.headers.get('content-type') || '-';
+            document.getElementById('readSource').textContent = 'Network';
+            logEl(content, '从网络获取并缓存', 'success');
+          }
+        }
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+      finally { this.disabled = false; this.innerHTML = '<span>查询缓存</span>'; }
+    });
+
+    document.getElementById('readAllBtn').addEventListener('click', async function() {
+      const content = document.getElementById('readLogContent');
+      clearLogEl(content, '');
+      try {
+        const keys = await currentCache.keys();
+        logEl(content, '缓存键 (' + keys.length + ' 条):', 'info');
+        keys.forEach((r, i) => logEl(content, (i+1) + '. ' + r.url, 'info'));
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+    });
+
+    // delete cache
+    document.getElementById('deleteOneBtn').addEventListener('click', async function() {
+      const url = document.getElementById('deleteUrl').value;
+      const content = document.getElementById('deleteLogContent');
+      if (!url) { logEl(content, '请输入 URL', 'error'); return; }
+      clearLogEl(content, '');
+      try {
+        const cache = await openCache();
+        const del = await cache.delete(url);
+        logEl(content, del ? '已删除: ' + url : '未找到: ' + url, del ? 'success' : 'warning');
+        await refreshStatus();
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+    });
+
+    document.getElementById('deleteAllBtn').addEventListener('click', async function() {
+      const content = document.getElementById('deleteLogContent');
+      clearLogEl(content, '');
+      try {
+        const names = await caches.keys();
+        for (const n of names) { await caches.delete(n); logEl(content, '已删除: ' + n, 'success'); }
+        document.getElementById('openCacheName').textContent = '-';
+        document.getElementById('cacheCount').textContent = '0';
+        document.getElementById('cacheListContent').innerHTML = '<div style="color:var(--gray-400); text-align:center; padding:1rem;">暂无缓存数据</div>';
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+    });
+
+    // list cache items
+    async function listCacheItems() {
+      const container = document.getElementById('cacheListContent');
+      if (!currentCache) { container.innerHTML = '<div style="color:var(--gray-400); text-align:center; padding:1rem;">请先打开缓存</div>'; return; }
+      try {
+        const keys = await currentCache.keys();
+        if (!keys.length) { container.innerHTML = '<div style="color:var(--gray-400); text-align:center; padding:1rem;">暂无缓存数据</div>'; return; }
+        container.innerHTML = '';
+        keys.forEach((req, i) => {
+          const item = document.createElement('div');
+          item.className = 'cache-item';
+          item.innerHTML = '<span class="cache-item-url">' + (i+1) + '. ' + req.url + '</span><span class="cache-item-badge badge-primary">已缓存</span>';
+          container.appendChild(item);
+        });
+      } catch(e) { container.innerHTML = '<div style="color:var(--error)">读取失败: ' + e.message + '</div>'; }
+    }
+    document.getElementById('listCacheBtn').addEventListener('click', listCacheItems);
+
+    // strategy demo
+    document.getElementById('runStrategyBtn').addEventListener('click', async function() {
+      const url = document.getElementById('strategyUrl').value;
+      const strategy = document.getElementById('strategySelect').value;
+      const content = document.getElementById('strategyLogContent');
+      if (!url) { logEl(content, '请输入 URL', 'error'); return; }
+      this.disabled = true; this.innerHTML = '<span class="loading"><span class="spinner"></span>执行中...</span>';
+      clearLogEl(content, '');
+      try {
+        const req = new Request(url);
+        logEl(content, '策略: ' + strategy, 'info');
+        const t0 = Date.now();
+        let result, src;
+        const cache = await openCache();
+        switch (strategy) {
+          case 'cacheFirst':
+            const c = await cache.match(req);
+            if (c) { src = 'cache'; result = c; }
+            else { src = 'network'; result = await fetch(req); cache.put(req, result.clone()); }
+            break;
+          case 'networkFirst':
+            try {
+              result = await fetch(req);
+              cache.put(req, result.clone());
+              src = 'network';
+            } catch(e) {
+              const c2 = await cache.match(req);
+              if (c2) { src = 'cache'; result = c2; }
+              else throw e;
+            }
+            break;
+          case 'staleWhileRevalidate':
+            const cachedResp = cache.match(req);
+            const networkResp = fetch(req).then(r => { cache.put(req, r.clone()); return r; });
+            result = await (cachedResp || networkResp);
+            src = cachedResp ? 'cache' : 'network';
+            break;
+        }
+        const ms = Date.now() - t0;
+        logEl(content, '来源: ' + (src === 'cache' ? '缓存' : '网络'), src === 'cache' ? 'success' : 'info');
+        logEl(content, '耗时: ' + ms + 'ms | HTTP ' + result.status, 'info');
+        const text = await result.text();
+        logEl(content, '数据: ' + text.substring(0, 150) + (text.length > 150 ? '...' : ''), 'info');
+      } catch(e) { logEl(content, '错误: ' + e.message, 'error'); }
+      finally { this.disabled = false; this.innerHTML = '<span>执行策略</span>'; }
+    });
+
+    init();
+  </script>
+</body>
+</html>
