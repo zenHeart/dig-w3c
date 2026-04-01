@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JS RegExp W3C 标准视角 — 交互演示</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --accent: #e94560;
+      --accent2: #533483;
+      --text: #eaeaea;
+      --muted: #a0a0a0;
+      --green: #4ecca3;
+      --yellow: #ffd369;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .subtitle { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .section h2 {
+      font-size: 1rem;
+      color: var(--green);
+      margin-bottom: 0.75rem;
+      border-left: 3px solid var(--green);
+      padding-left: 0.5rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.875rem;
+      padding: 0.4rem 0.6rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus,
+    textarea:focus { border-color: var(--accent); }
+
+    textarea { resize: vertical; min-height: 60px; }
+
+    .flags-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .flag-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-family: monospace;
+      font-size: 0.875rem;
+      padding: 0.25rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .flag-btn.active {
+      background: var(--accent2);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .flag-btn:hover { border-color: var(--accent); }
+
+    button.run-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.2s;
+    }
+    button.run-btn:hover { opacity: 0.85; }
+
+    .output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      min-height: 60px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .match-highlight { color: var(--green); font-weight: bold; }
+    .group-highlight { color: var(--yellow); }
+    .null-result { color: var(--accent); }
+    .index-info { color: var(--muted); font-size: 0.75rem; margin-top: 0.25rem; }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .preset-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .preset-card:hover { border-color: var(--accent); }
+    .preset-card .title { color: var(--green); font-size: 0.875rem; font-weight: bold; }
+    .preset-card .desc { color: var(--muted); font-size: 0.75rem; margin-top: 0.25rem; }
+
+    .info-box {
+      background: rgba(78, 204, 163, 0.08);
+      border: 1px solid rgba(78, 204, 163, 0.3);
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--green);
+      margin-top: 0.5rem;
+    }
+
+    .lastindex-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (max-width: 640px) {
+      .controls { grid-template-columns: 1fr; }
+      .lastindex-demo { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>JS RegExp W3C 标准视角 — 交互演示</h1>
+<p class="subtitle">ECMAScript 规范 Symbol 方法 · Unicode 模式 · lastIndex 机制 · 具名捕获组</p>
+
+<!-- ========== 基础演示 ========== -->
+<div class="section">
+  <h2>1. 基础匹配（String.prototype.match / exec）</h2>
+
+  <div class="controls">
+    <div>
+      <label>Pattern</label>
+      <input type="text" id="pattern" value="[a-z]+" placeholder="e.g. [a-z]+" />
+    </div>
+    <div>
+      <label>Test String</label>
+      <input type="text" id="testStr" value="Hello World 123" placeholder="string to test" />
+    </div>
+  </div>
+
+  <label>Flags</label>
+  <div class="flags-row" style="margin: 0.5rem 0 0.75rem;">
+    <button class="flag-btn active" data-flag="g">g</button>
+    <button class="flag-btn" data-flag="i">i</button>
+    <button class="flag-btn" data-flag="m">m</button>
+    <button class="flag-btn" data-flag="s">s</button>
+    <button class="flag-btn" data-flag="u">u</button>
+    <button class="flag-btn" data-flag="y">y</button>
+    <button class="flag-btn" data-flag="d">d</button>
+    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="flags-display">g</span>
+  </div>
+
+  <button class="run-btn" id="runBasic">运行 match()</button>
+
+  <div class="output" id="basicOutput">点击运行查看结果...</div>
+  <p class="index-info" id="basicInfo"></p>
+</div>
+
+<!-- ========== Unicode 演示 ========== -->
+<div class="section">
+  <h2>2. Unicode 模式（u flag）— 代码点 vs 代码单元</h2>
+
+  <div class="controls">
+    <div>
+      <label>Pattern（. 匹配任意字符）</label>
+      <input type="text" id="unicodePattern" value="." placeholder="." />
+    </div>
+    <div>
+      <label>Test String（含 Emoji / 汉字）</label>
+      <input type="text" id="unicodeStr" value="Hello😄世界𝟙𝟚𝟛" />
+    </div>
+  </div>
+
+  <div class="flags-row" style="margin-bottom:0.75rem;">
+    <button class="flag-btn" data-group="unicode" data-flag="g">g</button>
+    <button class="flag-btn active" data-group="unicode" data-flag="u">u</button>
+    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="unicodeFlags">u</span>
+  </div>
+
+  <button class="run-btn" id="runUnicode">运行 match()</button>
+
+  <div class="output" id="unicodeOutput">点击运行查看结果...</div>
+  <div class="info-box" id="unicodeInfo">
+    注意：JS 字符串使用 UTF-16 编码。<br>
+    无 <code>u</code> flag：<code>.</code> 匹配 1 个代码单元（surrogate half 匹配失败）<br>
+    有 <code>u</code> flag：<code>.</code> 匹配 1 个 Unicode 代码点
+  </div>
+</div>
+
+<!-- ========== lastIndex 演示 ========== -->
+<div class="section">
+  <h2>3. lastIndex — g flag 循环 vs y flag 粘滞</h2>
+
+  <div class="controls">
+    <div>
+      <label>Pattern</label>
+      <input type="text" id="lastIndexPattern" value="\w+" />
+    </div>
+    <div>
+      <label>Test String</label>
+      <input type="text" id="lastIndexStr" value="apple banana apple" />
+    </div>
+    <div>
+      <label>Initial lastIndex</label>
+      <input type="number" id="lastIndexVal" value="0" min="0" />
+    </div>
+  </div>
+
+  <div class="flags-row" style="margin-bottom:0.75rem;">
+    <button class="flag-btn active" data-group="lastIndex" data-flag="g">g</button>
+    <button class="flag-btn" data-group="lastIndex" data-flag="y">y</button>
+    <button class="flag-btn" data-group="lastIndex" data-flag="gy">g + y</button>
+    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="lastIndexFlags">g</span>
+  </div>
+
+  <button class="run-btn" id="runLastIndex">运行 exec()</button>
+
+  <div class="output" id="lastIndexOutput">点击运行查看结果...</div>
+  <div class="info-box" id="lastIndexInfo">
+    <code>g</code>：循环匹配所有结果，自动推进 lastIndex<br>
+    <code>y</code>：严格从 lastIndex 开始匹配，不向前扫描<br>
+    <code>g + y</code>：sticky 优先，只从 lastIndex 开始（不循环）
+  </div>
+</div>
+
+<!-- ========== 具名捕获组 ========== -->
+<div class="section">
+  <h2>4. 具名捕获组（Named Capture Groups）</h2>
+
+  <div class="controls">
+    <div>
+      <label>Pattern（含具名组）</label>
+      <input type="text" id="namedPattern" value='(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})' />
+    </div>
+    <div>
+      <label>Test String</label>
+      <input type="text" id="namedStr" value="2026-04-01 and 2025-12-31" />
+    </div>
+  </div>
+
+  <div class="flags-row" style="margin-bottom:0.75rem;">
+    <button class="flag-btn active" data-group="named" data-flag="g">g</button>
+    <button class="flag-btn active" data-group="named" data-flag="u">u</button>
+    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="namedFlags">gu</span>
+  </div>
+
+  <button class="run-btn" id="runNamed">运行 match()</button>
+
+  <div class="output" id="namedOutput">点击运行查看结果...</div>
+  <div class="info-box">
+    <code>result.groups</code> — 具名捕获组对象（ES2018+）<br>
+    <code>$&lt;name&gt;</code> — replace 中的具名占位符
+  </div>
+</div>
+
+<!-- ========== @@replace 演示 ========== -->
+<div class="section">
+  <h2>5. String.prototype.replace — Symbol.replace 协议</h2>
+
+  <div class="controls">
+    <div>
+      <label>Search Pattern</label>
+      <input type="text" id="replacePattern" value="(\w+)\s(\w+)" />
+    </div>
+    <div>
+      <label>Replacement</label>
+      <input type="text" id="replaceWith" value="$2 $1" placeholder="$2 $1 or $<name>" />
+    </div>
+    <div>
+      <label>Input String</label>
+      <input type="text" id="replaceStr" value="Hello World" />
+    </div>
+  </div>
+
+  <div class="flags-row" style="margin-bottom:0.75rem;">
+    <button class="flag-btn active" data-group="replace" data-flag="g">g</button>
+    <button class="flag-btn" data-group="replace" data-flag="u">u</button>
+    <span style="color:var:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="replaceFlags">g</span>
+  </div>
+
+  <button class="run-btn" id="runReplace">运行 replace()</button>
+
+  <div class="output" id="replaceOutput">点击运行查看结果...</div>
+</div>
+
+<!-- ========== Symbol.matchAll ========== -->
+<div class="section">
+  <h2>6. Symbol.matchAll — Match Iterator</h2>
+
+  <div class="controls">
+    <div>
+      <label>Pattern</label>
+      <input type="text" id="matchAllPattern" value="(\d+)-(\w+)" />
+    </div>
+    <div>
+      <label>Test String</label>
+      <input type="text" id="matchAllStr" value="1-a 2-b 3-c" />
+    </div>
+  </div>
+
+  <div class="flags-row" style="margin-bottom:0.75rem;">
+    <button class="flag-btn active" data-group="matchAll" data-flag="g">g</button>
+    <button class="flag-btn" data-group="matchAll" data-flag="u">u</button>
+    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem" id="matchAllFlags">g</span>
+  </div>
+
+  <button class="run-btn" id="runMatchAll">运行 matchAll()</button>
+
+  <div class="output" id="matchAllOutput">点击运行查看结果...</div>
+  <div class="info-box">
+    <code>matchAll()</code> 返回可迭代对象，每次迭代产出完整 Match 对象（含 indices、groups）
+  </div>
+</div>
+
+<!-- ========== 预设快捷演示 ========== -->
+<div class="section">
+  <h2>7. 预设快捷演示</h2>
+  <div class="demo-grid">
+    <div class="preset-card" onclick="runPreset('url')">
+      <div class="title">URL 验证</div>
+      <div class="desc">演示带 u flag 的 URL 正则匹配</div>
+    </div>
+    <div class="preset-card" onclick="runPreset('unicodeProp')">
+      <div class="title">Unicode 属性</div>
+      <div class="desc">\p{L} 匹配汉字、拉丁字母等</div>
+    </div>
+    <div class="preset-card" onclick="runPreset('lookaround')">
+      <div class="title">零宽断言</div>
+      <div class="desc">(?=) (?!) (?&lt;=) (?&lt;!) 位置匹配</div>
+    </div>
+    <div class="preset-card" onclick="runPreset('emptyMatch')">
+      <div class="title">空匹配推进</div>
+      <div class="desc">演示 lastIndex 在空匹配时的推进行为</div>
+    </div>
+  </div>
+  <div class="output" id="presetOutput" style="margin-top:0.75rem">选择一个预设查看效果...</div>
+</div>
+
+<script>
+  // ─── 全局状态 ───
+  const state = {
+    basic: { flags: new Set(['g']) },
+    unicode: { flags: new Set(['u', 'g']) },
+    lastIndex: { flags: new Set(['g']) },
+    named: { flags: new Set(['g', 'u']) },
+    replace: { flags: new Set(['g']) },
+    matchAll: { flags: new Set(['g']) },
+  };
+
+  // ─── Flag 按钮交互 ───
+  document.querySelectorAll('.flag-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.group;
+      const flag = btn.dataset.flag;
+
+      if (group) {
+        // 多选模式
+        const groupFlags = state[group].flags;
+        if (groupFlags.has(flag)) {
+          groupFlags.delete(flag);
+          btn.classList.remove('active');
+        } else {
+          groupFlags.add(flag);
+          btn.classList.add('active');
+        }
+        document.getElementById(`${group}Flags`).textContent = [...groupFlags].join('');
+      } else {
+        // 单选模式（基础）
+        if (state.basic.flags.has(flag)) {
+          state.basic.flags.delete(flag);
+          btn.classList.remove('active');
+        } else {
+          state.basic.flags.add(flag);
+          btn.classList.add('active');
+        }
+        document.getElementById('flags_display').textContent = [...state.basic.flags].join('');
+      }
+    });
+  });
+
+  // ─── 基础匹配 ───
+  document.getElementById('runBasic').addEventListener('click', () => {
+    const pattern = document.getElementById('pattern').value;
+    const str = document.getElementById('testStr').value;
+    const flags = [...state.basic.flags].join('');
+    runMatch(pattern, str, flags, 'basicOutput', 'basicInfo');
+  });
+
+  // ─── Unicode ───
+  document.getElementById('runUnicode').addEventListener('click', () => {
+    const pattern = document.getElementById('unicodePattern').value;
+    const str = document.getElementById('unicodeStr').value;
+    const flags = [...state.unicode.flags].join('');
+    runMatch(pattern, str, flags, 'unicodeOutput');
+    showUnicodeInfo(str, flags);
+  });
+
+  // ─── lastIndex ───
+  document.getElementById('runLastIndex').addEventListener('click', () => {
+    const pattern = document.getElementById('lastIndexPattern').value;
+    const str = document.getElementById('lastIndexStr').value;
+    const flags = [...state.lastIndex.flags].join('');
+    const startLastIndex = parseInt(document.getElementById('lastIndexVal').value, 10) || 0;
+    runExecLoop(pattern, str, flags, startLastIndex, 'lastIndexOutput');
+  });
+
+  // ─── 具名捕获 ───
+  document.getElementById('runNamed').addEventListener('click', () => {
+    const pattern = document.getElementById('namedPattern').value;
+    const str = document.getElementById('namedStr').value;
+    const flags = [...state.named.flags].join('');
+    runMatch(pattern, str, flags, 'namedOutput');
+  });
+
+  // ─── replace ───
+  document.getElementById('runReplace').addEventListener('click', () => {
+    const pattern = document.getElementById('replacePattern').value;
+    const replacement = document.getElementById('replaceWith').value;
+    const str = document.getElementById('replaceStr').value;
+    const flags = [...state.replace.flags].join('');
+    try {
+      const re = new RegExp(pattern, flags);
+      const result = str.replace(re, replacement);
+      document.getElementById('replaceOutput').innerHTML =
+        `<span class="group-highlight">Input:</span> ${escapeHtml(str)}\n` +
+        `<span class="group-highlight">Replacement:</span> ${escapeHtml(replacement)}\n` +
+        `<span class="group-highlight">Result:</span> <span class="match-highlight">${escapeHtml(result)}</span>`;
+    } catch (e) {
+      document.getElementById('replaceOutput').innerHTML =
+        `<span class="null-result">Error: ${escapeHtml(e.message)}</span>`;
+    }
+  });
+
+  // ─── matchAll ───
+  document.getElementById('runMatchAll').addEventListener('click', () => {
+    const pattern = document.getElementById('matchAllPattern').value;
+    const str = document.getElementById('matchAllStr').value;
+    const flags = [...state.matchAll.flags].join('');
+    try {
+      const re = new RegExp(pattern, flags);
+      const results = [...str.matchAll(re)];
+      const lines = results.map((m, i) => {
+        const groups = m.groups ? JSON.stringify(m.groups) : 'undefined';
+        return `[${i}] ${formatMatch(m)} | groups: ${groups}`;
+      });
+      document.getElementById('matchAllOutput').innerHTML =
+        results.length
+          ? lines.join('\n')
+          : `<span class="null-result">null — 无匹配或正则缺少 g flag</span>`;
+    } catch (e) {
+      document.getElementById('matchAllOutput').innerHTML =
+        `<span class="null-result">Error: ${escapeHtml(e.message)}</span>`;
+    }
+  });
+
+  // ─── 预设演示 ───
+  const PRESETS = {
+    url: () => {
+      const re = /^(?<protocol>https?):\/\/(?<host>[\w.-]+)(?<path>\/.*)?$/u;
+      const tests = [
+        'https://example.com/path',
+        'http://test.cn/api/v1',
+        'not-a-url',
+        'ftp://files.server.com'
+      ];
+      return tests.map(s => {
+        const m = re.exec(s);
+        return m ? `✓ ${s}\n  → protocol: ${m.groups.protocol}, host: ${m.groups.host}, path: ${m.groups.path}`
+                  : `✗ ${s}`;
+      }).join('\n\n');
+    },
+    unicodeProp: () => {
+      const re = /\p{L}/gu;
+      const tests = ['Hello世界ABC日本語', 'Θεός και ἄνθρωπος', '🎉 emoji & symbols'];
+      return tests.map(s => {
+        const matches = s.match(re);
+        return `Input: ${s}\nMatches (\\p{L}): ${matches ? matches.join(', ') : 'null'}`;
+      }).join('\n\n');
+    },
+    lookaround: () => {
+      const str = 'foo123bar456baz789';
+      const results = [
+        { label: '(?=\\d+) — 数字前位置', pattern: /(?=\d+)/g },
+        { label: '(?!\\d) — 非数字后位置', pattern: /(?!\d)/g },
+        { label: '(?<=\\d{3}) — 数字三连后位置', pattern: /(?<=\d{3})/g },
+        { label: '(?<!foo)bar — 非 foo 后 bar', pattern: /(?<!foo)bar/g },
+      ];
+      return results.map(r => {
+        const re = new RegExp(r.pattern.source, 'g');
+        const matches = [...str.matchAll(re)];
+        return `Pattern: /${r.pattern.source}/g\n  Label: ${r.label}\n  String: ${str}\n  Matches at indices: ${matches.map(m => m.index).join(', ')}`;
+      }).join('\n\n');
+    },
+    emptyMatch: () => {
+      const re = /a?/gu;
+      const str = 'abc';
+      const matches = str.match(re);
+      const info = [];
+      let li = 0;
+      for (const m of matches) {
+        const re2 = new RegExp(re.source, re.flags);
+        re2.lastIndex = li;
+        const r = re2.exec(str);
+        info.push(`match "${m}" at index ${r.index}, lastIndex → ${re2.lastIndex}`);
+        li = re2.lastIndex || li + 1;
+      }
+      return `Pattern: /a?/gu  String: "${str}"\nResults: ${matches.join(', ')}\n\n${info.join('\n')}`;
+    },
+  };
+
+  function runPreset(name) {
+    const output = document.getElementById('presetOutput');
+    try {
+      output.textContent = PRESETS[name]();
+    } catch (e) {
+      output.textContent = `Error: ${e.message}`;
+    }
+  }
+
+  // ─── 辅助函数 ───
+  function runMatch(pattern, str, flags, outputId) {
+    const out = document.getElementById(outputId);
+    try {
+      const re = new RegExp(pattern, flags);
+      const result = str.match(re);
+      if (result === null) {
+        out.innerHTML = `<span class="null-result">null — 无匹配</span>`;
+      } else {
+        const lines = Array.isArray(result)
+          ? result.map((m, i) => `[${i}] ${formatMatch(m)}`).join('\n')
+          : formatMatch(result);
+        out.innerHTML = `<span class="match-highlight">${escapeHtml(lines)}</span>`;
+      }
+    } catch (e) {
+      out.innerHTML = `<span class="null-result">SyntaxError: ${escapeHtml(e.message)}</span>`;
+    }
+  }
+
+  function runExecLoop(pattern, str, flags, startLastIndex, outputId) {
+    const out = document.getElementById(outputId);
+    try {
+      const re = new RegExp(pattern, flags);
+      re.lastIndex = startLastIndex;
+      const lines = [];
+      let step = 0;
+      let result;
+      while ((result = re.exec(str)) !== null && step < 20) {
+        lines.push(
+          `[Step ${step}] lastIndex=${re.lastIndex - result[0].length}→${re.lastIndex}  ` +
+          `match="${result[0]}"  index=${result.index}` +
+          (result.groups ? `  groups=${JSON.stringify(result.groups)}` : '')
+        );
+        step++;
+      }
+      if (lines.length === 0) {
+        out.innerHTML = `<span class="null-result">null — lastIndex=${startLastIndex} 处无匹配</span>`;
+      } else {
+        out.textContent = lines.join('\n');
+      }
+    } catch (e) {
+      out.innerHTML = `<span class="null-result">Error: ${escapeHtml(e.message)}</span>`;
+    }
+  }
+
+  function formatMatch(m) {
+    if (m === null) return 'null';
+    const parts = [escapeHtml(m[0])];
+    if (m.index !== undefined) parts.push(`index=${m.index}`);
+    if (m.groups) parts.push(`groups=${JSON.stringify(m.groups)}`);
+    if (m.indices) parts.push(`indices=${JSON.stringify(m.indices)}`);
+    return parts.join(' | ');
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function showUnicodeInfo(str, flags) {
+    const info = document.getElementById('unicodeInfo');
+    const hasU = flags.includes('u');
+    const charDetails = [...str].map(ch => {
+      const codePoint = ch.codePointAt(0).toString(16).toUpperCase();
+      const isEmoji = ch.length > 1;
+      return `${ch} (U+${codePoint.padStart(4,'0')})${isEmoji ? ' [emoji, 2 code units]' : ''}`;
+    });
+    info.innerHTML = `
+      <strong>字符串分析：</strong>${str}<br>
+      <strong>字符拆解（按代码点）：</strong><br>
+      &nbsp;&nbsp;${charDetails.join(' | ')}<br><br>
+      <strong>匹配粒度：</strong>${hasU ? '按 Unicode 代码点' : '按 UTF-16 代码单元'}<br>
+      <strong>无 u 时：</strong><code>.</code> 不匹配 surrogate half（0xD83D 等）<br>
+      <strong>有 u 时：</strong><code>.</code> 正确匹配整个代码点
+    `;
+  }
+</script>
+
+</body>
+</html>
