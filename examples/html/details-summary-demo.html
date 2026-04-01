@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Details 和 Summary 交互式演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    
+    .demo-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .demo-section h2 {
+      margin-top: 0;
+      color: #2563eb;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 12px;
+    }
+    
+    details {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0;
+      margin: 12px 0;
+    }
+    
+    summary {
+      padding: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      user-select: none;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    
+    summary:hover {
+      background: #e5e7eb;
+    }
+    
+    summary::marker {
+      content: "▶";
+      font-size: 12px;
+      margin-right: 8px;
+      transition: transform 0.2s;
+    }
+    
+    details[open] summary::marker {
+      content: "▼";
+    }
+    
+    details > div {
+      padding: 0 16px 16px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 0;
+    }
+    
+    /* 隐藏默认 marker */
+    .hide-marker summary {
+      list-style: none;
+    }
+    
+    .hide-marker summary::-webkit-details-marker {
+      display: none;
+    }
+    
+    /* 自定义 marker */
+    .custom-marker summary::marker {
+      content: "＋";
+    }
+    
+    .custom-marker details[open] summary::marker {
+      content: "－";
+    }
+    
+    /* 动画展开 */
+    .animated details {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease;
+    }
+    
+    .animated details[open] {
+      grid-template-rows: 1fr;
+    }
+    
+    .animated details > summary,
+    .animated details > div {
+      overflow: hidden;
+    }
+    
+    /* 嵌套样式 */
+    .nested details {
+      background: white;
+      margin: 8px 0 8px 20px;
+    }
+    
+    .nested details details {
+      border-color: #bfdbfe;
+    }
+    
+    /* 代码展示 */
+    pre {
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #dc2626;
+    }
+    
+    /* Tab 导航 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: #2563eb;
+    }
+    
+    .tab.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 日志输出 */
+    .log-output {
+      background: #1f2937;
+      color: #10b981;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 16px;
+    }
+    
+    .log-entry {
+      margin: 4px 0;
+      padding: 4px 0;
+      border-bottom: 1px solid #374151;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    /* 事件状态 */
+    .event-status {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .status-item {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .status-item .label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    .status-item .value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+    
+    /* Quiz */
+    .quiz {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+    }
+    
+    .quiz h3 {
+      margin-top: 0;
+    }
+    
+    .quiz-option {
+      display: block;
+      background: rgba(255,255,255,0.2);
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .quiz-option:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .quiz-option.correct {
+      background: #10b981;
+    }
+    
+    .quiz-option.incorrect {
+      background: #ef4444;
+    }
+    
+    .quiz-result {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+    }
+    
+    .quiz-result.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Details 和 Summary 交互式演示</h1>
+  
+  <!-- Tab 1: 基础用法 -->
+  <div class="demo-section">
+    <h2>📖 Tab 1: 基础用法</h2>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('basic')">基本示例</button>
+      <button class="tab" onclick="showTab('nested')">嵌套结构</button>
+      <button class="tab" onclick="showTab('custom')">自定义 Marker</button>
+      <button class="tab" onclick="showTab('animated')">动画效果</button>
+      <button class="tab" onclick="showTab('event')">事件监听</button>
+    </div>
+    
+    <div id="tab-basic" class="tab-content active">
+      <h3>基本折叠示例</h3>
+      
+      <!-- 默认折叠 -->
+      <details>
+        <summary>点击展开查看详情</summary>
+        <p>这是隐藏在折叠区域内的内容。当用户点击标题时，内容会显示或隐藏。</p>
+        <p>这是第二段内容，用于展示多段落的情况。</p>
+      </details>
+      
+      <!-- 默认展开 -->
+      <details open>
+        <summary>默认展开的折叠区域</summary>
+        <p>页面加载时，这个区域默认是展开状态。</p>
+        <p>添加 <code>open</code> 属性即可实现默认展开。</p>
+      </details>
+    </div>
+    
+    <div id="tab-nested" class="tab-content">
+      <h3>嵌套折叠结构</h3>
+      
+      <details>
+        <summary>父级折叠区域</summary>
+        <div class="nested">
+          <details>
+            <summary>子级折叠 1</summary>
+            <p>这是第一个嵌套的折叠内容。</p>
+          </details>
+          <details>
+            <summary>子级折叠 2</summary>
+            <p>这是第二个嵌套的折叠内容。</p>
+          </details>
+          <details open>
+            <summary>子级折叠 3（默认展开）</summary>
+            <p>这个子级默认是展开的。</p>
+          </details>
+        </div>
+      </details>
+      
+      <p style="margin-top: 16px; color: #6b7280;">
+        💡 提示：可以无限嵌套折叠区域，但要注意用户体验
+      </p>
+    </div>
+    
+    <div id="tab-custom" class="tab-content hide-marker">
+      <h3>自定义 Marker 符号</h3>
+      
+      <details>
+        <summary>使用 ＋/－ 符号</summary>
+        <p>通过 CSS 可以自定义 marker 的样式和符号。</p>
+      </details>
+      
+      <details>
+        <summary>使用 Emoji 作为 Marker</summary>
+        <p>Marker 支持多种样式的自定义。</p>
+      </details>
+      
+      <style>
+        .emoji-marker summary::marker {
+          content: "👉";
+          font-size: 16px;
+        }
+        .emoji-marker details[open] summary::marker {
+          content: "👉🏷️";
+        }
+      </style>
+      
+      <details class="emoji-marker">
+        <summary>使用 Emoji</summary>
+        <p>这里使用了自定义的 Emoji marker。</p>
+      </details>
+    </div>
+    
+    <div id="tab-animated" class="tab-content animated">
+      <h3>平滑展开动画</h3>
+      
+      <details>
+        <summary>动画展开 1</summary>
+        <div>
+          <p>使用 CSS Grid 的 <code>grid-template-rows</code> 技术实现平滑动画效果。</p>
+          <p>动画在现代浏览器中效果良好。</p>
+        </div>
+      </details>
+      
+      <details>
+        <summary>动画展开 2</summary>
+        <div>
+          <p>这种动画方式不会导致页面跳动。</p>
+          <p>相比 JavaScript 动画更简单。</p>
+        </div>
+      </details>
+    </div>
+    
+    <div id="tab-event" class="tab-content">
+      <h3>Toggle 事件监听</h3>
+      
+      <details id="eventDetails">
+        <summary>点击这里触发事件</summary>
+        <div>
+          <p>每次展开或折叠都会触发 <code>toggle</code> 事件。</p>
+        </div>
+      </details>
+      
+      <div class="event-status">
+        <div class="status-item">
+          <div class="label">当前状态</div>
+          <div class="value" id="statusText">折叠</div>
+        </div>
+        <div class="status-item">
+          <div class="label">触发次数</div>
+          <div class="value" id="toggleCount">0</div>
+        </div>
+      </div>
+      
+      <div class="log-output" id="logOutput">
+        <div class="log-entry">等待交互...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tab 2: 代码示例 -->
+  <div class="demo-section">
+    <h2>💻 Tab 2: 代码示例</h2>
+    
+    <h3>HTML 结构</h3>
+    <pre><code>&lt;!-- 基本用法 --&gt;
+&lt;details&gt;
+  &lt;summary&gt;点击展开&lt;/summary&gt;
+  &lt;p&gt;这里是隐藏的内容&lt;/p&gt;
+&lt;/details&gt;
+
+&lt;!-- 默认展开 --&gt;
+&lt;details open&gt;
+  &lt;summary&gt;默认展开&lt;/summary&gt;
+  &lt;p&gt;页面加载时显示&lt;/p&gt;
+&lt;/details&gt;</code></pre>
+    
+    <h3>CSS 动画</h3>
+    <pre><code>/* 使用 Grid 实现动画 */
+details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+details[open] {
+  grid-template-rows: 1fr;
+}
+
+summary, details > div {
+  overflow: hidden;
+}</code></pre>
+    
+    <h3>JavaScript 事件</h3>
+    <pre><code>const details = document.querySelector('details');
+
+details.addEventListener('toggle', (e) => {
+  if (details.open) {
+    console.log('展开');
+  } else {
+    console.log('折叠');
+  }
+});</code></pre>
+  </div>
+  
+  <!-- Tab 3: 实用场景 -->
+  <div class="demo-section">
+    <h2>🎯 Tab 3: 实用场景</h2>
+    
+    <h3>FAQ 折叠面板</h3>
+    
+    <details>
+      <summary>什么是 HTML5?</summary>
+      <p>HTML5 是 HTML 的第五个主要版本,引入了许多新特性,如语义化标签、原生视频/音频支持、Canvas 绘图等。</p>
+    </details>
+    
+    <details>
+      <summary><code>&lt;details&gt;</code> 和 <code>&lt;dialog&gt;</code> 有什么区别?</summary>
+      <p><code>&lt;details&gt;</code> 用于折叠/展开内容,而 <code>&lt;dialog&gt;</code> 用于创建模态对话框。<code>&lt;dialog&gt;</code> 可以覆盖页面内容并创建叠加层。</p>
+    </details>
+    
+    <details>
+      <summary>如何添加展开/折叠动画?</summary>
+      <p>可以使用 CSS Grid 的 <code>grid-template-rows</code> 技术实现平滑动画效果,或者使用 <code>max-height</code> 配合 <code>transition</code>。</p>
+    </details>
+    
+    <h3>文档目录</h3>
+    
+    <details>
+      <summary>第一章: HTML 基础</summary>
+      <div style="margin-left: 20px;">
+        <details>
+          <summary>1.1 标签和元素</summary>
+          <p>HTML 使用标签来定义元素...</p>
+        </details>
+        <details>
+          <summary>1.2 属性</summary>
+          <p>属性提供关于元素的额外信息...</p>
+        </details>
+      </div>
+    </details>
+    
+    <details>
+      <summary>第二章: CSS 样式</summary>
+      <div style="margin-left: 20px;">
+        <details>
+          <summary>2.1 选择器</summary>
+          <p>CSS 选择器用于选择要样式化的元素...</p>
+        </details>
+      </div>
+    </details>
+  </div>
+  
+  <!-- Tab 4: 自测题 -->
+  <div class="demo-section">
+    <h2>✅ Tab 4: 自测题</h3>
+    
+    <div class="quiz">
+      <h3>问题 1: 如何让 details 默认展开?</h3>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, false)">
+        &lt;details expanded&gt;
+      </label>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, true)">
+        &lt;details open&gt;
+      </label>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, false)">
+        &lt;details visible&gt;
+      </label>
+      
+      <div class="quiz-result" id="quiz1-result"></div>
+    </div>
+    
+    <div class="quiz" style="margin-top: 20px;">
+      <h3>问题 2: 哪个事件在折叠/展开时触发?</h3>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, false)">
+        change 事件
+      </label>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, false)">
+        click 事件
+      </label>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, true)">
+        toggle 事件
+      </label>
+      
+      <div class="quiz-result" id="quiz2-result"></div>
+    </div>
+    
+    <div class="quiz" style="margin-top: 20px;">
+      <h3>问题 3: <code>&lt;summary&gt;</code> 可以单独使用吗?</h3>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, false)">
+        可以,没有限制
+      </label>
+      
+      <label class="quiz-option" onclick="checkAnswer(this, true)">
+        不可以,必须放在 details 内
+      </label>
+      
+      <div class="quiz-result" id="quiz3-result"></div>
+    </div>
+  </div>
+  
+  <!-- Tab 5: 浏览器兼容 -->
+  <div class="demo-section">
+    <h2>🌐 Tab 5: 浏览器兼容性</h2>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+      <thead>
+        <tr style="background: #f3f4f6;">
+          <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">浏览器</th>
+          <th style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">版本要求</th>
+          <th style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">支持状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Chrome</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">12+</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb; color: green;">✅ 完全支持</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Firefox</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">49+</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb; color: green;">✅ 完全支持</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Safari</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">6+</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb; color: green;">✅ 完全支持</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Edge</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">79+</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb; color: green;">✅ 完全支持</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">移动端 Safari</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb;">6+</td>
+          <td style="padding: 12px; text-align: center; border: 1px solid #e5e7eb; color: green;">✅ 完全支持</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div style="margin-top: 20px; padding: 16px; background: #fef3c7; border-radius: 8px;">
+      <strong>💡 注意:</strong> CSS 动画效果 (<code>interpolate-size</code>) 是较新的功能,在旧版浏览器中可能不生效,但降级体验仍然正常。
+    </div>
+  </div>
+  
+  <script>
+    // Tab 切换
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    // 事件监听演示
+    let toggleCount = 0;
+    const eventDetails = document.getElementById('eventDetails');
+    const statusText = document.getElementById('statusText');
+    const toggleCountEl = document.getElementById('toggleCount');
+    const logOutput = document.getElementById('logOutput');
+    
+    if (eventDetails) {
+      eventDetails.addEventListener('toggle', (e) => {
+        toggleCount++;
+        const time = new Date().toLocaleTimeString();
+        const status = eventDetails.open ? '展开' : '折叠';
+        
+        statusText.textContent = status;
+        toggleCountEl.textContent = toggleCount;
+        
+        // 添加日志
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.textContent = `[${time}] ${status} - 触发 #${toggleCount}`;
+        logOutput.insertBefore(logEntry, logOutput.firstChild);
+        
+        // 限制日志数量
+        if (logOutput.children.length > 10) {
+          logOutput.removeChild(logOutput.lastChild);
+        }
+      });
+    }
+    
+    // 自测题
+    function checkAnswer(element, isCorrect) {
+      const quiz = element.parentElement;
+      const options = quiz.querySelectorAll('.quiz-option');
+      const result = quiz.querySelector('.quiz-result');
+      
+      // 禁用所有选项
+      options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt === element) {
+          opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
+      });
+      
+      // 显示结果
+      result.classList.add('show');
+      result.style.background = isCorrect ? '#10b981' : '#ef4444';
+      result.textContent = isCorrect ? '✅ 回答正确!' : '❌ 回答错误';
+    }
+    
+    // 初始化: 为所有 details 添加点击日志
+    document.querySelectorAll('details').forEach(details => {
+      details.addEventListener('toggle', () => {
+        console.log(`Details ${details.open ? 'opened' : 'closed'}`);
+      });
+    });
+  </script>
+</body>
+</html>
