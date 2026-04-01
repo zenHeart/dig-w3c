@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>0.6px 渲染机制 - 交互演示</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --success: #10b981;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: var(--gray-50); color: var(--gray-900); line-height: 1.6; }
+    .header { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); color: white; padding: 2rem 1rem; text-align: center; }
+    .header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .header p { opacity: 0.9; font-size: 0.95rem; }
+    .tabs { display: flex; background: white; border-bottom: 1px solid var(--gray-200); overflow-x: auto; }
+    .tab { padding: 1rem 1.25rem; border: none; background: none; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--gray-500); white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab:hover { color: var(--primary); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .content { padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+    h3 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--gray-700); margin-top: 1.5rem; }
+    p { margin-bottom: 1rem; color: var(--gray-700); }
+    .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    .code-block { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 8px; font-family: 'SF Mono', Consolas, monospace; font-size: 0.85rem; overflow-x: auto; margin-bottom: 1rem; line-height: 1.5; }
+    .code-block .comment { color: #6b7280; }
+    .code-block .property { color: #60a5fa; }
+    .code-block .value { color: #f59e0b; }
+    .code-block .string { color: #10b981; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--gray-200); }
+    th { background: var(--gray-100); font-weight: 600; font-size: 0.85rem; }
+    td { font-size: 0.9rem; }
+    .demo-row { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1rem 0; }
+    .demo-item { flex: 1; min-width: 200px; }
+    .demo-label { font-size: 0.8rem; color: var(--gray-500); margin-bottom: 0.5rem; font-family: monospace; }
+    .demo-box { height: 48px; display: flex; align-items: center; padding: 0 1rem; background: white; border: 1px solid var(--gray-200); overflow: hidden; }
+    .preview-panel { background: var(--gray-100); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
+    .preview-label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0; }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.75rem; color: var(--gray-500); }
+    .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+    .tag-green { background: #d1fae5; color: #065f46; }
+    .tag-yellow { background: #fef3c7; color: #92400e; }
+    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; background: var(--primary); color: white; }
+    .solution-card { border: 1px solid var(--gray-200); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+    .solution-card h4 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--gray-900); }
+    .solution-card p { font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 0.6px 渲染机制</h1>
+  <p>CSS 像素与物理像素的底层原理</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('concept')">概念解析</button>
+  <button class="tab" onclick="showTab('demo')">渲染演示</button>
+  <button class="tab" onclick="showTab('solution')">解决方案</button>
+  <button class="tab" onclick="showTab('quiz')">自测题</button>
+</div>
+
+<div class="content">
+
+<!-- 概念解析 -->
+<div id="concept" class="panel active">
+  <h2>CSS 像素 vs 物理像素</h2>
+
+  <div class="card">
+    <h3>核心概念</h3>
+    <div class="stat">
+      <div class="stat-item">
+        <div class="stat-value">CSS 像素</div>
+        <div class="stat-label">逻辑像素 / 设计像素</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">物理像素</div>
+        <div class="stat-label">屏幕实际发光点</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="dpr-display">-</div>
+        <div class="stat-label">devicePixelRatio</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>devicePixelRatio 计算公式</h3>
+    <div class="code-block">
+<span class="comment">// devicePixelRatio = 物理像素 / CSS 像素</span>
+<span class="property">devicePixelRatio</span> = screen.<span class="value">width</span> / window.<span class="value">innerWidth</span>
+
+<span class="comment">// 示例：</span>
+<span class="comment">// iPhone 13: 1170px / 390px = 3</span>
+<span class="comment">// Mac Retina: 2880px / 1440px = 2</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>渲染计算过程</h3>
+    <p>当 CSS 值为 0.6px 时的渲染计算：</p>
+    <table>
+      <thead>
+        <tr><th>设备</th><th>devicePixelRatio</th><th>计算</th><th>物理像素结果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>标准屏幕</td><td>1</td><td>0.6 × 1</td><td>0.6px → 渲染为 0px 或 1px</td></tr>
+        <tr><td>Retina</td><td>2</td><td>0.6 × 2</td><td>1.2px → 渲染为 1px（抗锯齿）</td></tr>
+        <tr><td>iPhone</td><td>3</td><td>0.6 × 3</td><td>1.8px → 渲染为 1px 或 2px</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Sub-pixel Rendering 原理</h3>
+    <p>物理像素由 R/G/B 三个子像素组成：</p>
+    <div class="preview-panel">
+      <div class="preview-label">物理像素结构</div>
+      <div style="display:flex;gap:4px;justify-content:center;padding:1rem;">
+        <div style="width:60px;height:30px;background:#ccc;border-radius:4px;display:flex;overflow:hidden;">
+          <div style="flex:1;background:#ff0000;"></div>
+          <div style="flex:1;background:#00ff00;"></div>
+          <div style="flex:1;background:#0000ff;"></div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:0.85rem;color:var(--gray-600);">
+        一个物理像素 = R + G + B 三个子像素
+      </p>
+    </div>
+    <p>Sub-pixel rendering 通过独立控制每个子像素实现比像素更精细的渲染精度。</p>
+  </div>
+</div>
+
+<!-- 渲染演示 -->
+<div id="demo" class="panel">
+  <h2>不同 border-width 渲染效果</h2>
+
+  <div class="card">
+    <h3>当前屏幕信息</h3>
+    <div class="stat">
+      <div class="stat-item">
+        <div class="stat-value" id="stat-dpr">-</div>
+        <div class="stat-label">devicePixelRatio</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-screen">-</div>
+        <div class="stat-label">物理分辨率</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="stat-viewport">-</div>
+        <div class="stat-label">CSS 分辨率</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>border-width 渲染对比</h3>
+    <div class="demo-row">
+      <div class="demo-item">
+        <div class="demo-label">0.1px</div>
+        <div class="demo-box" style="border-bottom: 0.1px solid #000;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">0.3px</div>
+        <div class="demo-box" style="border-bottom: 0.3px solid #000;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">0.5px</div>
+        <div class="demo-box" style="border-bottom: 0.5px solid #000;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">0.6px</div>
+        <div class="demo-box" style="border-bottom: 0.6px solid #000;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">1px</div>
+        <div class="demo-box" style="border-bottom: 1px solid #000;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>box-shadow 实现细线</h3>
+    <div class="demo-row">
+      <div class="demo-item">
+        <div class="demo-label">box-shadow: 0 0.6px 0</div>
+        <div class="demo-box" style="box-shadow: 0 0.6px 0 #000;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">box-shadow: 0 1px 0</div>
+        <div class="demo-box" style="box-shadow: 0 1px 0 #000;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>transform: scale 实现</h3>
+    <div class="demo-row">
+      <div class="demo-item">
+        <div class="demo-label">transform: scaleY(0.6)</div>
+        <div class="demo-box" style="border-bottom: 1px solid #000; transform: scaleY(0.6); transform-origin: top;"></div>
+      </div>
+      <div class="demo-item">
+        <div class="demo-label">原生 1px</div>
+        <div class="demo-box" style="border-bottom: 1px solid #000;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 解决方案 -->
+<div id="solution" class="panel">
+  <h2>0.6px 渲染解决方案</h2>
+
+  <div class="solution-card">
+    <h4>方案一：直接使用 0.6px（推荐）</h4>
+    <p>现代浏览器基本都支持小于 1px 的 border-width</p>
+    <div class="code-block">
+<span class="property">.rule</span> {
+  <span class="property">border-width</span>: <span class="value">0.6px</span>;
+}
+    </div>
+    <span class="tag tag-green">兼容性：现代浏览器</span>
+    <span class="tag tag-blue">性能最优</span>
+  </div>
+
+  <div class="solution-card">
+    <h4>方案二：box-shadow</h4>
+    <p>利用 box-shadow 实现细线效果</p>
+    <div class="code-block">
+<span class="property">.rule</span> {
+  <span class="property">box-shadow</span>: <span class="value">0 0.6px 0 #000</span>;
+}
+    </div>
+    <span class="tag tag-green">兼容性：全部</span>
+  </div>
+
+  <div class="solution-card">
+    <h4>方案三：transform: scale</h4>
+    <p>使用 transform 缩放 1px 的边框</p>
+    <div class="code-block">
+<span class="property">.rule</span> {
+  <span class="property">border-width</span>: <span class="value">1px</span>;
+  <span class="property">transform</span>: <span class="value">scaleY(0.6)</span>;
+  <span class="property">transform-origin</span>: <span class="value">top</span>;
+}
+    </div>
+    <span class="tag tag-green">兼容性：全部</span>
+    <span class="tag tag-yellow">注意定位</span>
+  </div>
+
+  <div class="solution-card">
+    <h4>方案四：渐变模拟</h4>
+    <p>使用线性渐变创建亚像素效果</p>
+    <div class="code-block">
+<span class="property">.rule</span> {
+  <span class="property">background</span>: <span class="value">linear-gradient(to bottom, 
+    transparent 0%, transparent 40%, 
+    #000 40%, #000 60%, 
+    transparent 60%, transparent 100%)</span>;
+  <span class="property">background-size</span>: <span class="value">100% 1px</span>;
+  <span class="property">background-repeat</span>: <span class="value">no-repeat</span>;
+}
+    </div>
+    <span class="tag tag-green">兼容性：全部</span>
+  </div>
+
+  <div class="card">
+    <h3>方案对比</h3>
+    <table>
+      <thead>
+        <tr><th>方案</th><th>兼容性</th><th>性能</th><th>复杂度</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>直接 0.6px</td><td>现代浏览器</td><td>最优</td><td>最简单</td></tr>
+        <tr><td>box-shadow</td><td>全部</td><td>良好</td><td>简单</td></tr>
+        <tr><td>transform: scale</td><td>全部</td><td>良好</td><td>中等</td></tr>
+        <tr><td>渐变</td><td>全部</td><td>良好</td><td>较高</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 自测题 -->
+<div id="quiz" class="panel">
+  <h2>自测题</h2>
+
+  <div class="card">
+    <h3>Q1: devicePixelRatio=2 的屏幕上，0.6px 边框实际渲染为多少物理像素？</h3>
+    <div style="margin: 1rem 0;">
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q1" style="margin-right:0.5rem;">A. 0.6 物理像素</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q1" style="margin-right:0.5rem;">B. 1.2 物理像素</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q1" style="margin-right:0.5rem;">C. 3 物理像素</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Q2: 0.6px 在标准屏幕（dpr=1）上可能完全不显示的原因？</h3>
+    <div style="margin: 1rem 0;">
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q2" style="margin-right:0.5rem;">A. CSS 规范不允许</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q2" style="margin-right:0.5rem;">B. 0.6px × 1 = 0.6 像素，浏览器取整为 0px</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q2" style="margin-right:0.5rem;">C. 屏幕太小</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Q3: 物理像素的子像素有哪些？</h3>
+    <div style="margin: 1rem 0;">
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q3" style="margin-right:0.5rem;">A. R、G、B</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q3" style="margin-right:0.5rem;">B. R、G、B、W</label>
+      <label style="display:block;padding:0.5rem;cursor:pointer;"><input type="radio" name="q3" style="margin-right:0.5rem;">C. 只有 R</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>答案</h3>
+    <button class="btn" onclick="showAnswers()">显示答案</button>
+    <div id="answers" style="display:none;margin-top:1rem;">
+      <p><strong>Q1:</strong> B - 0.6 × 2 = 1.2 物理像素，浏览器会进行抗锯齿处理</p>
+      <p><strong>Q2:</strong> B - 0.6px × 1 = 0.6px，浏览器可能取整为 0px 导致不显示</p>
+      <p><strong>Q3:</strong> A - 物理像素由 R（红）、G（绿）、B（蓝）三个子像素组成</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showAnswers() {
+  document.getElementById('answers').style.display = 'block';
+}
+
+// 显示屏幕信息
+const dpr = window.devicePixelRatio || 1;
+document.getElementById('dpr-display').textContent = dpr;
+document.getElementById('stat-dpr').textContent = dpr;
+document.getElementById('stat-screen').textContent = `${screen.width}×${screen.height}`;
+document.getElementById('stat-viewport').textContent = `${window.innerWidth}×${window.innerHeight}`;
+</script>
+
+</body>
+</html>
