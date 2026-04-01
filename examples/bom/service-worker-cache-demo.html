@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Worker 与 Cache Storage 交互演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 2rem; }
+    h1 { font-size: 1.8rem; color: #fff; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.2rem; color: #00d4ff; margin: 1.5rem 0 0.8rem; }
+    h3 { font-size: 1rem; color: #ffd700; margin: 1rem 0 0.5rem; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; }
+    .tab-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+    .tab-btn.active { background: #00d4ff; color: #0a0a0a; font-weight: bold; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 1rem 0; }
+    .mini-card { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; }
+    .mini-card h4 { font-size: 0.85rem; color: #00d4ff; margin-bottom: 6px; }
+    .mini-card p { font-size: 0.8rem; color: #aaa; line-height: 1.5; }
+
+    .highlight { color: #00d4ff; font-weight: bold; }
+    .warning { color: #ff6b6b; }
+    .success { color: #4ade80; }
+
+    pre { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.8rem 0; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .comment { color: #666; }
+    .keyword { color: #ff79c6; }
+    .string { color: #f1fa8c; }
+
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+    th { background: #111; color: #00d4ff; padding: 8px 12px; text-align: left; border: 1px solid #2a2a2a; }
+    td { padding: 8px 12px; border: 1px solid #2a2a2a; color: #ccc; }
+    td:first-child { color: #ffd700; }
+
+    .btn { background: #00d4ff; color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+    .btn:hover { opacity: 0.9; }
+    .btn.danger { background: #ff6b6b; color: white; }
+    .btn.success { background: #4ade80; color: #0a0a0a; }
+    .btn.secondary { background: #333; color: #fff; }
+
+    .mt-1 { margin-top: 1rem; }
+    .text-sm { font-size: 0.85rem; }
+    .color-gray { color: #888; }
+    .mb-1 { margin-bottom: 1rem; }
+
+    .alert { background: #1a1a00; border-left: 3px solid #ffd700; padding: 10px 14px; margin: 8px 0; border-radius: 0 4px 4px 0; font-size: 0.85rem; }
+    .alert.error { background: #1a0000; border-color: #ff6b6b; }
+    .alert.success { background: #001400; border-color: #4ade80; }
+
+    #log, #consoleLog { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+    .log-entry { padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
+    .log-entry.info { color: #aaa; }
+    .log-entry.success { color: #4ade80; }
+    .log-entry.warn { color: #ffd700; }
+    .log-entry.error { color: #ff6b6b; }
+
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .status-badge.registered { background: #001a1a; color: #00d4ff; border: 1px solid #00d4ff; }
+    .status-badge.installing { background: #1a1a00; color: #ffd700; border: 1px solid #ffd700; }
+    .status-badge.activated { background: #001400; color: #4ade80; border: 1px solid #4ade80; }
+    .status-badge.error { background: #1a0000; color: #ff6b6b; border: 1px solid #ff6b6b; }
+    .status-badge.none { background: #1a1a1a; color: #888; border: 1px solid #333; }
+
+    .progress-step { display: flex; align-items: center; margin: 1rem 0; }
+    .step-circle { width: 30px; height: 30px; border-radius: 50%; background: #333; color: #888; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
+    .step-circle.active { background: #00d4ff; color: #0a0a0a; }
+    .step-circle.completed { background: #4ade80; color: #0a0a0a; }
+    .step-line { flex: 1; height: 2px; background: #333; margin: 0 10px; }
+    .step-line.active { background: #00d4ff; }
+
+    .visual-box { background: #111; border: 2px dashed #333; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; text-align: center; }
+    .visual-box.cache { border-color: #00d4ff; background: linear-gradient(135deg, #001a1a 0%, #0a0a0a 100%); }
+    .visual-box.network { border-color: #4ade80; background: linear-gradient(135deg, #001400 0%, #0a0a0a 100%); }
+    .visual-box.cached { border-color: #ffd700; background: linear-gradient(135deg, #1a1a00 0%, #0a0a0a 100%); }
+
+    .arrow { font-size: 1.5rem; color: #00d4ff; margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Service Worker 与 Cache Storage 交互演示</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">概念总览</button>
+    <button class="tab-btn" onclick="switchTab('lifecycle')">生命周期</button>
+    <button class="tab-btn" onclick="switchTab('strategy')">缓存策略</button>
+    <button class="tab-btn" onclick="switchTab('cache-api')">Cache API</button>
+    <button class="tab-btn" onclick="switchTab('offline')">离线应用</button>
+  </div>
+
+  <!-- Tab 1: 概念总览 -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="card">
+      <h2>Service Worker 简介</h2>
+      <p class="text-sm color-gray mb-1">Service Worker 是浏览器在后台运行的脚本，独立于网页面，提供离线体验、拦截网络请求等功能。</p>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>独立线程</h4>
+          <p>运行在浏览器独立线程，不阻塞主线程</p>
+        </div>
+        <div class="mini-card">
+          <h4>事件驱动</h4>
+          <p>基于事件机制：install, activate, fetch</p>
+        </div>
+        <div class="mini-card">
+          <h4>离线能力</h4>
+          <p>拦截网络请求，提供缓存内容</p>
+        </div>
+        <div class="mini-card">
+          <h4>HTTPS only</h4>
+          <p>仅在 HTTPS 或 localhost 下可用</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cache Storage API</h2>
+      <p class="text-sm color-gray mb-1">用于存储 Request/Response 对象对，通常与 Service Worker 配合使用。</p>
+      <table>
+        <tr><th>方法</th><th>说明</th></tr>
+        <tr><td>caches.open()</td><td>打开或创建指定名称的缓存</td></tr>
+        <tr><td>caches.keys()</td><td>获取所有缓存名称</td></tr>
+        <tr><td>caches.delete()</td><td>删除指定缓存</td></tr>
+        <tr><td>cache.match()</td><td>查找匹配的缓存</td></tr>
+        <tr><td>cache.put()</td><td>手动存储请求/响应对</td></tr>
+        <tr><td>cache.addAll()</td><td>批量添加请求到缓存</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>当前状态</h2>
+      <div id="swStatus" class="status-badge none">未注册</div>
+      <div id="swScope" class="text-sm color-gray mt-1"></div>
+      <div class="mt-1">
+        <button class="btn" onclick="registerSW()">注册 SW</button>
+        <button class="btn danger" onclick="unregisterSW()">注销</button>
+        <button class="btn secondary" onclick="checkSW()">检查状态</button>
+      </div>
+      <div id="log" class="mt-1"></div>
+    </div>
+  </div>
+
+  <!-- Tab 2: 生命周期 -->
+  <div id="tab-lifecycle" class="tab-content">
+    <div class="card">
+      <h2>生命周期流程</h2>
+      <div class="progress-step">
+        <div class="step-circle" id="step-register">1</div>
+        <div class="step-line"></div>
+        <div class="step-circle">2</div>
+        <div class="step-line"></div>
+        <div class="step-circle">3</div>
+        <div class="step-line"></div>
+        <div class="step-circle">4</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888;">
+        <span>注册</span><span>install</span><span>activate</span><span>终止/事件</span>
+      </div>
+
+      <div class="card-grid mt-1">
+        <div class="mini-card">
+          <h4>注册</h4>
+          <p>navigator.serviceWorker.register('/sw.js')</p>
+        </div>
+        <div class="mini-card">
+          <h4>install</h4>
+          <p>缓存静态资源，skipWaiting() 立即激活</p>
+        </div>
+        <div class="mini-card">
+          <h4>activate</h4>
+          <p>清理旧缓存，clients.claim() 接管页面</p>
+        </div>
+        <div class="mini-card">
+          <h4>fetch 事件</h4>
+          <p>拦截网络请求，实现缓存策略</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>生命周期代码</h2>
+      <pre><code>// sw.js - Service Worker 文件
+
+// 1. install 事件 - 缓存静态资源
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('static-v1').then((cache) => {
+      return cache.addAll(['/', '/index.html']);
+    })
+  );
+  self.skipWaiting(); // 跳过等待，立即激活
+});
+
+// 2. activate 事件 - 清理旧缓存
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== 'static-v1')
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// 3. fetch 事件 - 拦截网络请求
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 3: 缓存策略 -->
+  <div id="tab-strategy" class="tab-content">
+    <div class="card">
+      <h2>缓存策略对比</h2>
+      <table>
+        <tr><th>策略</th><th>说明</th><th>适用场景</th></tr>
+        <tr><td>Cache First</td><td>缓存优先，失败时网络</td><td>静态资源</td></tr>
+        <tr><td>Network First</td><td>网络优先，失败时缓存</td><td>API 数据</td></tr>
+        <tr><td>Stale-While-Revalidate</td><td>先返回缓存，后台更新</td><td>不频繁变化的数据</td></tr>
+        <tr><td>Network Only</td><td>仅网络</td><td>实时数据</td></tr>
+        <tr><td>Cache Only</td><td>仅缓存</td><td>完全离线</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Cache First 策略</h2>
+      <div class="visual-box cache">
+        <div style="font-size: 1.2rem; color: #00d4ff;">请求</div>
+        <div class="arrow">|</div>
+        <div style="padding: 0.5rem;">
+          <span class="status-badge registered">缓存中有?</span>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
+          <div><span class="success">有</span> -&gt; 返回缓存</div>
+          <div><span class="warning">没有</span> -&gt; 请求网络</div>
+        </div>
+      </div>
+      <pre><code>// Cache First 策略
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) return response; // 命中缓存
+      return fetch(event.request); // 未命中，发起请求
+    })
+  );
+});</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Network First 策略</h2>
+      <div class="visual-box network">
+        <div style="font-size: 1.2rem; color: #4ade80;">请求</div>
+        <div class="arrow">|</div>
+        <div style="padding: 0.5rem;">
+          <span class="status-badge activated">发起网络请求</span>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
+          <div><span class="success">成功</span> -&gt; 返回 + 缓存</div>
+          <div><span class="warning">失败</span> -&gt; 返回缓存</div>
+        </div>
+      </div>
+      <pre><code>// Network First 策略
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          caches.open('api-v1').then(cache => 
+            cache.put(event.request, response.clone())
+          );
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 4: Cache API -->
+  <div id="tab-cache-api" class="tab-content">
+    <div class="card">
+      <h2>Cache API 概览</h2>
+      <table>
+        <tr><th>级别</th><th>方法</th><th>说明</th></tr>
+        <tr><td rowspan="4">caches</td><td>caches.open(name)</td><td>打开/创建缓存</td></tr>
+        <tr><td>caches.keys()</td><td>获取所有缓存名称</td></tr>
+        <tr><td>caches.delete(name)</td><td>删除缓存</td></tr>
+        <tr><td>caches.match(request)</td><td>在所有缓存中查找</td></tr>
+        <tr><td rowspan="4">cache</td><td>cache.match(request)</td><td>查找匹配的缓存</td></tr>
+        <tr><td>cache.matchAll()</td><td>查找所有匹配</td></tr>
+        <tr><td>cache.put()</td><td>手动存储</td></tr>
+        <tr><td>cache.delete()</td><td>删除条目</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Cache API 演示</h2>
+      <div class="mt-1">
+        <button class="btn" onclick="openCache()">打开/创建缓存</button>
+        <button class="btn" onclick="listCacheNames()">列出所有缓存</button>
+        <button class="btn success" onclick="putToCache()">手动存储</button>
+        <button class="btn danger" onclick="deleteFromCache()">删除条目</button>
+        <button class="btn secondary" onclick="clearAllCaches()">清空所有缓存</button>
+      </div>
+      <div id="cacheList" class="mt-1"></div>
+    </div>
+
+    <div class="card">
+      <h2>手动存储示例</h2>
+      <pre><code>// 手动存储自定义 Response
+const cache = await caches.open('my-cache-v1');
+
+// 创建自定义 Response
+const request = new Request('/api/custom');
+const response = new Response(
+  JSON.stringify({ message: 'Hello from SW!' }),
+  { headers: { 'Content-Type': 'application/json' } }
+);
+
+// 存储
+await cache.put(request, response);
+
+// 查找
+const cached = await cache.match('/api/custom');
+const data = await cached.json();
+console.log(data.message); // "Hello from SW!"</code></pre>
+    </div>
+  </div>
+
+  <!-- Tab 5: 离线应用 -->
+  <div id="tab-offline" class="tab-content">
+    <div class="card">
+      <h2>离线应用架构</h2>
+      <div class="visual-box" style="border-color: #ffd700;">
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem;">
+          <div class="mini-card" style="flex: 1; min-width: 120px;">
+            <h4>注册 SW</h4>
+            <p style="font-size: 0.75rem;">页面加载时注册</p>
+          </div>
+          <div style="font-size: 1rem; align-self: center;">-&gt;</div>
+          <div class="mini-card" style="flex: 1; min-width: 120px;">
+            <h4>install</h4>
+            <p style="font-size: 0.75rem;">缓存静态资源</p>
+          </div>
+          <div style="font-size: 1rem; align-self: center;">-&gt;</div>
+          <div class="mini-card" style="flex: 1; min-width: 120px;">
+            <h4>activate</h4>
+            <p style="font-size: 0.75rem;">清理旧缓存</p>
+          </div>
+          <div style="font-size: 1rem; align-self: center;">-&gt;</div>
+          <div class="mini-card" style="flex: 1; min-width: 120px;">
+            <h4>fetch</h4>
+            <p style="font-size: 0.75rem;">拦截请求</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>完整离线应用代码</h2>
+      <pre><code>// sw.js - 离线应用示例
+const CACHE_NAME = 'offline-app-v1';
+const STATIC_ASSETS = ['/', '/index.html', '/offline.html'];
+
+// 安装
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting();
+});
+
+// 激活
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(names => 
+      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+    )
+  );
+  self.clients.claim();
+});
+
+// 拦截请求
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        if (response.ok) {
+          caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then(r => r || caches.match('/offline.html')))
+  );
+});</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>调试技巧</h2>
+      <table>
+        <tr><th>操作</th><th>方法</th></tr>
+        <tr><td>查看 SW</td><td>DevTools -> Application -> Service Workers</td></tr>
+        <tr><td>查看缓存</td><td>DevTools -> Application -> Cache Storage</td></tr>
+        <tr><td>注销 SW</td><td>DevTools -> Service Workers -> Unregister</td></tr>
+        <tr><td>强制更新</td><td>DevTools -> Service Workers -> Update</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mt-1">
+    <h2>Console 日志</h2>
+    <div id="consoleLog"></div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('consoleLog');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+      logDiv.insertBefore(entry, logDiv.firstChild);
+    }
+
+    function checkSWSupport() {
+      if (!('serviceWorker' in navigator)) {
+        log('Browser does not support Service Worker', 'error');
+        return false;
+      }
+      if (!('caches' in window)) {
+        log('Browser does not support Cache Storage', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    async function checkSW() {
+      if (!checkSWSupport()) return;
+      
+      const statusDiv = document.getElementById('swStatus');
+      const scopeDiv = document.getElementById('swScope');
+      
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        
+        if (!registration) {
+          statusDiv.className = 'status-badge none';
+          statusDiv.textContent = 'Not registered';
+          scopeDiv.textContent = '';
+          log('Service Worker not registered', 'warn');
+          return;
+        }
+        
+        if (registration.active) {
+          statusDiv.className = 'status-badge activated';
+          statusDiv.textContent = 'Activated';
+          scopeDiv.textContent = 'Scope: ' + registration.scope;
+          log('Service Worker activated', 'success');
+        } else if (registration.installing) {
+          statusDiv.className = 'status-badge installing';
+          statusDiv.textContent = 'Installing';
+          log('Service Worker installing', 'warn');
+        } else if (registration.waiting) {
+          statusDiv.className = 'status-badge registered';
+          statusDiv.textContent = 'Waiting';
+          log('Service Worker waiting', 'warn');
+        }
+      } catch (error) {
+        log('Check SW failed: ' + error.message, 'error');
+      }
+    }
+
+    async function registerSW() {
+      if (!checkSWSupport()) return;
+      
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        log('SW registered, scope: ' + registration.scope, 'success');
+        
+        registration.addEventListener('updatefound', () => {
+          log('New SW version found', 'warn');
+        });
+        
+        registration.addEventListener('statechange', () => {
+          if (registration.active) {
+            log('SW activated', 'success');
+            checkSW();
+          }
+        });
+        
+        await checkSW();
+      } catch (error) {
+        log('SW registration failed: ' + error.message, 'error');
+      }
+    }
+
+    async function unregisterSW() {
+      if (!checkSWSupport()) return;
+      
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.unregister();
+          log('SW unregistered', 'success');
+        }
+        await checkSW();
+      } catch (error) {
+        log('SW unregister failed: ' + error.message, 'error');
+      }
+    }
+
+    let demoCache = null;
+    
+    async function openCache() {
+      try {
+        demoCache = await caches.open('demo-cache-v1');
+        log('Cache opened: demo-cache-v1', 'success');
+        await listCacheNames();
+      } catch (error) {
+        log('Open cache failed: ' + error.message, 'error');
+      }
+    }
+    
+    async function listCacheNames() {
+      try {
+        const names = await caches.keys();
+        const listDiv = document.getElementById('cacheList');
+        
+        if (names.length === 0) {
+          listDiv.innerHTML = '<div class="alert">No caches</div>';
+          return;
+        }
+        
+        let html = '<table><tr><th>Cache Name</th><th>Action</th></tr>';
+        for (const name of names) {
+          html += '<tr><td>' + name + '</td><td><button class="btn danger" onclick="deleteCacheByName(\'' + name + '\')">Delete</button></td></tr>';
+        }
+        html += '</table>';
+        listDiv.innerHTML = html;
+        log('Cache list updated, count: ' + names.length, 'info');
+      } catch (error) {
+        log('List caches failed: ' + error.message, 'error');
+      }
+    }
+    
+    async function deleteCacheByName(name) {
+      try {
+        await caches.delete(name);
+        log('Cache deleted: ' + name, 'success');
+        await listCacheNames();
+      } catch (error) {
+        log('Delete cache failed: ' + error.message, 'error');
+      }
+    }
+    
+    async function putToCache() {
+      if (!demoCache) {
+        await openCache();
+      }
+      
+      try {
+        const request = new Request('/api/demo', {
+          method: 'GET',
+          headers: { 'X-Demo': 'service-worker' }
+        });
+        
+        const response = new Response(
+          JSON.stringify({ message: 'Hello from Cache API!', time: Date.now() }),
+          { 
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        
+        await demoCache.put(request, response);
+        log('Data stored to cache: /api/demo', 'success');
+        
+        const cached = await demoCache.match(request);
+        if (cached) {
+          const data = await cached.json();
+          log('Verify success: ' + JSON.stringify(data), 'success');
+        }
+      } catch (error) {
+        log('Store to cache failed: ' + error.message, 'error');
+      }
+    }
+    
+    async function deleteFromCache() {
+      if (!demoCache) {
+        log('Please open cache first', 'warn');
+        return;
+      }
+      
+      try {
+        const request = new Request('/api/demo');
+        const deleted = await demoCache.delete(request);
+        if (deleted) {
+          log('Cache entry deleted: /api/demo', 'success');
+        } else {
+          log('Cache entry not found', 'warn');
+        }
+      } catch (error) {
+        log('Delete cache entry failed: ' + error.message, 'error');
+      }
+    }
+    
+    async function clearAllCaches() {
+      try {
+        const names = await caches.keys();
+        let count = 0;
+        for (const name of names) {
+          await caches.delete(name);
+          count++;
+        }
+        log('Cleared ' + count + ' caches', 'success');
+        await listCacheNames();
+      } catch (error) {
+        log('Clear caches failed: ' + error.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (checkSWSupport()) {
+        checkSW();
+        log('Service Worker support detected', 'success');
+      }
+    });
+  </script>
+</body>
+</html>
