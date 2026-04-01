@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>createObjectURL 交互演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 2rem; }
+    h1 { font-size: 1.8rem; color: #fff; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.2rem; color: #00d4ff; margin: 1.5rem 0 0.8rem; }
+    h3 { font-size: 1rem; color: #ffd700; margin: 1rem 0 0.5rem; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .tab-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; }
+    .tab-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+    .tab-btn.active { background: #00d4ff; color: #0a0a0a; font-weight: bold; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 1rem 0; }
+    .mini-card { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; }
+    .mini-card h4 { font-size: 0.85rem; color: #00d4ff; margin-bottom: 6px; }
+    .mini-card p { font-size: 0.8rem; color: #aaa; line-height: 1.5; }
+
+    .highlight { color: #00d4ff; font-weight: bold; }
+    .warning { color: #ff6b6b; }
+    .success { color: #4ade80; }
+
+    pre { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.8rem 0; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .comment { color: #666; }
+    .keyword { color: #ff79c6; }
+    .string { color: #f1fa8c; }
+
+    .upload-area { border: 2px dashed #333; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-area:hover { border-color: #00d4ff; background: #0d0d0d; }
+    .upload-area.dragover { border-color: #4ade80; background: #001a00; }
+    .upload-area input { display: none; }
+
+    .preview-container { display: flex; flex-wrap: wrap; gap: 12px; margin: 1rem 0; }
+    .preview-item { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 8px; position: relative; }
+    .preview-item img { max-width: 150px; max-height: 150px; display: block; border-radius: 4px; }
+    .preview-item .remove-btn { position: absolute; top: 4px; right: 4px; background: #ff6b6b; border: none; color: white; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px; }
+
+    .memory-bar { height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .memory-fill { height: 100%; background: linear-gradient(90deg, #00d4ff, #4ade80); border-radius: 4px; transition: width 0.3s; }
+    .memory-fill.warn { background: linear-gradient(90deg, #ff6b6b, #ffd700); }
+    .memory-fill.ok { background: linear-gradient(90deg, #4ade80, #00d4ff); }
+
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .status-badge.active { background: #001a1a; color: #00d4ff; border: 1px solid #00d4ff; }
+    .status-badge.revoked { background: #1a0000; color: #ff6b6b; border: 1px solid #ff6b6b; }
+    .status-badge.released { background: #001400; color: #4ade80; border: 1px solid #4ade80; }
+
+    table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+    th { background: #111; color: #00d4ff; padding: 8px 12px; text-align: left; border: 1px solid #2a2a2a; }
+    td { padding: 8px 12px; border: 1px solid #2a2a2a; color: #ccc; }
+
+    .btn { background: #00d4ff; color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+    .btn:hover { opacity: 0.9; }
+    .btn.danger { background: #ff6b6b; color: white; }
+    .btn.success { background: #4ade80; color: #0a0a0a; }
+
+    .mt-1 { margin-top: 1rem; }
+    .text-sm { font-size: 0.85rem; }
+    .color-gray { color: #888; }
+    .mb-1 { margin-bottom: 1rem; }
+
+    .alert { background: #1a1a00; border-left: 3px solid #ffd700; padding: 10px 14px; margin: 8px 0; border-radius: 0 4px 4px 0; font-size: 0.85rem; }
+    .alert.error { background: #1a0000; border-color: #ff6b6b; }
+    .alert.success { background: #001400; border-color: #4ade80; }
+
+    #log { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+    .log-entry { padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
+    .log-entry.create { color: #00d4ff; }
+    .log-entry.revoke { color: #ff6b6b; }
+    .log-entry.info { color: #aaa; }
+    .log-entry.success { color: #4ade80; }
+  </style>
+</head>
+<body>
+  <h1>🔗 URL.createObjectURL 交互演示</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('preview')">图片预览</button>
+    <button class="tab-btn" onclick="switchTab('download')">文件下载</button>
+    <button class="tab-btn" onclick="switchTab('memory')">内存管理</button>
+    <button class="tab-btn" onclick="switchTab('lifecycle')">生命周期</button>
+    <button class="tab-btn" onclick="switchTab('compare')">API 对比</button>
+  </div>
+
+  <!-- 图片预览 -->
+  <div id="tab-preview" class="tab-content active">
+    <div class="card">
+      <h2>图片预览（自动释放）</h2>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        <p class="color-gray">点击或拖拽上传图片</p>
+        <p class="text-sm color-gray">支持多选，每次上传会自动清理旧 URL</p>
+      </div>
+      <div class="preview-container" id="previewContainer"></div>
+      <div class="alert">
+        💡 每次选择新图片时，上一张的 Blob URL 会被自动释放，避免内存泄漏
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>URL 管理日志</h2>
+      <div id="log"></div>
+    </div>
+
+    <div class="card">
+      <h2>当前管理的 URL</h2>
+      <div id="urlList"></div>
+    </div>
+  </div>
+
+  <!-- 文件下载 -->
+  <div id="tab-download" class="tab-content">
+    <div class="card">
+      <h2>动态生成文件并下载</h2>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>文本文件</h4>
+          <button class="btn" onclick="downloadText()">下载 .txt</button>
+        </div>
+        <div class="mini-card">
+          <h4>JSON 文件</h4>
+          <button class="btn" onclick="downloadJSON()">下载 .json</button>
+        </div>
+        <div class="mini-card">
+          <h4>CSV 文件</h4>
+          <button class="btn" onclick="downloadCSV()">下载 .csv</button>
+        </div>
+        <div class="mini-card">
+          <h4>HTML 文件</h4>
+          <button class="btn" onclick="downloadHTML()">下载 .html</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>下载代码示例</h2>
+      <pre><code><span class="keyword">function</span> <span class="string">downloadBlob</span>(blob, filename) {
+  <span class="keyword">const</span> url = URL.createObjectURL(blob);
+  <span class="keyword">const</span> a = document.createElement(<span class="string">'a'</span>);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  <span class="comment">// ⚠️ 关键：下载完成后立即释放</span>
+  URL.revokeObjectURL(url);
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 内存管理 -->
+  <div id="tab-memory" class="tab-content">
+    <div class="card">
+      <h2>内存管理演示</h2>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h4>当前 URL 数量</h4>
+          <p><span id="urlCount" class="highlight">0</span></p>
+        </div>
+        <div class="mini-card">
+          <h4>已释放数量</h4>
+          <p><span id="revokedCount" class="success">0</span></p>
+        </div>
+        <div class="mini-card">
+          <h4>预估内存使用</h4>
+          <p><span id="memUsage" class="highlight">0 KB</span></p>
+        </div>
+      </div>
+      <div class="memory-bar">
+        <div class="memory-fill ok" id="memoryBar" style="width: 0%"></div>
+      </div>
+      <div class="mt-1">
+        <button class="btn" onclick="simulateLeaks()">模拟内存泄漏（不释放）</button>
+        <button class="btn danger" onclick="cleanupAll()">释放所有 URL</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>最佳实践：封装管理类</h2>
+      <pre><code><span class="keyword">class</span> <span class="string">ObjectURLManager</span> {
+  <span class="keyword">constructor</span>() {
+    <span class="keyword">this</span>.urls = <span class="keyword">new</span> Set();
+  }
+
+  <span class="keyword">create</span>(blob) {
+    <span class="keyword">const</span> url = URL.createObjectURL(blob);
+    <span class="keyword">this</span>.urls.add(url);
+    <span class="keyword">return</span> url;
+  }
+
+  <span class="keyword">revoke</span>(url) {
+    <span class="keyword">if</span> (<span class="keyword">this</span>.urls.has(url)) {
+      URL.revokeObjectURL(url);
+      <span class="keyword">this</span>.urls.delete(url);
+    }
+  }
+
+  <span class="keyword">revokeAll</span>() {
+    <span class="keyword">this</span>.urls.forEach(url => URL.revokeObjectURL(url));
+    <span class="keyword">this</span>.urls.clear();
+  }
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>React 最佳实践</h2>
+      <pre><code><span class="keyword">function</span> <span class="string">ImagePreview</span>({ file }) {
+  <span class="keyword">const</span> [url, setUrl] = useState(<span class="keyword">null</span>);
+
+  useEffect(() => {
+    <span class="keyword">if</span> (!file) <span class="keyword">return</span>;
+    <span class="keyword">const</span> objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    <span class="comment">// 清理函数：组件卸载时自动释放</span>
+    <span class="keyword">return</span> () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  <span class="keyword">return</span> url ? <span class="string">&lt;img src={url} /&gt;</span> : <span class="keyword">null</span>;
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 生命周期 -->
+  <div id="tab-lifecycle" class="tab-content">
+    <div class="card">
+      <h2>Blob URL 生命周期</h2>
+      <table>
+        <thead>
+          <tr><th>阶段</th><th>状态</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>createObjectURL()</td>
+            <td><span class="status-badge active">ACTIVE</span></td>
+            <td>URL 已创建，可正常使用</td>
+          </tr>
+          <tr>
+            <td>页面运行中</td>
+            <td><span class="status-badge active">ACTIVE</span></td>
+            <td>URL 有效，可用于 img.src 等</td>
+          </tr>
+          <tr>
+            <td>revokeObjectURL()</td>
+            <td><span class="status-badge revoked">REVOKED</span></td>
+            <td>URL 已释放，不可再使用</td>
+          </tr>
+          <tr>
+            <td>标签页关闭</td>
+            <td><span class="status-badge released">RELEASED</span></td>
+            <td>浏览器自动释放所有 Blob URL</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>生命周期图解</h2>
+      <pre><code>┌─────────────────────────────────────┐
+│  createObjectURL(blob) → url 创建   │
+│              ↓                      │
+│        img.src = url                 │
+│              ↓                      │
+│       URL 处于活跃状态 ✓             │
+│              ↓                      │
+│    revokeObjectURL(url)              │
+│              ↓                      │
+│       URL 立即失效 ✗                 │
+└─────────────────────────────────────┘</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>自动释放场景</h2>
+      <div class="alert success">
+        ✅ <strong>页面关闭/刷新</strong>：浏览器自动释放所有 Blob URL
+      </div>
+      <div class="alert success">
+        ✅ <strong>React useEffect 清理</strong>：组件卸载时调用 cleanup 函数
+      </div>
+      <div class="alert success">
+        ✅ <strong>img.src 覆盖</strong>：旧 URL 需要手动释放
+      </div>
+      <div class="alert error">
+        ⚠️ <strong>频繁创建不释放</strong>：会导致内存泄漏
+      </div>
+    </div>
+  </div>
+
+  <!-- API 对比 -->
+  <div id="tab-compare" class="tab-content">
+    <div class="card">
+      <h2>createObjectURL vs data URL vs FileReader</h2>
+      <table>
+        <thead>
+          <tr><th>特性</th><th>createObjectURL</th><th>data URL</th><th>FileReader</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>返回类型</td>
+            <td>字符串 URL</td>
+            <td>base64 字符串</td>
+            <td>Data URL / ArrayBuffer</td>
+          </tr>
+          <tr>
+            <td>性能</td>
+            <td class="success">✅ 快</td>
+            <td class="warning">⚠️ 慢（编码开销）</td>
+            <td class="warning">⚠️ 异步</td>
+          </tr>
+          <tr>
+            <td>文件大小限制</td>
+            <td class="success">无限制</td>
+            <td class="warning">URL 长度限制</td>
+            <td class="success">无限制</td>
+          </tr>
+          <tr>
+            <td>内存管理</td>
+            <td class="warning">需手动释放</td>
+            <td class="success">无需释放</td>
+            <td class="success">无需释放</td>
+          </tr>
+          <tr>
+            <td>适用场景</td>
+            <td>图片预览、视频、下载</td>
+            <td>小图标、小文件</td>
+            <td>需要处理文件内容</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>使用建议</h2>
+      <div class="alert">
+        💡 <strong>大文件/媒体</strong>：使用 createObjectURL（性能最优）
+      </div>
+      <div class="alert">
+        💡 <strong>小图标/小文件</strong>：使用 data URL（内联方便）
+      </div>
+      <div class="alert">
+        💡 <strong>需要处理内容</strong>：使用 FileReader（读取文件数据）
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    const manager = {
+      urls: new Set(),
+      revokedCount: 0,
+      log: []
+    };
+
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Logging
+    function addLog(message, type = 'info') {
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      log.insertBefore(entry, log.firstChild);
+    }
+
+    // Update URL list display
+    function updateUrlList() {
+      const container = document.getElementById('urlList');
+      const count = manager.urls.size;
+      document.getElementById('urlCount').textContent = count;
+      document.getElementById('revokedCount').textContent = manager.revokedCount;
+
+      if (count === 0) {
+        container.innerHTML = '<p class="color-gray text-sm">暂无管理的 URL</p>';
+        return;
+      }
+
+      container.innerHTML = Array.from(manager.urls).map(url =>
+        `<div style="background:#111;border:1px solid #2a2a2a;border-radius:4px;padding:6px 10px;margin:4px 0;font-size:0.8rem;word-break:break-all;">
+          <span class="status-badge active">ACTIVE</span>
+          <span class="color-gray">${url.substring(0, 60)}...</span>
+          <button onclick="revokeUrl('${url}')" class="btn danger" style="padding:2px 8px;margin-left:8px">释放</button>
+        </div>`
+      ).join('');
+    }
+
+    // Create and manage URL
+    function createAndManage(blob, filename = '') {
+      const url = URL.createObjectURL(blob);
+      manager.urls.add(url);
+      addLog(`创建 URL: ${filename} (${(blob.size / 1024).toFixed(1)} KB)`, 'create');
+      updateUrlList();
+      updateMemory();
+      return url;
+    }
+
+    // Revoke specific URL
+    function revokeUrl(url) {
+      if (manager.urls.has(url)) {
+        URL.revokeObjectURL(url);
+        manager.urls.delete(url);
+        manager.revokedCount++;
+        addLog(`释放 URL: ${url.substring(0, 50)}...`, 'revoke');
+        updateUrlList();
+        updateMemory();
+      }
+    }
+
+    // Cleanup all
+    function cleanupAll() {
+      manager.urls.forEach(url => URL.revokeObjectURL(url));
+      manager.urls.clear();
+      addLog('已释放所有 URL', 'success');
+      updateUrlList();
+      updateMemory();
+    }
+
+    // Update memory display
+    function updateMemory() {
+      const count = manager.urls.size;
+      const pct = Math.min(100, count * 10);
+      const bar = document.getElementById('memoryBar');
+      bar.style.width = pct + '%';
+      bar.className = 'memory-fill ' + (count > 5 ? 'warn' : 'ok');
+      document.getElementById('memUsage').textContent = (count * 50) + ' KB';
+    }
+
+    // File upload - Preview
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const previewContainer = document.getElementById('previewContainer');
+    let currentPreviewUrl = null;
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      // Clean up previous preview
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+        addLog('预览切换，自动释放旧 URL', 'revoke');
+      }
+      previewContainer.innerHTML = '';
+
+      Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const url = createAndManage(file, file.name);
+        currentPreviewUrl = url;
+
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.innerHTML = `
+          <img src="${url}" alt="${file.name}">
+          <button class="remove-btn" onclick="removePreview(this, '${url}')">×</button>
+          <div class="text-sm color-gray" style="margin-top:4px">${file.name}<br>${(file.size / 1024).toFixed(1)} KB</div>
+        `;
+        previewContainer.appendChild(item);
+      });
+    }
+
+    function removePreview(btn, url) {
+      URL.revokeObjectURL(url);
+      manager.urls.delete(url);
+      manager.revokedCount++;
+      btn.parentElement.remove();
+      addLog('手动释放预览 URL', 'revoke');
+      updateUrlList();
+    }
+
+    // Simulate memory leak
+    function simulateLeaks() {
+      for (let i = 0; i < 10; i++) {
+        const blob = new Blob([new Array(10000).join('x')], { type: 'text/plain' });
+        createAndManage(blob, `leak-${i}.txt`);
+      }
+      addLog('⚠️ 模拟泄漏：创建了 10 个 URL 未释放', 'create');
+    }
+
+    // Download functions
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      addLog(`下载完成并释放: ${filename}`, 'success');
+    }
+
+    function downloadText() {
+      const content = 'Hello World!\n这是使用 createObjectURL 动态生成的文件。';
+      const blob = new Blob([content], { type: 'text/plain' });
+      downloadBlob(blob, 'hello.txt');
+    }
+
+    function downloadJSON() {
+      const data = { name: 'createObjectURL Demo', version: '1.0.0', features: ['图片预览', '文件下载', '内存管理'] };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      downloadBlob(blob, 'demo.json');
+    }
+
+    function downloadCSV() {
+      const content = 'name,age,city\n张三,25,北京\n李四,30,上海\n王五,28,深圳';
+      const blob = new Blob([content], { type: 'text/csv' });
+      downloadBlob(blob, 'users.csv');
+    }
+
+    function downloadHTML() {
+      const content = `<!DOCTYPE html>
+<html><head><title>Demo</title></head>
+<body><h1>Hello from createObjectURL!</h1></body></html>`;
+      const blob = new Blob([content], { type: 'text/html' });
+      downloadBlob(blob, 'demo.html');
+    }
+
+    // Init
+    updateUrlList();
+    addLog('演示页面加载完成', 'info');
+  </script>
+</body>
+</html>
