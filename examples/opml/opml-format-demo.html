@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPML 格式交互演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    h1 { 
+      text-align: center; 
+      color: #333; 
+      margin-bottom: 30px;
+      font-size: 2rem;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #e0e0e0;
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .panel {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .panel h3 {
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #007AFF;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #007AFF;
+      box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #007AFF;
+      color: white;
+    }
+    
+    .btn-primary:hover { background: #0056CC; }
+    
+    .btn-secondary {
+      background: #34C759;
+      color: white;
+    }
+    
+    .btn-secondary:hover { background: #248A3D; }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    th {
+      background: #f8f8f8;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9em;
+      color: #d63200;
+    }
+    
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    pre code { background: transparent; color: inherit; padding: 0; }
+    
+    .tree-view {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      padding: 15px;
+      background: #fafafa;
+      border-radius: 6px;
+      border: 1px solid #eee;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .tree-item {
+      padding: 4px 0;
+    }
+    
+    .tree-level-0 { padding-left: 0; }
+    .tree-level-1 { padding-left: 20px; }
+    .tree-level-2 { padding-left: 40px; }
+    .tree-level-3 { padding-left: 60px; }
+    
+    .tree-icon {
+      display: inline-block;
+      width: 20px;
+      color: #888;
+    }
+    
+    .tree-text { color: #333; }
+    .tree-rss { color: #FF6B35; }
+    .tree-link { color: #007AFF; }
+    
+    .feed-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .feed-item {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .feed-item:last-child { border-bottom: none; }
+    
+    .feed-title {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .feed-url {
+      font-size: 12px;
+      color: #888;
+      word-break: break-all;
+    }
+    
+    .validation-result {
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 15px;
+    }
+    
+    .validation-success {
+      background: #E8F5E9;
+      border: 1px solid #4CAF50;
+      color: #2E7D32;
+    }
+    
+    .validation-error {
+      background: #FFEBEE;
+      border: 1px solid #F44336;
+      color: #C62828;
+    }
+    
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    
+    .quiz-container { padding: 20px; }
+    
+    .quiz-question {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .quiz-option {
+      padding: 15px;
+      background: #f5f5f5;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quiz-option:hover { background: #eee; }
+    .quiz-option.correct { border-color: #4CAF50; background: #E8F5E9; }
+    .quiz-option.incorrect { border-color: #F44336; background: #FFEBEE; }
+    .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+    
+    .quiz-result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .quiz-result.pass { background: #E8F5E9; color: #2E7D32; }
+    .quiz-result.fail { background: #FFEBEE; color: #C62828; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 OPML 格式交互演示</h1>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">📖 概念总览</button>
+      <button class="tab" data-tab="structure">🏗️ 文件结构</button>
+      <button class="tab" data-tab="parser">🔧 解析演示</button>
+      <button class="tab" data-tab="feeds">📡 RSS 订阅</button>
+      <button class="tab" data-tab="validate">✅ 验证工具</button>
+      <button class="tab" data-tab="quiz">📝 自测题</button>
+    </div>
+    
+    <!-- 概念总览 -->
+    <div id="overview" class="tab-content active">
+      <div class="panel">
+        <h3>什么是 OPML？</h3>
+        <p style="margin-bottom: 15px;">
+          <strong>OPML (Outline Processor Markup Language)</strong> 是一种基于 XML 的轮廓标记语言，
+          主要用于描述层级结构的数据，广泛应用于：
+        </p>
+        <table>
+          <thead>
+            <tr><th>应用场景</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>RSS 订阅列表</strong></td><td>导出/导入阅读器订阅，如 Google Reader、Feedly</td></tr>
+            <tr><td><strong>播客订阅</strong></td><td>播客客户端之间的订阅迁移</td></tr>
+            <tr><td><strong>笔记大纲</strong></td><td>思维导图、笔记应用的层级结构</td></tr>
+            <tr><td><strong>博客roll</strong></td><td>博客订阅列表管理</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="panel">
+        <h3>OPML 版本</h3>
+        <table>
+          <thead>
+            <tr><th>版本</th><th>特点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>OPML 1.0</strong></td><td>早期版本，outline 属性较少</td></tr>
+            <tr><td><strong>OPML 2.0</strong></td><td>增加 dateCreated、ownerName 等 head 元素；outline 增加更多属性</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="panel">
+        <h3>为什么使用 OPML？</h3>
+        <div class="summary-stats">
+          <div class="stat-card">
+            <div class="stat-number">1</div>
+            <div class="stat-label">标准格式</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="stat-number">XML</div>
+            <div class="stat-label">人类可读</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="stat-number">∞</div>
+            <div class="stat-label">跨平台兼容</div>
+          </div>
+          <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="stat-number">RSS</div>
+            <div class="stat-label">生态系统</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 文件结构 -->
+    <div id="structure" class="tab-content">
+      <div class="panel">
+        <h3>基本结构</h3>
+        <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;opml version="2.0"&gt;
+  &lt;head&gt;
+    &lt;title&gt;文档标题&lt;/title&gt;
+    &lt;dateCreated&gt;创建时间&lt;/dateCreated&gt;
+    &lt;ownerName&gt;所有者名称&lt;/ownerName&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;outline text="节点1"&gt;
+      &lt;outline text="子节点" /&gt;
+    &lt;/outline&gt;
+  &lt;/body&gt;
+&lt;/opml&gt;</code></pre>
+      </div>
+      
+      <div class="panel">
+        <h3>outline 元素属性</h3>
+        <table>
+          <thead>
+            <tr><th>属性</th><th>说明</th><th>示例</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>text</code></td><td>显示文本（必需）</td><td><code>text="博客名称"</code></td></tr>
+            <tr><td><code>type</code></td><td>节点类型</td><td><code>type="rss"</code></td></tr>
+            <tr><td><code>xmlUrl</code></td><td>XML Feed URL</td><td><code>xmlUrl="https://..."</code></td></tr>
+            <tr><td><code>htmlUrl</code></td><td>HTML 页面 URL</td><td><code>htmlUrl="https://..."</code></td></tr>
+            <tr><td><code>title</code></td><td>标题</td><td><code>title="完整标题"</code></td></tr>
+            <tr><td><code>description</code></td><td>描述</td><td><code>description="博客描述"</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="panel">
+        <h3>type 属性值</h3>
+        <table>
+          <thead>
+            <tr><th>type</th><th>说明</th><th>必需属性</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>rss</code></td><td>RSS Feed</td><td>xmlUrl, htmlUrl</td></tr>
+            <tr><td><code>atom</code></td><td>Atom Feed</td><td>xmlUrl, htmlUrl</td></tr>
+            <tr><td><code>link</code></td><td>通用链接</td><td>htmlUrl</td></tr>
+            <tr><td><code>outline</code></td><td>普通节点</td><td>无</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 解析演示 -->
+    <div id="parser" class="tab-content">
+      <div class="panel">
+        <h3>OPML 解析器</h3>
+        <p style="margin-bottom: 15px;">在下方输入 OPML 内容，点击解析查看结构：</p>
+        <textarea id="opml-input" placeholder="请输入 OPML 内容..."></textarea>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="parseOPML()">🔍 解析 OPML</button>
+          <button class="btn btn-secondary" onclick="loadSampleOPML()">📥 加载示例</button>
+          <button class="btn btn-secondary" onclick="clearOPML()">🗑️ 清空</button>
+        </div>
+        <div id="parse-result"></div>
+      </div>
+    </div>
+    
+    <!-- RSS 订阅 -->
+    <div id="feeds" class="tab-content">
+      <div class="panel">
+        <h3>RSS 订阅表示例</h3>
+        <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;opml version="2.0"&gt;
+  &lt;head&gt;
+    &lt;title&gt;我的订阅列表&lt;/title&gt;
+    &lt;ownerName&gt;用户名&lt;/ownerName&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;outline text="技术博客"&gt;
+      &lt;outline
+        text="阮一峰的网络日志"
+        type="rss"
+        xmlUrl="https://www.ruanyifeng.com/blog/atom.xml"
+        htmlUrl="https://www.ruanyifeng.com/blog/"
+        description="科技与人文"/&gt;
+    &lt;/outline&gt;
+    &lt;outline text="AI/机器学习"&gt;
+      &lt;outline
+        text="机器之心"
+        type="rss"
+        xmlUrl="https://rsshub.app/jiqizhixin"
+        htmlUrl="https://www.jiqizhixin.com/"/&gt;
+    &lt;/outline&gt;
+  &lt;/body&gt;
+&lt;/opml&gt;</code></pre>
+      </div>
+      
+      <div class="panel">
+        <h3>订阅列表预览</h3>
+        <div id="feeds-list" class="feed-list"></div>
+      </div>
+    </div>
+    
+    <!-- 验证工具 -->
+    <div id="validate" class="tab-content">
+      <div class="panel">
+        <h3>OPML 验证工具</h3>
+        <p style="margin-bottom: 15px;">粘贴 OPML 内容进行验证：</p>
+        <textarea id="validate-input" placeholder="请输入 OPML 内容..."></textarea>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="validateOPML()">✅ 验证</button>
+          <button class="btn btn-secondary" onclick="loadSampleForValidate()">📥 加载示例</button>
+        </div>
+        <div id="validation-result"></div>
+      </div>
+    </div>
+    
+    <!-- 自测题 -->
+    <div id="quiz" class="tab-content">
+      <div class="panel quiz-container">
+        <h3>OPML 格式自测</h3>
+        
+        <div id="quiz-1" class="quiz-question-container">
+          <p class="quiz-question">1. OPML 文件中，哪个元素是可选的？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 1)">&lt;head&gt;</div>
+            <div class="quiz-option" data-answer="correct" onclick="checkAnswer(this, 1)">&lt;outline&gt; 的 description 属性</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 1)">&lt;body&gt;</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 1)">&lt;opml&gt; 的 version 属性</div>
+          </div>
+          <div class="quiz-result" style="display:none;"></div>
+        </div>
+        
+        <div id="quiz-2" class="quiz-question-container" style="margin-top: 20px;">
+          <p class="quiz-question">2. type="rss" 的 outline 元素，哪些属性是必需的？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 2)">只需要 xmlUrl</div>
+            <div class="quiz-option" data-answer="correct" onclick="checkAnswer(this, 2)">xmlUrl 和 htmlUrl</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 2)">只需要 htmlUrl</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 2)">text 和 title</div>
+          </div>
+          <div class="quiz-result" style="display:none;"></div>
+        </div>
+        
+        <div id="quiz-3" class="quiz-question-container" style="margin-top: 20px;">
+          <p class="quiz-question">3. OPML 主要用于什么场景？</p>
+          <div class="quiz-options">
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 3)">图片存储</div>
+            <div class="quiz-option" data-answer="correct" onclick="checkAnswer(this, 3)">层级结构数据描述（如 RSS 订阅列表）</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 3)">数据库存储</div>
+            <div class="quiz-option" data-answer="wrong" onclick="checkAnswer(this, 3)">视频流传输</div>
+          </div>
+          <div class="quiz-result" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab 切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 示例 OPML
+    const sampleOPML = `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>我的订阅列表</title>
+    <dateCreated>Fri, 27 Mar 2026 08:00:00 GMT</dateCreated>
+    <ownerName>John Doe</ownerName>
+    <ownerEmail>john@example.com</ownerEmail>
+  </head>
+  <body>
+    <outline text="技术博客">
+      <outline
+        text="阮一峰的网络日志"
+        type="rss"
+        xmlUrl="https://www.ruanyifeng.com/blog/atom.xml"
+        htmlUrl="https://www.ruanyifeng.com/blog/"
+        description="科技与人文"/>
+      <outline
+        text="张鑫旭的博客"
+        type="rss"
+        xmlUrl="https://www.zhangxinxu.com/wordpress/feed/"
+        htmlUrl="https://www.zhangxinxu.com/"/>
+    </outline>
+    <outline text="AI/机器学习">
+      <outline
+        text="机器之心"
+        type="rss"
+        xmlUrl="https://rsshub.app/jiqizhixin"
+        htmlUrl="https://www.jiqizhixin.com/"
+        description="人工智能科技媒体"/>
+    </outline>
+  </body>
+</opml>`;
+
+    // 解析 OPML
+    function parseOPML() {
+      const input = document.getElementById('opml-input').value.trim();
+      const resultDiv = document.getElementById('parse-result');
+      
+      if (!input) {
+        resultDiv.innerHTML = '<div class="validation-result validation-error">请输入 OPML 内容</div>';
+        return;
+      }
+      
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(input, 'text/xml');
+        
+        const parseError = doc.querySelector('parsererror');
+        if (parseError) {
+          throw new Error('XML 解析错误: ' + parseError.textContent);
+        }
+        
+        // 提取元数据
+        const title = doc.querySelector('head title')?.textContent || '';
+        const dateCreated = doc.querySelector('head dateCreated')?.textContent || '';
+        const ownerName = doc.querySelector('head ownerName')?.textContent || '';
+        const ownerEmail = doc.querySelector('head ownerEmail')?.textContent || '';
+        
+        // 提取所有 outline
+        const outlines = [];
+        function extractOutlines(element, level = 0) {
+          const items = element.querySelectorAll(':scope > outline');
+          items.forEach(outline => {
+            const node = {
+              text: outline.getAttribute('text') || '',
+              type: outline.getAttribute('type') || 'outline',
+              xmlUrl: outline.getAttribute('xmlUrl') || '',
+              htmlUrl: outline.getAttribute('htmlUrl') || '',
+              level
+            };
+            outlines.push(node);
+            extractOutlines(outline, level + 1);
+          });
+        }
+        extractOutlines(doc.body);
+        
+        // 渲染结果
+        let html = '<div class="validation-result validation-success">✅ 解析成功！</div>';
+        
+        html += '<div class="summary-stats" style="margin-top: 15px;">';
+        html += `<div class="stat-card"><div class="stat-number">${outlines.length}</div><div class="stat-label">总节点数</div></div>`;
+        html += `<div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="stat-number">${outlines.filter(o => o.type === 'rss').length}</div><div class="stat-label">RSS 订阅</div></div>`;
+        html += '</div>';
+        
+        html += '<h4 style="margin: 15px 0 10px;">元数据</h4>';
+        html += '<table><tr><th>属性</th><th>值</th></tr>';
+        html += `<tr><td>标题</td><td>${title || '-'}</td></tr>`;
+        html += `<tr><td>创建时间</td><td>${dateCreated || '-'}</td></tr>`;
+        html += `<tr><td>所有者</td><td>${ownerName || '-'}</td></tr>`;
+        html += `<tr><td>邮箱</td><td>${ownerEmail || '-'}</td></tr>`;
+        html += '</table>';
+        
+        html += '<h4 style="margin: 15px 0 10px;">大纲结构</h4>';
+        html += '<div class="tree-view">';
+        outlines.forEach(outline => {
+          const indent = outline.level * 20;
+          const icon = outline.type === 'rss' ? '📡' : outline.type === 'link' ? '🔗' : '📁';
+          const className = outline.type === 'rss' ? 'tree-rss' : outline.type === 'link' ? 'tree-link' : 'tree-text';
+          html += `<div class="tree-item" style="padding-left: ${indent}px;">`;
+          html += `<span class="tree-icon">${icon}</span>`;
+          html += `<span class="${className}">${outline.text || '(无text)'}</span>`;
+          if (outline.xmlUrl) {
+            html += ` <span style="color:#888;font-size:11px;">→ ${outline.xmlUrl}</span>`;
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+        
+        resultDiv.innerHTML = html;
+        
+      } catch (e) {
+        resultDiv.innerHTML = `<div class="validation-result validation-error">❌ 解析失败: ${e.message}</div>`;
+      }
+    }
+
+    function loadSampleOPML() {
+      document.getElementById('opml-input').value = sampleOPML;
+    }
+
+    function clearOPML() {
+      document.getElementById('opml-input').value = '';
+      document.getElementById('parse-result').innerHTML = '';
+    }
+
+    // RSS 订阅列表
+    function loadFeedsList() {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(sampleOPML, 'text/xml');
+      const feeds = [];
+      
+      doc.querySelectorAll('outline[type="rss"]').forEach(outline => {
+        feeds.push({
+          text: outline.getAttribute('text'),
+          xmlUrl: outline.getAttribute('xmlUrl'),
+          htmlUrl: outline.getAttribute('htmlUrl'),
+          description: outline.getAttribute('description')
+        });
+      });
+      
+      let html = '';
+      feeds.forEach(feed => {
+        html += `<div class="feed-item">
+          <div class="feed-title">📡 ${feed.text}</div>
+          <div class="feed-url">🔗 ${feed.htmlUrl}</div>
+          <div class="feed-url">📡 ${feed.xmlUrl}</div>
+          ${feed.description ? `<div style="color:#666;font-size:12px;margin-top:4px;">${feed.description}</div>` : ''}
+        </div>`;
+      });
+      
+      document.getElementById('feeds-list').innerHTML = html;
+    }
+
+    // 验证 OPML
+    function validateOPML() {
+      const input = document.getElementById('validate-input').value.trim();
+      const resultDiv = document.getElementById('validation-result');
+      
+      if (!input) {
+        resultDiv.innerHTML = '<div class="validation-result validation-error">请输入 OPML 内容</div>';
+        return;
+      }
+      
+      const errors = [];
+      
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(input, 'text/xml');
+        
+        const parseError = doc.querySelector('parsererror');
+        if (parseError) {
+          errors.push('XML 解析错误');
+        }
+        
+        // 检查必需元素
+        if (!doc.querySelector('opml')) {
+          errors.push('缺少 <opml> 根元素');
+        }
+        
+        const opml = doc.querySelector('opml');
+        if (opml && !opml.getAttribute('version')) {
+          errors.push('<opml> 缺少 version 属性');
+        }
+        
+        if (!doc.querySelector('head')) {
+          errors.push('缺少 <head> 元素');
+        }
+        
+        if (!doc.querySelector('body')) {
+          errors.push('缺少 <body> 元素');
+        }
+        
+        // 检查 RSS outline
+        doc.querySelectorAll('outline[type="rss"]').forEach((outline, i) => {
+          if (!outline.getAttribute('xmlUrl')) {
+            errors.push(`第 ${i + 1} 个 RSS outline 缺少 xmlUrl`);
+          }
+          if (!outline.getAttribute('htmlUrl')) {
+            errors.push(`第 ${i + 1} 个 RSS outline 缺少 htmlUrl`);
+          }
+        });
+        
+        if (errors.length === 0) {
+          resultDiv.innerHTML = `
+            <div class="validation-result validation-success">
+              ✅ OPML 验证通过！<br>
+              <small>这是一个有效的 OPML 2.0 文档</small>
+            </div>`;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="validation-result validation-error">
+              ❌ 验证失败，发现 ${errors.length} 个问题：<br>
+              <ul style="margin: 10px 0 0 20px;">
+                ${errors.map(e => `<li>${e}</li>`).join('')}
+              </ul>
+            </div>`;
+        }
+        
+      } catch (e) {
+        resultDiv.innerHTML = `<div class="validation-result validation-error">❌ 验证失败: ${e.message}</div>`;
+      }
+    }
+
+    function loadSampleForValidate() {
+      document.getElementById('validate-input').value = sampleOPML;
+    }
+
+    // Quiz
+    function checkAnswer(element, questionNum) {
+      const container = document.getElementById(`quiz-${questionNum}`);
+      const options = container.querySelectorAll('.quiz-option');
+      const result = container.querySelector('.quiz-result');
+      
+      options.forEach(opt => opt.classList.add('disabled'));
+      
+      if (element.dataset.answer === 'correct') {
+        element.classList.add('correct');
+        result.className = 'quiz-result pass';
+        result.style.display = 'block';
+        result.textContent = '✅ 回答正确！';
+      } else {
+        element.classList.add('incorrect');
+        options.forEach(opt => {
+          if (opt.dataset.answer === 'correct') {
+            opt.classList.add('correct');
+          }
+        });
+        result.className = 'quiz-result fail';
+        result.style.display = 'block';
+        result.textContent = '❌ 回答错误，正确答案是绿色标注的选项。';
+      }
+    }
+
+    // 初始化
+    loadFeedsList();
+  </script>
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch API 交互式演示</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.875rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem; }
+    .subtitle { color: var(--gray-500); margin-bottom: 2rem; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 1.25rem;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    .section-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 0.5rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    textarea { resize: vertical; font-family: 'Monaco', 'Menlo', monospace; }
+    .row { display: flex; gap: 1rem; }
+    .row > * { flex: 1; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--error); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-group { display: flex; gap: 0.75rem; margin-top: 1rem; }
+    .output {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    .output-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .log-entry { padding: 0.25rem 0; border-bottom: 1px solid var(--gray-700); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.success { color: #34d399; }
+    .log-entry.info { color: #60a5fa; }
+    .log-entry.warning { color: #fbbf24; }
+    .log-entry .timestamp { color: var(--gray-500); margin-right: 0.5rem; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .info-item { background: var(--gray-50); padding: 0.75rem; border-radius: 6px; }
+    .info-label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.25rem; }
+    .info-value { font-size: 0.875rem; font-weight: 600; color: var(--gray-800); }
+    .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--gray-200); margin-bottom: 1rem; }
+    .tab {
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--gray-700); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem; }
+    .checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
+    .checkbox-item input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); }
+    .checkbox-item label { font-size: 0.875rem; color: var(--gray-700); }
+    .loading { display: inline-flex; align-items: center; gap: 0.5rem; }
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-bar {
+      height: 4px;
+      background: var(--gray-200);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .stream-output {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.8125rem;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-top: 1rem;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-badge.success { background: #d1fae5; color: #065f46; }
+    .status-badge.error { background: #fee2e2; color: #991b1b; }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .row { flex-direction: column; }
+      .btn-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fetch API 交互式演示</h1>
+    <p class="subtitle">通过实际案例学习 Fetch API 的各种用法</p>
+
+    <!-- 基础 GET 请求 -->
+    <div class="card">
+      <div class="card-title">基础 GET 请求</div>
+      <div class="section-label">请求 URL</div>
+      <input type="text" id="getUrl" value="https://jsonplaceholder.typicode.com/posts/1" placeholder="输入请求 URL">
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="getCredentials" checked>
+          <label for="getCredentials">credentials: 'include'</label>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="sendGet"><span>发送请求</span></button>
+        <button class="btn btn-danger" id="abortGet"><span>取消请求</span></button>
+      </div>
+      <div id="getStatus" style="display:none">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Status</div>
+            <div class="info-value" id="statusCode">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Status Text</div>
+            <div class="info-value" id="statusText">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Response Type</div>
+            <div class="info-value" id="responseType">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Content-Type</div>
+            <div class="info-value" id="contentType">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="output">
+        <div class="output-title">响应结果</div>
+        <div id="getLog">等待发送请求...</div>
+      </div>
+    </div>
+
+    <!-- POST 请求 -->
+    <div class="card">
+      <div class="card-title">POST 请求</div>
+      <div class="tabs">
+        <button class="tab active" data-tab="post-json">JSON</button>
+        <button class="tab" data-tab="post-form">FormData</button>
+      </div>
+      <div class="tab-content active" id="post-json">
+        <div class="section-label">请求 URL</div>
+        <input type="text" id="postUrl" value="https://jsonplaceholder.typicode.com/posts" placeholder="输入请求 URL">
+        <div class="section-label" style="margin-top:1rem">JSON Body</div>
+        <textarea id="postBody" rows="4">{
+  "title": "Fetch API 演示",
+  "body": "这是 POST 请求的内容",
+  "userId": 1
+}</textarea>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="sendPost"><span>发送 POST</span></button>
+        </div>
+      </div>
+      <div class="tab-content" id="post-form">
+        <div class="section-label">FormData（自动设置 Content-Type）</div>
+        <div class="row">
+          <div>
+            <div class="section-label">username</div>
+            <input type="text" id="fdUsername" value="zhangsan">
+          </div>
+          <div>
+            <div class="section-label">email</div>
+            <input type="text" id="fdEmail" value="zhangsan@example.com">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="sendFormData"><span>发送 FormData</span></button>
+        </div>
+      </div>
+      <div class="output">
+        <div class="output-title">响应结果</div>
+        <div id="postLog">等待发送请求...</div>
+      </div>
+    </div>
+
+    <!-- AbortController -->
+    <div class="card">
+      <div class="card-title">AbortController - 请求取消与超时</div>
+      <div class="section-label">请求 URL（建议使用慢速 API 测试）</div>
+      <input type="text" id="abortUrl" value="https://jsonplaceholder.typicode.com/posts?_delay=5000" placeholder="输入请求 URL">
+      <div class="row" style="margin-top:1rem">
+        <div>
+          <div class="section-label">超时时间（毫秒）</div>
+          <input type="number" id="timeoutMs" value="2000" min="0" step="500">
+        </div>
+        <div>
+          <div class="section-label">操作</div>
+          <div class="btn-group" style="margin-top:0">
+            <button class="btn btn-primary" id="startTimeout"><span>启动（带超时）</span></button>
+            <button class="btn btn-danger" id="cancelRequest"><span>手动取消</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="timeoutProgress" style="width:0%"></div>
+      </div>
+      <div class="output">
+        <div class="output-title">输出日志</div>
+        <div id="abortLog">等待操作...</div>
+      </div>
+    </div>
+
+    <!-- 错误处理 -->
+    <div class="card">
+      <div class="card-title">错误处理 - Network Error vs HTTP Error</div>
+      <div class="section-label">选择错误类型</div>
+      <select id="errorType">
+        <option value="network">Network Error（无效 URL）</option>
+        <option value="http404">HTTP 404</option>
+        <option value="http500">HTTP 500</option>
+        <option value="cors">CORS 错误（模拟）</option>
+      </select>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="triggerError"><span>触发错误</span></button>
+      </div>
+      <div class="output">
+        <div class="output-title">错误信息</div>
+        <div id="errorLog">等待触发错误...</div>
+      </div>
+    </div>
+
+    <!-- 流式读取 -->
+    <div class="card">
+      <div class="card-title">流式读取（ReadableStream）</div>
+      <div class="section-label">选择一个测试场景</div>
+      <select id="streamType">
+        <option value="large">大文件模拟（分块读取）</option>
+        <option value="ndjson">NDJSON 流（逐行解析）</option>
+      </select>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="startStream"><span>开始流式读取</span></button>
+        <button class="btn btn-danger" id="stopStream"><span>停止</span></button>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="streamProgress" style="width:0%"></div>
+      </div>
+      <div class="stream-output" id="streamOutput">等待开始...</div>
+    </div>
+  </div>
+
+  <script>
+    // 工具函数
+    function formatTime() {
+      return new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    }
+
+    function log(container, message, type = '') {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.innerHTML = '<span class="timestamp">[' + formatTime() + ']</span>' + message;
+      container.appendChild(entry);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearLog(container, message = '已清空') {
+      container.innerHTML = '<span class="timestamp">[' + formatTime() + ']</span><span style="color:var(--gray-500)">' + message + '</span>';
+    }
+
+    function getStatusBadge(ok) {
+      return ok 
+        ? '<span class="status-badge success">成功</span>' 
+        : '<span class="status-badge error">失败</span>';
+    }
+
+    // 全局变量
+    let currentController = null;
+    let currentStreamReader = null;
+    let abortTimer = null;
+    let progressTimer = null;
+
+    // ===== 基础 GET 请求 =====
+    const getUrlInput = document.getElementById('getUrl');
+    const getCredentials = document.getElementById('getCredentials');
+    const sendGetBtn = document.getElementById('sendGet');
+    const abortGetBtn = document.getElementById('abortGet');
+    const getLogEl = document.getElementById('getLog');
+    const getStatusEl = document.getElementById('getStatus');
+
+    sendGetBtn.addEventListener('click', async () => {
+      const url = getUrlInput.value;
+      if (!url) {
+        log(getLogEl, '请输入 URL', 'error');
+        return;
+      }
+
+      clearLog(getLogEl);
+      log(getLogEl, '开始请求: ' + url, 'info');
+      sendGetBtn.disabled = true;
+      sendGetBtn.innerHTML = '<span class="loading"><span class="spinner"></span>请求中...</span>';
+      getStatusEl.style.display = 'none';
+
+      currentController = new AbortController();
+      const startTime = Date.now();
+
+      try {
+        const response = await fetch(url, {
+          credentials: getCredentials.checked ? 'include' : 'omit',
+          signal: currentController.signal
+        });
+
+        const duration = Date.now() - startTime;
+
+        getStatusEl.style.display = 'block';
+        document.getElementById('statusCode').innerHTML = response.status + ' ' + getStatusBadge(response.ok);
+        document.getElementById('statusText').textContent = response.statusText;
+        document.getElementById('responseType').textContent = response.type || 'basic';
+        document.getElementById('contentType').textContent = response.headers.get('content-type') || '-';
+
+        log(getLogEl, '响应状态: ' + response.status + ' ' + response.statusText + ' (' + duration + 'ms)', response.ok ? 'success' : 'error');
+
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          data = await response.text();
+        }
+
+        log(getLogEl, '响应类型: ' + (contentType || 'text'), 'info');
+        log(getLogEl, '响应数据: ' + JSON.stringify(data, null, 2).substring(0, 300) + (JSON.stringify(data).length > 300 ? '...' : ''), 'success');
+
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          log(getLogEl, '请求已被取消', 'warning');
+        } else {
+          log(getLogEl, '错误: ' + error.message, 'error');
+          getStatusEl.style.display = 'block';
+          document.getElementById('statusCode').innerHTML = '<span class="status-badge error">Network Error</span>';
+        }
+      } finally {
+        sendGetBtn.disabled = false;
+        sendGetBtn.innerHTML = '<span>发送请求</span>';
+        currentController = null;
+      }
+    });
+
+    abortGetBtn.addEventListener('click', () => {
+      if (currentController) {
+        currentController.abort();
+        log(getLogEl, '触发取消...', 'warning');
+      } else {
+        log(getLogEl, '没有正在进行的请求', 'warning');
+      }
+    });
+
+    // ===== POST 请求 =====
+    const postUrlInput = document.getElementById('postUrl');
+    const postBodyInput = document.getElementById('postBody');
+    const sendPostBtn = document.getElementById('sendPost');
+    const postLogEl = document.getElementById('postLog');
+
+    sendPostBtn.addEventListener('click', async () => {
+      const url = postUrlInput.value;
+      let body;
+
+      clearLog(postLogEl);
+
+      try {
+        body = JSON.parse(postBodyInput.value);
+        log(postLogEl, 'JSON 解析成功', 'info');
+      } catch (e) {
+        log(postLogEl, 'JSON 解析失败: ' + e.message, 'error');
+        return;
+      }
+
+      log(postLogEl, '发送 POST: ' + url, 'info');
+      log(postLogEl, 'Body: ' + JSON.stringify(body), 'info');
+
+      sendPostBtn.disabled = true;
+      sendPostBtn.innerHTML = '<span class="loading"><span class="spinner"></span>请求中...</span>';
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+        log(postLogEl, '响应: ' + response.status + ' ' + response.statusText, response.ok ? 'success' : 'error');
+        log(postLogEl, '数据: ' + JSON.stringify(data), 'success');
+
+      } catch (error) {
+        log(postLogEl, '错误: ' + error.message, 'error');
+      } finally {
+        sendPostBtn.disabled = false;
+        sendPostBtn.innerHTML = '<span>发送 POST</span>';
+      }
+    });
+
+    // FormData
+    const sendFormDataBtn = document.getElementById('sendFormData');
+    const fdUsername = document.getElementById('fdUsername');
+    const fdEmail = document.getElementById('fdEmail');
+
+    sendFormDataBtn.addEventListener('click', async () => {
+      const url = 'https://jsonplaceholder.typicode.com/posts';
+      const formData = new FormData();
+      formData.append('username', fdUsername.value);
+      formData.append('email', fdEmail.value);
+
+      clearLog(postLogEl);
+      log(postLogEl, '发送 FormData 请求', 'info');
+      log(postLogEl, '注意: Content-Type 会自动设置为 multipart/form-data', 'info');
+
+      sendFormDataBtn.disabled = true;
+      sendFormDataBtn.innerHTML = '<span class="loading"><span class="spinner"></span>请求中...</span>';
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        log(postLogEl, '响应: ' + response.status + ' ' + response.statusText, 'success');
+        log(postLogEl, '创建成功，ID: ' + data.id, 'success');
+
+      } catch (error) {
+        log(postLogEl, '错误: ' + error.message, 'error');
+      } finally {
+        sendFormDataBtn.disabled = false;
+        sendFormDataBtn.innerHTML = '<span>发送 FormData</span>';
+      }
+    });
+
+    // ===== Tab 切换 =====
+    document.querySelectorAll('.tabs').forEach(function(tabGroup) {
+      tabGroup.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('tab')) return;
+
+        var tabId = e.target.dataset.tab;
+        var parent = e.target.closest('.card');
+
+        parent.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        parent.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+        e.target.classList.add('active');
+        parent.querySelector('#' + tabId).classList.add('active');
+      });
+    });
+
+    // ===== AbortController 超时 =====
+    var abortUrlInput = document.getElementById('abortUrl');
+    var timeoutMsInput = document.getElementById('timeoutMs');
+    var startTimeoutBtn = document.getElementById('startTimeout');
+    var cancelRequestBtn = document.getElementById('cancelRequest');
+    var abortLogEl = document.getElementById('abortLog');
+    var timeoutProgress = document.getElementById('timeoutProgress');
+
+    startTimeoutBtn.addEventListener('click', async function() {
+      var url = abortUrlInput.value;
+      var timeout = parseInt(timeoutMsInput.value) || 5000;
+
+      clearLog(abortLogEl);
+      log(abortLogEl, '启动请求，超时时间: ' + timeout + 'ms', 'info');
+      
+      timeoutProgress.style.width = '0%';
+
+      currentController = new AbortController();
+      var startTime = Date.now();
+
+      // 进度条
+      var progress = 0;
+      progressTimer = setInterval(function() {
+        progress = Math.min(((Date.now() - startTime) / timeout) * 100, 100);
+        timeoutProgress.style.width = progress + '%';
+      }, 50);
+
+      // 超时控制器
+      abortTimer = setTimeout(function() {
+        if (currentController) {
+          currentController.abort();
+          log(abortLogEl, '请求超时，已自动取消', 'warning');
+        }
+      }, timeout);
+
+      startTimeoutBtn.disabled = true;
+      startTimeoutBtn.innerHTML = '<span class="loading"><span class="spinner"></span>请求中...</span>';
+
+      try {
+        var response = await fetch(url, { signal: currentController.signal });
+        
+        clearTimeout(abortTimer);
+        clearInterval(progressTimer);
+        timeoutProgress.style.width = '100%';
+
+        var data = await response.json();
+        log(abortLogEl, '请求成功: ' + response.status + ' (' + (Date.now() - startTime) + 'ms)', 'success');
+        log(abortLogEl, '数据: ' + JSON.stringify(data).substring(0, 100) + '...', 'info');
+
+      } catch (error) {
+        clearTimeout(abortTimer);
+        clearInterval(progressTimer);
+
+        if (error.name === 'AbortError') {
+          log(abortLogEl, '请求被取消 (' + (Date.now() - startTime) + 'ms)', 'warning');
+        } else {
+          log(abortLogEl, '错误: ' + error.message, 'error');
+        }
+      } finally {
+        startTimeoutBtn.disabled = false;
+        startTimeoutBtn.innerHTML = '<span>启动（带超时）</span>';
+        currentController = null;
+      }
+    });
+
+    cancelRequestBtn.addEventListener('click', function() {
+      if (currentController) {
+        currentController.abort();
+        clearTimeout(abortTimer);
+        clearInterval(progressTimer);
+        log(abortLogEl, '手动取消请求', 'warning');
+      } else {
+        log(abortLogEl, '没有正在进行的请求', 'warning');
+      }
+    });
+
+    // ===== 错误处理演示 =====
+    var errorTypeSelect = document.getElementById('errorType');
+    var triggerErrorBtn = document.getElementById('triggerError');
+    var errorLogEl = document.getElementById('errorLog');
+
+    triggerErrorBtn.addEventListener('click', async function() {
+      var errorType = errorTypeSelect.value;
+      clearLog(errorLogEl);
+
+      var url, expectedError;
+
+      switch (errorType) {
+        case 'network':
+          url = 'https://this-domain-does-not-exist-12345.com/api';
+          expectedError = 'Network Error';
+          break;
+        case 'http404':
+          url = 'https://jsonplaceholder.typicode.com/posts/99999';
+          expectedError = 'HTTP 404';
+          break;
+        case 'http500':
+          url = 'https://jsonplaceholder.typicode.com/posts/99999?_status=500';
+          expectedError = 'HTTP 500';
+          break;
+        case 'cors':
+          url = 'https://httpbin.org/delay/1';
+          expectedError = 'CORS Error';
+          break;
+      }
+
+      log(errorLogEl, '测试场景: ' + expectedError, 'info');
+      log(errorLogEl, 'URL: ' + url, 'info');
+
+      triggerErrorBtn.disabled = true;
+      triggerErrorBtn.innerHTML = '<span class="loading"><span class="spinner"></span>请求中...</span>';
+
+      try {
+        var response = await fetch(url);
+
+        // HTTP 错误检查（404、500 不会自动抛出）
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+        }
+
+        await response.json();
+        log(errorLogEl, '请求成功（意外）', 'success');
+
+      } catch (error) {
+        log(errorLogEl, '捕获到错误: ' + error.message, 'error');
+        
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+          log(errorLogEl, '这是 Network Error（网络级别错误）', 'warning');
+          log(errorLogEl, 'fetch() 会 reject，只有在 catch 中才能捕获', 'warning');
+        } else if (error.message.startsWith('HTTP 4') || error.message.startsWith('HTTP 5')) {
+          log(errorLogEl, '这是 HTTP Error（服务器返回错误状态码）', 'warning');
+          log(errorLogEl, '注意：fetch() 不会 reject，需要手动检查 response.ok', 'warning');
+        }
+      } finally {
+        triggerErrorBtn.disabled = false;
+        triggerErrorBtn.innerHTML = '<span>触发错误</span>';
+      }
+    });
+
+    // ===== 流式读取演示 =====
+    var streamTypeSelect = document.getElementById('streamType');
+    var startStreamBtn = document.getElementById('startStream');
+    var stopStreamBtn = document.getElementById('stopStream');
+    var streamOutputEl = document.getElementById('streamOutput');
+    var streamProgressEl = document.getElementById('streamProgress');
+
+    startStreamBtn.addEventListener('click', async function() {
+      var streamType = streamTypeSelect.value;
+      streamOutputEl.textContent = '';
+      streamProgressEl.style.width = '0%';
+
+      if (streamType === 'large') {
+        await simulateLargeFileDownload();
+      } else {
+        await simulateNDJSONStream();
+      }
+    });
+
+    async function simulateLargeFileDownload() {
+      var totalChunks = 10;
+      var receivedChunks = 0;
+
+      log(streamOutputEl, '开始模拟大文件下载...\n', 'info');
+
+      for (var i = 0; i < totalChunks; i++) {
+        // 模拟网络延迟
+        await new Promise(function(resolve) { setTimeout(resolve, 200); });
+        
+        receivedChunks++;
+        var chunk = '数据块 ' + receivedChunks + '/' + totalChunks + ': ' + new Date().toISOString() + '\n';
+        streamOutputEl.textContent += '[收到块 ' + receivedChunks + '] ' + chunk;
+        streamProgressEl.style.width = (receivedChunks / totalChunks * 100) + '%';
+      }
+
+      streamOutputEl.textContent += '\n=== 下载完成 ===\n总共 ' + totalChunks + ' 个数据块';
+    }
+
+    async function simulateNDJSONStream() {
+      var items = [
+        '{"id":1,"name":"张三","score":95}',
+        '{"id":2,"name":"李四","score":87}',
+        '{"id":3,"name":"王五","score":92}',
+        '{"id":4,"name":"赵六","score":78}',
+        '{"id":5,"name":"钱七","score":88}'
+      ];
+
+      log(streamOutputEl, '开始模拟 NDJSON 流...\n', 'info');
+
+      for (var i = 0; i < items.length; i++) {
+        await new Promise(function(resolve) { setTimeout(resolve, 300); });
+        
+        var item = JSON.parse(items[i]);
+        streamOutputEl.textContent += '[解析行 ' + (i + 1) + '] ID: ' + item.id + ', Name: ' + item.name + ', Score: ' + item.score + '\n';
+        streamProgressEl.style.width = ((i + 1) / items.length * 100) + '%';
+      }
+
+      streamOutputEl.textContent += '\n=== 流读取完成 ===\n总共 ' + items.length + ' 条记录';
+    }
+
+    stopStreamBtn.addEventListener('click', function() {
+      if (currentStreamReader) {
+        currentStreamReader.cancel();
+        currentStreamReader = null;
+        streamOutputEl.textContent += '\n=== 已停止 ===';
+      }
+    });
+  </script>
+</body>
+</html>
