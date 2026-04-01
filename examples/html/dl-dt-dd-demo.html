@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dl, dt, dd 定义列表 — 交互式演示</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 1.875rem; font-weight: 700; color: var(--gray-900); margin-bottom: 0.5rem; }
+    .subtitle { color: var(--gray-500); margin-bottom: 2rem; }
+
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--gray-200);
+      padding: 0.25rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { background: var(--gray-300); color: var(--gray-800); }
+    .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 1.25rem;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    .section-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Demo Block */
+    .demo-block {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .demo-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-400);
+      margin-bottom: 0.75rem;
+    }
+    .demo-label.vertical { color: var(--success); }
+    .demo-label.horizontal { color: var(--primary); }
+    .demo-label.multi-col { color: var(--warning); }
+
+    /* Comparison Table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .comparison-table th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    .comparison-table td { color: var(--gray-600); }
+    .comparison-table code {
+      background: var(--gray-100);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      color: var(--primary);
+    }
+
+    /* Code Block */
+    pre {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.8125rem;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+    pre .comment { color: #6b7280; }
+    pre .tag { color: #f472b6; }
+    pre .attr { color: #a78bfa; }
+    pre .str { color: #34d399; }
+    pre .keyword { color: #60a5fa; }
+
+    /* Inline code */
+    code {
+      background: var(--gray-100);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.8125rem;
+      color: var(--primary);
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    }
+
+    /* DL Styles for demos */
+    .demo-dl-basic dt { font-weight: bold; margin-bottom: 0.25rem; color: var(--gray-800); }
+    .demo-dl-basic dd { margin-left: 1.5rem; color: var(--gray-600); margin-bottom: 1rem; }
+
+    .demo-dl-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5rem 1.5rem;
+    }
+    .demo-dl-grid dt { font-weight: bold; color: var(--gray-800); }
+    .demo-dl-grid dd { margin: 0; color: var(--gray-600); }
+
+    .demo-dl-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .demo-dl-flex dt { font-weight: bold; color: var(--gray-800); }
+    .demo-dl-flex dd { margin-left: 1.5rem; color: var(--gray-600); }
+
+    .demo-dl-columns {
+      column-count: 2;
+      column-gap: 2rem;
+    }
+    .demo-dl-columns dt { font-weight: bold; color: var(--gray-800); break-inside: avoid; }
+    .demo-dl-columns dd { margin-left: 0; color: var(--gray-600); margin-bottom: 0.75rem; }
+
+    /* One-to-many demo */
+    .demo-dl-one-many dt { font-weight: bold; color: var(--gray-800); margin-bottom: 0.25rem; }
+    .demo-dl-one-many dd { margin-left: 1.5rem; color: var(--gray-600); margin-bottom: 0.5rem; }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--gray-50);
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+    .checklist li::before {
+      content: '✓';
+      width: 1.25rem;
+      height: 1.25rem;
+      background: var(--success);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    /* Quiz */
+    .quiz-question {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 1rem;
+    }
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .quiz-option {
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.15s;
+      background: white;
+    }
+    .quiz-option:hover { border-color: var(--primary); }
+    .quiz-option.correct { border-color: var(--success); background: #ecfdf5; }
+    .quiz-option.wrong { border-color: var(--error); background: #fef2f2; }
+    .quiz-result {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      display: none;
+    }
+    .quiz-result.show { display: block; }
+    .quiz-result.pass { background: #ecfdf5; color: #065f46; }
+    .quiz-result.fail { background: #fef2f2; color: #991b1b; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>dl, dt, dd 定义列表 — 交互式演示</h1>
+<p class="subtitle">HTML Definition List Complete Guide with Interactive Examples</p>
+
+<!-- Tab Navigation -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="overview">概念总览</button>
+  <button class="tab-btn" data-tab="basic">基本用法</button>
+  <button class="tab-btn" data-tab="layout">CSS 布局</button>
+  <button class="tab-btn" data-tab="scenarios">使用场景</button>
+  <button class="tab-btn" data-tab="compare">对比选择</button>
+  <button class="tab-btn" data-tab="quiz">自测题</button>
+</div>
+
+<!-- Tab: Overview -->
+<div id="tab-overview" class="tab-panel active">
+  <div class="card">
+    <div class="card-title">什么是定义列表？</div>
+    <p style="color: var(--gray-600); margin-bottom: 1rem;">
+      <code>&lt;dl&gt;</code> (Definition List) 是 HTML 中用于展示<strong>键值对</strong>或<strong>术语定义</strong>的语义化标签组合。
+    </p>
+
+    <table class="comparison-table">
+      <thead>
+        <tr><th>标签</th><th>全称</th><th>作用</th><th>类比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>&lt;dl&gt;</code></td><td>Definition List</td><td>定义列表容器</td><td>整个表格</td></tr>
+        <tr><td><code>&lt;dt&gt;</code></td><td>Definition Term</td><td>定义术语（键）</td><td>表头单元格</td></tr>
+        <tr><td><code>&lt;dd&gt;</code></td><td>Definition Description</td><td>定义描述（值）</td><td>表格单元格</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">快速示例</div>
+<pre><span class="tag">&lt;dl&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>HTML<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>超文本标记语言<span class="tag">&lt;/dd&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>CSS<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>层叠样式表<span class="tag">&lt;/dd&gt;</span>
+<span class="tag">&lt;/dl&gt;</span></pre>
+
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl style="margin:1rem 0">
+        <dt style="font-weight:bold;margin-bottom:0.25rem">HTML</dt>
+        <dd style="margin-left:1.5rem;color:#6b7280;margin-bottom:0.75rem">超文本标记语言</dd>
+        <dt style="font-weight:bold;margin-bottom:0.25rem">CSS</dt>
+        <dd style="margin-left:1.5rem;color:#6b7280">层叠样式表</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Basic -->
+<div id="tab-basic" class="tab-panel">
+  <div class="card">
+    <div class="card-title">一对一关系（最常见）</div>
+<pre><span class="tag">&lt;dl&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>作者<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>张三<span class="tag">&lt;/dd&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>版本<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>2.1.0<span class="tag">&lt;/dd&gt;</span>
+<span class="tag">&lt;/dl&gt;</span></pre>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl class="demo-dl-basic">
+        <dt>作者</dt>
+        <dd>张三</dd>
+        <dt>版本</dt>
+        <dd>2.1.0</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">一对多关系（一个术语多个描述）</div>
+<pre><span class="tag">&lt;dl&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>前端框架<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>React — Facebook 开发的 UI 库<span class="tag">&lt;/dd&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>Vue — 渐进式 JavaScript 框架<span class="tag">&lt;/dd&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>Angular — Google 完整应用框架<span class="tag">&lt;/dd&gt;</span>
+<span class="tag">&lt;/dl&gt;</span></pre>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl class="demo-dl-one-many">
+        <dt>前端框架</dt>
+        <dd>React — Facebook 开发的 UI 库</dd>
+        <dd>Vue — 渐进式 JavaScript 框架</dd>
+        <dd>Angular — Google 完整应用框架</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">多对一关系（多个术语同一描述）— 较少见</div>
+<pre><span class="tag">&lt;dl&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>Firefox<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dt&gt;</span>Mozilla<span class="tag">&lt;/dt&gt;</span>
+  <span class="tag">&lt;dd&gt;</span>Mozilla 基金会开发的开源浏览器<span class="tag">&lt;/dd&gt;</span>
+<span class="tag">&lt;/dl&gt;</span></pre>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl style="display:flex;flex-direction:column;gap:0.5rem">
+        <div style="display:flex;gap:0.5rem">
+          <dt style="font-weight:bold;color:var(--gray-800)">Firefox</dt>
+          <dt style="font-weight:bold;color:var(--gray-800)">Mozilla</dt>
+        </div>
+        <dd style="margin:0;color:var(--gray-600)">Mozilla 基金会开发的开源浏览器</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Layout -->
+<div id="tab-layout" class="tab-panel">
+  <div class="card">
+    <div class="card-title">垂直布局（默认）</div>
+    <div class="demo-block">
+      <div class="demo-label vertical">推荐场景：移动端、简单列表</div>
+      <dl class="demo-dl-basic">
+        <dt>HTML</dt>
+        <dd>超文本标记语言</dd>
+        <dt>CSS</dt>
+        <dd>层叠样式表</dd>
+        <dt>JavaScript</dt>
+        <dd>脚本语言</dd>
+      </dl>
+    </div>
+<pre><span class="keyword">dl</span> {
+  <span class="attr">display</span>: flex;
+  <span class="attr">flex-direction</span>: column;
+  <span class="attr">gap</span>: 0.5rem;
+}
+<span class="keyword">dt</span> { <span class="attr">font-weight</span>: bold; }
+<span class="keyword">dd</span> { <span class="attr">margin-left</span>: 1.5rem; }</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Grid 水平布局（推荐）</div>
+    <div class="demo-block">
+      <div class="demo-label horizontal">推荐场景：元数据、配置项</div>
+      <dl class="demo-dl-grid">
+        <dt>作者</dt>
+        <dd>张三</dd>
+        <dt>版本</dt>
+        <dd>2.1.0</dd>
+        <dt>许可证</dt>
+        <dd>MIT</dd>
+        <dt>发布日期</dt>
+        <dd>2024-01-15</dd>
+      </dl>
+    </div>
+<pre><span class="keyword">dl</span> {
+  <span class="attr">display</span>: grid;
+  <span class="attr">grid-template-columns</span>: auto 1fr;
+  <span class="attr">gap</span>: 0.5rem 1.5rem;
+}
+<span class="keyword">dt</span> { <span class="attr">grid-column</span>: 1; <span class="attr">font-weight</span>: bold; }
+<span class="keyword">dd</span> { <span class="attr">grid-column</span>: 2; <span class="attr">margin</span>: 0; }</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title">多列布局（瀑布流）</div>
+    <div class="demo-block">
+      <div class="demo-label multi-col">推荐场景：术语表、FAQ</div>
+      <dl class="demo-dl-columns">
+        <dt>API</dt>
+        <dd>应用程序编程接口</dd>
+        <dt>URL</dt>
+        <dd>统一资源定位符</dd>
+        <dt>HTTP</dt>
+        <dd>超文本传输协议</dd>
+        <dt>HTML</dt>
+        <dd>超文本标记语言</dd>
+        <dt>CSS</dt>
+        <dd>层叠样式表</dd>
+        <dt>DOM</dt>
+        <dd>文档对象模型</dd>
+      </dl>
+    </div>
+<pre><span class="keyword">dl</span> {
+  <span class="attr">column-count</span>: 2;
+  <span class="attr">column-gap</span>: 2rem;
+}
+<span class="keyword">dt</span> { <span class="attr">break-inside</span>: avoid; }</pre>
+  </div>
+</div>
+
+<!-- Tab: Scenarios -->
+<div id="tab-scenarios" class="tab-panel">
+  <div class="card">
+    <div class="card-title">场景 1：元数据展示</div>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl class="demo-dl-grid" style="max-width:400px">
+        <dt>作者</dt>
+        <dd>张三</dd>
+        <dt>发布日期</dt>
+        <dd>2024-01-15</dd>
+        <dt>版本</dt>
+        <dd>2.1.0</dd>
+        <dt>许可证</dt>
+        <dd>MIT</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">场景 2：术语表（Glossary）</div>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem 1.5rem;max-width:500px">
+        <dt style="font-weight:bold">API</dt>
+        <dd style="margin:0;color:var(--gray-600)">Application Programming Interface，应用程序编程接口</dd>
+        <dt style="font-weight:bold">URL</dt>
+        <dd style="margin:0;color:var(--gray-600)">Uniform Resource Locator，统一资源定位符</dd>
+        <dt style="font-weight:bold">HTTP</dt>
+        <dd style="margin:0;color:var(--gray-600)">HyperText Transfer Protocol，超文本传输协议</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">场景 3：问答对（FAQ）</div>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl style="display:flex;flex-direction:column;gap:1rem;max-width:500px">
+        <div>
+          <dt style="font-weight:bold;margin-bottom:0.25rem">什么是 HTML？</dt>
+          <dd style="margin-left:0;color:var(--gray-600)">HTML 是超文本标记语言，用于定义网页的结构和内容。</dd>
+        </div>
+        <div>
+          <dt style="font-weight:bold;margin-bottom:0.25rem">HTML 和 HTML5 有什么区别？</dt>
+          <dd style="margin-left:0;color:var(--gray-600)">HTML5 是 HTML 的最新版本，引入了新的语义元素、原生多媒体支持和 Canvas 绘图能力。</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">场景 4：产品特性列表</div>
+    <div class="demo-block">
+      <div class="demo-label">渲染效果</div>
+      <dl style="display:grid;grid-template-columns:auto 1fr;gap:0.5rem 1.5rem;max-width:500px">
+        <dt style="font-weight:bold">🚀 实时协作</dt>
+        <dd style="margin:0;color:var(--gray-600)">多人同时编辑，实时同步更改</dd>
+        <dt style="font-weight:bold">📜 版本控制</dt>
+        <dd style="margin:0;color:var(--gray-600)">完整的历史记录，一键回滚</dd>
+        <dt style="font-weight:bold">🔒 权限管理</dt>
+        <dd style="margin:0;color:var(--gray-600)">细粒度的访问控制，保护数据安全</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Compare -->
+<div id="tab-compare" class="tab-panel">
+  <div class="card">
+    <div class="card-title">dl vs ul vs ol — 选型决策表</div>
+    <table class="comparison-table">
+      <thead>
+        <tr><th>列表类型</th><th>HTML 标签</th><th>语义含义</th><th>适用场景</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>定义列表</strong></td>
+          <td><code>&lt;dl&gt;</code></td>
+          <td>键值对 / 术语定义</td>
+          <td>名词—解释对应关系</td>
+        </tr>
+        <tr>
+          <td>无序列表</td>
+          <td><code>&lt;ul&gt;</code></td>
+          <td>一组相关条目</td>
+          <td>无顺序要求的项</td>
+        </tr>
+        <tr>
+          <td>有序列表</td>
+          <td><code>&lt;ol&gt;</code></td>
+          <td>编号序列</td>
+          <td>有顺序/排名要求的项</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">常见错误用法</div>
+    <ul class="checklist">
+      <li>用 <code>&lt;div&gt;</code> 替代 <code>&lt;dl&gt;</code> — 失去语义</li>
+      <li>用 <code>&lt;table&gt;</code> 展示键值对 — 表格用于行列数据，不是键值</li>
+      <li>用 <code>&lt;ul&gt;</code> 写"名称: 值"字符串 — 语义不当</li>
+      <li><code>&lt;dl&gt;</code> 内直接放文本不带 <code>&lt;dt&gt;</code>/<code>&lt;dd&gt;</code> — 不规范</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">决策流程图（文字版）</div>
+    <pre>列表项之间是什么关系？
+  ↓
+是否有"键—值"对应？（名词—解释）
+  ↓ 是 → 使用 <span class="tag">&lt;dl&gt;</span> <span class="tag">&lt;dt&gt;</span> <span class="tag">&lt;dd&gt;</span>
+  ↓ 否
+是否有顺序/编号要求？
+  ↓ 是 → 使用 <span class="tag">&lt;ol&gt;</span> + <span class="tag">&lt;li&gt;</span>
+  ↓ 否
+使用 <span class="tag">&lt;ul&gt;</span> + <span class="tag">&lt;li&gt;</span></pre>
+  </div>
+</div>
+
+<!-- Tab: Quiz -->
+<div id="tab-quiz" class="tab-panel">
+  <div class="card">
+    <div class="card-title">自测题</div>
+
+    <div class="quiz-question">1. 以下哪个标签组合用于创建定义列表？</div>
+    <div class="quiz-options" data-answer="a">
+      <div class="quiz-option" data-choice="a">&lt;dl&gt; + &lt;dt&gt; + &lt;dd&gt;</div>
+      <div class="quiz-option" data-choice="b">&lt;ul&gt; + &lt;li&gt;</div>
+      <div class="quiz-option" data-choice="c">&lt;ol&gt; + &lt;li&gt;</div>
+      <div class="quiz-option" data-choice="d">&lt;table&gt; + &lt;tr&gt; + &lt;td&gt;</div>
+    </div>
+    <div class="quiz-result" id="quiz1-result"></div>
+  </div>
+
+  <div class="card">
+    <div class="quiz-question">2. 以下哪个场景最适合使用 &lt;dl&gt;？</div>
+    <div class="quiz-options" data-answer="c">
+      <div class="quiz-option" data-choice="a">展示购物清单</div>
+      <div class="quiz-option" data-choice="b">显示排行榜（1-2-3名）</div>
+      <div class="quiz-option" data-choice="c">展示术语及其定义</div>
+      <div class="quiz-option" data-choice="d">显示表格数据</div>
+    </div>
+    <div class="quiz-result" id="quiz2-result"></div>
+  </div>
+
+  <div class="card">
+    <div class="quiz-question">3. 一个 &lt;dt&gt; 可以对应几个 &lt;dd&gt;？</div>
+    <div class="quiz-options" data-answer="b">
+      <div class="quiz-option" data-choice="a">只能一个</div>
+      <div class="quiz-option" data-choice="b">一个或多个</div>
+      <div class="quiz-option" data-choice="c">最多两个</div>
+      <div class="quiz-option" data-choice="d">不能单独使用</div>
+    </div>
+    <div class="quiz-result" id="quiz3-result"></div>
+  </div>
+
+  <div class="card">
+    <div class="quiz-question">4. 下面哪个 CSS 布局可以让 dl 变成两列网格？</div>
+    <div class="quiz-options" data-answer="c">
+      <div class="quiz-option" data-choice="a"><code>display: flex; flex-direction: column;</code></div>
+      <div class="quiz-option" data-choice="b"><code>display: block;</code></div>
+      <div class="quiz-option" data-choice="c"><code>display: grid; grid-template-columns: auto 1fr;</code></div>
+      <div class="quiz-option" data-choice="d"><code>display: table;</code></div>
+    </div>
+    <div class="quiz-result" id="quiz4-result"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Quiz logic
+  document.querySelectorAll('.quiz-options').forEach(group => {
+    group.querySelectorAll('.quiz-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const answer = group.dataset.answer;
+        const choice = opt.dataset.choice;
+        const resultId = group.closest('.card').querySelector('.quiz-result').id;
+        const resultEl = document.getElementById(resultId);
+
+        group.querySelectorAll('.quiz-option').forEach(o => {
+          o.classList.remove('correct', 'wrong');
+          o.style.pointerEvents = 'none';
+        });
+
+        if (choice === answer) {
+          opt.classList.add('correct');
+          resultEl.className = 'quiz-result show pass';
+          resultEl.textContent = '✓ 正确！';
+        } else {
+          opt.classList.add('wrong');
+          group.querySelector(`[data-choice="${answer}"]`).classList.add('correct');
+          resultEl.className = 'quiz-result show fail';
+          resultEl.textContent = '✗ 错误，正确答案是 ' + answer.toUpperCase() + '。';
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
