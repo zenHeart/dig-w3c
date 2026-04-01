@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript Symbol 交互演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #34495e;
+      margin-top: 30px;
+      border-left: 4px solid #3498db;
+      padding-left: 12px;
+    }
+    .demo-section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    .code-block .keyword { color: #ff79c6; }
+    .code-block .string { color: #f1fa8c; }
+    .code-block .number { color: #bd93f9; }
+    .code-block .comment { color: #6272a4; }
+    .code-block .function { color: #50fa7b; }
+    .code-block .symbol { color: #ffb86c; }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .output {
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-family: monospace;
+      min-height: 50px;
+      border-left: 4px solid #27ae60;
+    }
+    .output.error {
+      border-left-color: #e74c3c;
+      color: #c0392b;
+    }
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin: 5px;
+    }
+    label {
+      display: block;
+      margin: 8px 0;
+      font-weight: 500;
+    }
+    .info-box {
+      background: #e8f4fd;
+      border: 1px solid #3498db;
+      border-radius: 6px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #3498db;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔮 JavaScript Symbol 交互演示</h1>
+
+  <!-- Section 1: 基本创建 -->
+  <div class="demo-section">
+    <h2>1. Symbol 创建与唯一性</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong>每次 <code>Symbol()</code> 调用创建唯一值，即使描述相同也不相等。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> s1 = <span class="symbol">Symbol</span>(<span class="string">'name'</span>);
+<span class="keyword">const</span> s2 = <span class="symbol">Symbol</span>(<span class="string">'name'</span>);
+<span class="comment">// s1 === s2 → false</span>
+    </div>
+    <button onclick="demoBasicSymbol()">运行演示</button>
+    <div id="output1" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 2: Symbol.for 全局注册 -->
+  <div class="demo-section">
+    <h2>2. Symbol.for() 全局注册表</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>Symbol.for()</code> 在全局注册表中查找或创建符号，实现跨模块共享。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> global1 = <span class="symbol">Symbol</span>.<span class="function">for</span>(<span class="string">'globalKey'</span>);
+<span class="keyword">const</span> global2 = <span class="symbol">Symbol</span>.<span class="function">for</span>(<span class="string">'globalKey'</span>);
+<span class="comment">// global1 === global2 → true</span>
+
+<span class="comment">// Symbol.keyFor() 查询注册的键</span>
+<span class="symbol">Symbol</span>.<span class="function">keyFor</span>(global1); <span class="comment">// 'globalKey'</span>
+    </div>
+    <button onclick="demoGlobalSymbol()">运行演示</button>
+    <div id="output2" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 3: Symbol.iterator -->
+  <div class="demo-section">
+    <h2>3. Symbol.iterator - 自定义迭代器</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong>为对象定义 <code>[Symbol.iterator]()</code> 方法，使其可用于 <code>for...of</code> 和 <code>...</code> 扩展。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> range = {
+  start: <span class="number">1</span>,
+  end: <span class="number">5</span>,
+  <span class="symbol">[Symbol.iterator]</span>() {
+    <span class="keyword">let</span> current = <span class="keyword">this</span>.start;
+    <span class="keyword">return</span> {
+      <span class="function">next</span>() {
+        <span class="keyword">if</span> (current <= <span class="keyword">this</span>.start + <span class="keyword">this</span>.end - <span class="number">1</span>) {
+          <span class="keyword">return</span> { value: current++, done: <span class="keyword">false</span> };
+        }
+        <span class="keyword">return</span> { value: <span class="keyword">undefined</span>, done: <span class="keyword">true</span> };
+      }
+    };
+  }
+};
+    </div>
+    <button onclick="demoIterator()">运行演示</button>
+    <div id="output3" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 4: Symbol.toStringTag -->
+  <div class="demo-section">
+    <h2>4. Symbol.toStringTag - 定制 toString 标签</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>[Symbol.toStringTag]</code> 定制 <code>Object.prototype.toString()</code> 的返回内容。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> person = {
+  name: <span class="string">'Alice'</span>,
+  <span class="symbol">[Symbol.toStringTag]</span>: <span class="string">'Person'</span>
+};
+
+<span class="function">Object.prototype.toString</span>.<span class="function">call</span>(person);
+<span class="comment">// '[object Person]'</span>
+    </div>
+    <button onclick="demoToStringTag()">运行演示</button>
+    <div id="output4" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 5: Symbol.hasInstance -->
+  <div class="demo-section">
+    <h2>5. Symbol.hasInstance - 定制 instanceof</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>[Symbol.hasInstance]</code> 允许自定义 <code>instanceof</code> 的判断逻辑。
+    </div>
+    <div class="code-block">
+<span class="keyword">class</span> <span class="function">EvenNumbers</span> {
+  <span class="keyword">static</span> <span class="symbol">[Symbol.hasInstance]</span>(num) {
+    <span class="keyword">return typeof</span> num === <span class="string">'number'</span> && num % <span class="number">2</span> === <span class="number">0</span>;
+  }
+}
+
+<span class="number">42</span> <span class="keyword">instanceof</span> EvenNumbers; <span class="comment">// true</span>
+<span class="number">37</span> <span class="keyword">instanceof</span> EvenNumbers; <span class="comment">// false</span>
+    </div>
+    <button onclick="demoHasInstance()">运行演示</button>
+    <div id="output5" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 6: Symbol.toPrimitive -->
+  <div class="demo-section">
+    <h2>6. Symbol.toPrimitive - 类型转换</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>[Symbol.toPrimitive]</code> 定义对象转换为基本类型时的行为（string/number/default）。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> voucher = {
+  value: <span class="number">100</span>,
+  <span class="symbol">[Symbol.toPrimitive]</span>(hint) {
+    <span class="keyword">switch</span>(hint) {
+      <span class="keyword">case</span> <span class="string">'string'</span>: <span class="keyword">return</span> <span class="string">`¥${this.value}`</span>;
+      <span class="keyword">case</span> <span class="string">'number'</span>: <span class="keyword">return</span> <span class="keyword">this</span>.value;
+      <span class="keyword">default</span>: <span class="keyword">return</span> <span class="string">'voucher'</span>;
+    }
+  }
+};
+    </div>
+    <button onclick="demoToPrimitive()">运行演示</button>
+    <div id="output6" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 7: Symbol 作为私有属性 -->
+  <div class="demo-section">
+    <h2>7. Symbol 实现"私有"属性</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong>Symbol 属性不会出现在 <code>Object.keys()</code> 中，可用于模拟私有属性。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> _secret = <span class="symbol">Symbol</span>(<span class="string">'secret'</span>);
+
+<span class="keyword">class</span> <span class="function">SecureBox</span> {
+  <span class="function">constructor</span>(data) {
+    <span class="keyword">this</span>.public = data;
+    <span class="keyword">this</span>[_secret] = <span class="string">'hidden value'</span>;
+  }
+}
+    </div>
+    <button onclick="demoPrivateSymbol()">运行演示</button>
+    <div id="output7" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 8: Symbol.isConcatSpreadable -->
+  <div class="demo-section">
+    <h2>8. Symbol.isConcatSpreadable - 控制数组展开</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>[Symbol.isConcatSpreadable]</code> 控制 <code>Array.concat()</code> 是否展开数组。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> arr = [<span class="number">1</span>, <span class="number">2</span>];
+arr[<span class="symbol">Symbol.isConcatSpreadable</span>] = <span class="keyword">false</span>;
+
+[<span class="number">0</span>].<span class="function">concat</span>(arr); <span class="comment">// [0, [1, 2]] - 不展开</span>
+    </div>
+    <button onclick="demoConcatSpreadable()">运行演示</button>
+    <div id="output8" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 9: 获取 Symbol 属性 -->
+  <div class="demo-section">
+    <h2>9. 获取对象的 Symbol 属性</h2>
+    <div class="info-box">
+      <strong>核心概念：</strong><code>Object.getOwnPropertySymbols()</code> 和 <code>Reflect.ownKeys()</code> 可枚举 Symbol 属性。
+    </div>
+    <div class="code-block">
+<span class="keyword">const</span> a = <span class="symbol">Symbol</span>(<span class="string">'a'</span>);
+<span class="keyword">const</span> b = <span class="symbol">Symbol</span>(<span class="string">'b'</span>);
+<span class="keyword">const</span> obj = { [a]: <span class="string">'1'</span>, [b]: <span class="string">'2'</span>, c: <span class="string">'3'</span> };
+
+<span class="function">Object.keys</span>(obj);              <span class="comment">// ['c']</span>
+<span class="function">Object.getOwnPropertySymbols</span>(obj); <span class="comment">// [Symbol(a), Symbol(b)]</span>
+<span class="function">Reflect.ownKeys</span>(obj);            <span class="comment">// [Symbol(a), Symbol(b), 'c']</span>
+    </div>
+    <button onclick="demoGetSymbols()">运行演示</button>
+    <div id="output9" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <!-- Section 10: 常见 Well-known Symbols 表 -->
+  <div class="demo-section">
+    <h2>10. Well-known Symbols 一览</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>用途</th>
+          <th>示例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Symbol.iterator</code></td>
+          <td>定义迭代器</td>
+          <td><code>for...of</code>, <code>...</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.toStringTag</code></td>
+          <td>定制 toString 结果</td>
+          <td><code>Object.prototype.toString.call()</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.hasInstance</code></td>
+          <td>定制 instanceof</td>
+          <td><code>x instanceof Class</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.toPrimitive</code></td>
+          <td>类型转换</td>
+          <td><code>+obj</code>, <code>String(obj)</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.isConcatSpreadable</code></td>
+          <td>控制 concat 展开</td>
+          <td><code>[].concat()</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.species</code></td>
+          <td>派生类构造函数</td>
+          <td><code>Array.map()</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.match</code></td>
+          <td>定制 match 行为</td>
+          <td><code>str.match()</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.split</code></td>
+          <td>定制 split 行为</td>
+          <td><code>str.split()</code></td>
+        </tr>
+        <tr>
+          <td><code>Symbol.asyncIterator</code></td>
+          <td>异步迭代器</td>
+          <td><code>for await...of</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <button onclick="showAllSymbols()">列出所有 Well-known Symbols</button>
+    <div id="output10" class="output">点击按钮查看结果...</div>
+  </div>
+
+  <script>
+    // Demo 1: Symbol 基本创建与唯一性
+    function demoBasicSymbol() {
+      const s1 = Symbol('name');
+      const s2 = Symbol('name');
+      
+      const result = `
+<strong>Symbol 创建测试：</strong>
+s1 = Symbol('name')
+s2 = Symbol('name')
+
+s1 === s2: <strong>${s1 === s2}</strong> ← 每次调用创建新值
+
+typeof Symbol(): <strong>${typeof Symbol()}</strong>
+Symbol() 不需要 new 关键字，它是基本类型
+      `;
+      document.getElementById('output1').innerHTML = result;
+    }
+
+    // Demo 2: Symbol.for 全局注册表
+    function demoGlobalSymbol() {
+      const global1 = Symbol.for('globalKey');
+      const global2 = Symbol.for('globalKey');
+      const local = Symbol('localKey');
+      
+      const result = `
+<strong>全局符号注册表测试：</strong>
+Symbol.for('globalKey') === Symbol.for('globalKey'): <strong>${global1 === global2}</strong>
+
+Symbol.keyFor(global1): <strong>"${Symbol.keyFor(global1)}"</strong>
+Symbol.keyFor(local): <strong>${Symbol.keyFor(local)}</strong> ← 局部符号不在注册表中
+
+<strong>应用场景：</strong>跨模块共享常量
+// moduleA.js: const KEY = Symbol.for('app.key');
+// moduleB.js: const KEY = Symbol.for('app.key'); // 相同引用！
+      `;
+      document.getElementById('output2').innerHTML = result;
+    }
+
+    // Demo 3: Symbol.iterator
+    function demoIterator() {
+      const range = {
+        start: 1,
+        end: 5,
+        [Symbol.iterator]() {
+          let current = this.start;
+          const end = this.start + this.end - 1;
+          return {
+            next: () => {
+              if (current <= end) {
+                return { value: current++, done: false };
+              }
+              return { value: undefined, done: true };
+            }
+          };
+        }
+      };
+      
+      const forOfResult = [];
+      for (const num of range) {
+        forOfResult.push(num);
+      }
+      
+      const spreadResult = [...range];
+      
+      const result = `
+<strong>自定义迭代器测试：</strong>
+对象: range = { start: 1, end: 5 }
+
+for (const num of range):
+  <strong>[${forOfResult.join(', ')}]</strong>
+
+[...range]:
+  <strong>[${spreadResult.join(', ')}]</strong>
+
+✓ 对象现在可以用于 for...of 和 ... 扩展运算符
+      `;
+      document.getElementById('output3').innerHTML = result;
+    }
+
+    // Demo 4: Symbol.toStringTag
+    function demoToStringTag() {
+      const person = {
+        name: 'Alice',
+        age: 28,
+        [Symbol.toStringTag]: 'Person'
+      };
+      
+      const array = [1, 2, 3];
+      
+      const result = `
+<strong>Symbol.toStringTag 测试：</strong>
+person[Symbol.toStringTag] = 'Person'
+
+Object.prototype.toString.call(person):
+  <strong>${Object.prototype.toString.call(person)}</strong>
+
+Object.prototype.toString.call(array):
+  <strong>${Object.prototype.toString.call(array)}</strong>
+
+对比：person.toString():
+  <strong>${person.toString()}</strong>
+      `;
+      document.getElementById('output4').innerHTML = result;
+    }
+
+    // Demo 5: Symbol.hasInstance
+    function demoHasInstance() {
+      class EvenNumbers {
+        static [Symbol.hasInstance](num) {
+          return typeof num === 'number' && num % 2 === 0;
+        }
+      }
+      
+      const result = `
+<strong>Symbol.hasInstance 测试：</strong>
+class EvenNumbers {
+  static [Symbol.hasInstance](num) {
+    return typeof num === 'number' && num % 2 === 0;
+  }
+}
+
+42 instanceof EvenNumbers: <strong>${42 instanceof EvenNumbers}</strong>
+37 instanceof EvenNumbers: <strong>${37 instanceof EvenNumbers}</strong>
+'abc' instanceof EvenNumbers: <strong>${'abc' instanceof EvenNumbers}</strong>
+      `;
+      document.getElementById('output5').innerHTML = result;
+    }
+
+    // Demo 6: Symbol.toPrimitive
+    function demoToPrimitive() {
+      const voucher = {
+        value: 100,
+        [Symbol.toPrimitive](hint) {
+          switch (hint) {
+            case 'string': return `¥${this.value}`;
+            case 'number': return this.value;
+            default: return 'voucher';
+          }
+        }
+      };
+      
+      const result = `
+<strong>Symbol.toPrimitive 测试：</strong>
+voucher = { value: 100, [Symbol.toPrimitive](hint) {...} }
+
+String(voucher): <strong>${String(voucher)}</strong>     ← hint = 'string'
++voucher: <strong>${+voucher}</strong>                 ← hint = 'number'
+voucher * 2: <strong>${voucher * 2}</strong>            ← hint = 'number'
+voucher + '': <strong>${voucher + ''}</strong>          ← hint = 'default'
+\`Hello ${voucher}\`: <strong>${`Hello ${voucher}`}</strong>  ← hint = 'string'
+      `;
+      document.getElementById('output6').innerHTML = result;
+    }
+
+    // Demo 7: Symbol 作为私有属性
+    function demoPrivateSymbol() {
+      const _secret = Symbol('secret');
+      
+      class SecureBox {
+        constructor(data) {
+          this.public = data;
+          this[_secret] = 'hidden value';
+        }
+        
+        reveal() {
+          return this[_secret];
+        }
+      }
+      
+      const box = new SecureBox('public data');
+      
+      const result = `
+<strong>Symbol 私有属性测试：</strong>
+const _secret = Symbol('secret');
+
+box.public: <strong>${box.public}</strong>
+box[_secret]: <strong>${box[_secret]}</strong> ← 外部无法直接访问
+
+Object.keys(box): <strong>[${Object.keys(box)}]</strong> ← 不包含 Symbol 属性
+box.reveal(): <strong>${box.reveal()}</strong> ← 必须通过方法访问
+
+⚠️ 注意：这只是"软私有"，Object.getOwnPropertySymbols() 仍可访问
+      `;
+      document.getElementById('output7').innerHTML = result;
+    }
+
+    // Demo 8: Symbol.isConcatSpreadable
+    function demoConcatSpreadable() {
+      const normalArr = [1, 2];
+      const blockedArr = [3, 4];
+      blockedArr[Symbol.isConcatSpreadable] = false;
+      
+      const result = `
+<strong>Symbol.isConcatSpreadable 测试：</strong>
+const normalArr = [1, 2];
+const blockedArr = [3, 4];
+blockedArr[Symbol.isConcatSpreadable] = false;
+
+[0].concat(normalArr): <strong>[${[0].concat(normalArr)}]</strong>  ← 展开
+[0].concat(blockedArr): <strong>[${[0].concat(blockedArr)}]</strong> ← 不展开，作为整体
+      `;
+      document.getElementById('output8').innerHTML = result;
+    }
+
+    // Demo 9: 获取 Symbol 属性
+    function demoGetSymbols() {
+      const a = Symbol('a');
+      const b = Symbol('b');
+      const obj = { [a]: '1', [b]: '2', c: '3' };
+      
+      const result = `
+<strong>获取 Symbol 属性测试：</strong>
+const a = Symbol('a');
+const b = Symbol('b');
+const obj = { [a]: '1', [b]: '2', c: '3' };
+
+Object.keys(obj): <strong>[${Object.keys(obj)}]</strong> ← 不包含 Symbol
+
+Object.getOwnPropertySymbols(obj):
+  <strong>[${Object.getOwnPropertySymbols(obj).map(s => s.toString())}]</strong>
+
+Reflect.ownKeys(obj):
+  <strong>[${Reflect.ownKeys(obj).map(k => k.toString())}]</strong> ← 全部属性
+      `;
+      document.getElementById('output9').innerHTML = result;
+    }
+
+    // Demo 10: 列出所有 Well-known Symbols
+    function showAllSymbols() {
+      const wellKnownSymbols = [
+        'asyncIterator', 'hasInstance', 'isConcatSpreadable', 
+        'iterator', 'match', 'replace', 'search', 
+        'species', 'split', 'toStringTag', 'toPrimitive', 
+        'unscopables', 'matchAll', 'replaceAll', 'searchAll'
+      ];
+      
+      const result = wellKnownSymbols.map(s => `Symbol.${s}`).join(',\n');
+      
+      document.getElementById('output10').innerHTML = `
+<strong>Well-known Symbols 完整列表：</strong>
+<pre>${result}</pre>
+
+共计 <strong>${wellKnownSymbols.length}</strong> 个（因运行环境而异）
+      `;
+    }
+  </script>
+</body>
+</html>
