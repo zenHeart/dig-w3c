@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>H5 打开 APP 方案演示</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e5e7eb; line-height: 1.6; }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1, h2, h3 { color: #f9fafb; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+    header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid #2d3748; }
+    header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    header .subtitle { color: #9ca3af; font-size: 0.95rem; }
+
+    .notice {
+      background: #1e293b; border-left: 4px solid #f59e0b;
+      padding: 1rem 1.25rem; border-radius: 0 6px 6px 0;
+      margin-bottom: 2rem; font-size: 0.9rem;
+    }
+
+    section { margin-bottom: 3rem; }
+    section h2 { font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .tag-iOS { background: #1d4ed8; color: #fff; }
+    .tag-Android { background: #15803d; color: #fff; }
+    .tag-Both { background: #6b21a8; color: #fff; }
+    .tag-Danger { background: #dc2626; color: #fff; }
+
+    .scheme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 640px) { .scheme-grid { grid-template-columns: 1fr; } }
+
+    .scheme-card { background: #1a2332; border: 1px solid #2d3748; border-radius: 8px; padding: 1.25rem; }
+    .scheme-card h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+    .scheme-card p { font-size: 0.85rem; color: #9ca3af; margin-bottom: 1rem; }
+
+    .config-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; align-items: flex-start; flex-wrap: wrap; }
+    .config-row label { font-size: 0.8rem; color: #9ca3af; min-width: 100px; padding-top: 6px; }
+    .config-row input {
+      flex: 1; min-width: 200px; background: #0f1117; border: 1px solid #374151;
+      border-radius: 6px; padding: 6px 10px; color: #e5e7eb; font-size: 0.85rem;
+      font-family: 'Fira Code', 'Consolas', monospace;
+    }
+    .config-row input:focus { outline: none; border-color: #60a5fa; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border: none; border-radius: 6px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-success { background: #16a34a; color: #fff; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-secondary { background: #374151; color: #e5e7eb; }
+    .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+
+    .code-block {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+      margin-top: 1rem; overflow: hidden;
+    }
+    .code-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 16px; background: #161b22; border-bottom: 1px solid #30363d;
+      font-size: 0.8rem; color: #8b949e;
+    }
+    .code-header .copy-btn {
+      background: none; border: 1px solid #30363d; color: #8b949e;
+      padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+    }
+    .code-header .copy-btn:hover { color: #e5e7eb; border-color: #8b949e; }
+    .code-content { padding: 1rem; overflow-x: auto; font-size: 0.82rem; }
+    pre { font-family: 'Fira Code', 'Consolas', monospace; color: #c9d1d9; white-space: pre; }
+    .tok-kw  { color: #ff7b72; }   /* keyword */
+    .tok-str { color: #a5d6ff; }   /* string */
+    .tok-cmt { color: #8b949e; font-style: italic; } /* comment */
+    .tok-fn  { color: #d2a8ff; }   /* function */
+    .tok-num { color: #79c0ff; }   /* number */
+
+    .log-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; margin-top: 1.5rem; }
+    .log-header { padding: 8px 16px; background: #161b22; border-bottom: 1px solid #30363d; font-size: 0.8rem; color: #8b949e; display: flex; justify-content: space-between; }
+    .log-body { padding: 1rem; max-height: 200px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.8rem; }
+    .log-entry { margin-bottom: 4px; display: flex; gap: 8px; }
+    .log-time { color: #484f58; flex-shrink: 0; }
+    .log-ok  { color: #3fb950; }
+    .log-fail{ color: #f85149; }
+    .log-info{ color: #58a6ff; }
+    .log-warn{ color: #d29922; }
+
+    .step-list { counter-reset: steps; list-style: none; }
+    .step-list li { counter-increment: steps; padding: 0.75rem 0.75rem 0.75rem 3rem; position: relative; border-left: 1px solid #2d3748; margin-left: 1rem; }
+    .step-list li::before { content: counter(steps); position: absolute; left: -12px; top: 0.75rem; width: 22px; height: 22px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; }
+    .step-list li:last-child { border-left: none; }
+
+    .result-banner { display: none; margin-top: 1.5rem; padding: 1rem 1.25rem; border-radius: 8px; font-weight: 600; text-align: center; }
+    .result-banner.show { display: block; }
+    .result-success { background: #14532d; border: 1px solid #16a34a; color: #86efac; }
+    .result-fail    { background: #450a0a; border: 1px solid #dc2626; color: #fca5a5; }
+
+    .ua-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 6px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>H5 打开 APP 并判断是否安装</h1>
+    <p class="subtitle">交互演示 — 涵盖 URL Scheme / Universal Links / App Links / 微信内处理</p>
+    <div id="ua-info" style="margin-top:0.75rem;"></div>
+  </header>
+
+  <div class="notice">
+    ⚠️ <strong>注意：</strong>本演示中的"打开 APP"操作会因为目标 APP 不存在而失败，页面会保持可见（模拟"未安装"场景）。
+    visibilitychange 监听逻辑在真实环境中可正常工作。
+  </div>
+
+  <!-- ==========================================
+       SECTION 1: URL Scheme
+  ========================================== -->
+  <section>
+    <h2>
+      <span class="tag tag-Both">基础</span>
+      URL Scheme（自定义协议）
+    </h2>
+
+    <div class="scheme-grid">
+      <div class="scheme-card">
+        <h3>iOS 注册</h3>
+        <p>在 <code>Info.plist</code> 的 <code>CFBundleURLTypes</code> 中声明 <code>myapp://</code> 协议。</p>
+      </div>
+      <div class="scheme-card">
+        <h3>Android 注册</h3>
+        <p>在 <code>AndroidManifest.xml</code> 的 <code>&lt;activity&gt;</code> 中添加 <code>&lt;data android:scheme="myapp"/&gt;</code>。</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>直接跳转（❌ 不可判断安装状态）</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+      <div class="code-content">
+<pre><code><span class="tok-cmt">// 直接赋值 location.href，JS 继续执行，无法可靠判断</span>
+window.location.href = <span class="tok-str">'myapp://open?url=https://example.com'</span>;</code></pre>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-danger" onclick="demoBasicScheme()">
+        🚫 直接跳转（会失败，无反馈）
+      </button>
+      <button class="btn btn-primary" onclick="demoVisibilityScheme()">
+        ✅ 尝试 + visibilitychange 检测
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 2: iframe + visibilitychange
+  ========================================== -->
+  <section>
+    <h2>
+      <span class="tag tag-Both">改进</span>
+      iframe 尝试跳转 + visibilitychange 监听
+    </h2>
+
+    <p style="color:#9ca3af;margin-bottom:1rem;font-size:0.9rem;">
+      通过隐藏 iframe 尝试拉起 APP，同时监听页面可见性变化。如果 APP 被拉起，页面被隐藏 → 可判定为"已安装"；否则进入兜底下载逻辑。
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>openAppViaIframe — 带检测的 iframe 方案</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+      <div class="code-content">
+<pre><code><span class="tok-kw">function</span> <span class="tok-fn">openAppViaIframe</span>(urlScheme, downloadUrl, timeout = <span class="tok-num">2500</span>) {
+  <span class="tok-kw">const</span> ifr = document.createElement(<span class="tok-str">'iframe'</span>);
+  ifr.style.display = <span class="tok-str">'none'</span>;
+  ifr.src = urlScheme;
+
+  <span class="tok-kw">let</span> fellBack = <span class="tok-num">false</span>;
+  <span class="tok-kw">let</span> timer = <span class="tok-kw">null</span>;
+
+  <span class="tok-kw">const</span> fallback = () => {
+    <span class="tok-kw">if</span> (fellBack) <span class="tok-kw">return</span>;
+    fellBack = <span class="tok-num">true</span>;
+    <span class="tok-kw">if</span> (timer) clearTimeout(timer);
+    log(<span class="tok-str">'warn'</span>, <span class="tok-str">'未检测到 APP 拉起，跳转下载页...'</span>);
+    <span class="tok-kw">if</span> (downloadUrl) window.location.href = downloadUrl;
+    document.removeEventListener(<span class="tok-str">'visibilitychange'</span>, onVis);
+    <span class="tok-kw">if</span> (ifr.parentNode) ifr.parentNode.removeChild(ifr);
+  };
+
+  <span class="tok-kw">const</span> onVis = () => {
+    <span class="tok-kw">if</span> (document.hidden) {
+      log(<span class="tok-str">'ok'</span>, <span class="tok-str">'visibilitychange → hidden：APP 已拉起 ✓'</span>);
+      fallback(); <span class="tok-cmt">// 清理</span>
+    } <span class="tok-kw">else</span> {
+      log(<span class="tok-str">'info'</span>, <span class="tok-str">'visibilitychange → visible：等待检测...'</span>);
+      timer = setTimeout(fallback, timeout);
+    }
+  };
+
+  document.addEventListener(<span class="tok-str">'visibilitychange'</span>, onVis);
+  document.body.appendChild(ifr);
+  timer = setTimeout(fallback, timeout);
+  log(<span class="tok-str">'info'</span>, <span class="tok-str">'iframe 已创建，等待 visibilitychange... (超时 '</span> + timeout + <span class="tok-str">'ms)'</span>);
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="openAppViaIframe('myapp://home','https://example.com/download')">
+        ▶️ 执行 iframe + visibilitychange 检测
+      </button>
+      <button class="btn btn-secondary" onclick="clearLog()">
+        🗑️ 清空日志
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 3: Universal Links / App Links
+  ========================================== -->
+  <section>
+    <h2>
+      <span class="tag tag-iOS">iOS</span>
+      <span class="tag tag-Android">Android</span>
+      Universal Links / App Links（系统级，最可靠）
+    </h2>
+
+    <p style="color:#9ca3af;margin-bottom:1rem;font-size:0.9rem;">
+      通过 HTTPS 域名关联，操作系统验证 APP 是否注册了该域名。<strong>已安装</strong> → 拉起 APP；<strong>未安装</strong> → 打开网页（iOS）或无响应（Android）。
+    </p>
+
+    <div class="scheme-grid">
+      <div class="scheme-card">
+        <h3>🍎 iOS — apple-app-site-association</h3>
+        <p>在网站 <code>/.well-known/apple-app-site-association</code> 部署 JSON，Xcode 配置 <code>applinks:</code> 域名。</p>
+        <div class="code-block" style="margin-top:0.75rem;">
+          <div class="code-content" style="padding:0.75rem;">
+<pre style="font-size:0.78rem;"><code>{
+  <span class="tok-str">"applinks"</span>: {
+    <span class="tok-str">"details"</span>: [{
+      <span class="tok-str">"appIDs"</span>: [<span class="tok-str">"ABCDE12345.com.example.myapp"</span>],
+      <span class="tok-str">"components"</span>: [{
+        <span class="tok-str">"/"</span>: <span class="tok-str">"/open/*"</span>
+      }]
+    }]
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="scheme-card">
+        <h3>🤖 Android — assetlinks.json</h3>
+        <p>在网站 <code>/.well-known/assetlinks.json</code> 部署 JSON，AndroidManifest 配置 <code>android:autoVerify="true"</code>。</p>
+        <div class="code-block" style="margin-top:0.75rem;">
+          <div class="code-content" style="padding:0.75rem;">
+<pre style="font-size:0.78rem;"><code>[{
+  <span class="tok-str">"relation"</span>: [<span class="tok-str">"delegate_permission/common.handle_all_urls"</span>],
+  <span class="tok-str">"target"</span>: {
+    <span class="tok-str">"namespace"</span>: <span class="tok-str">"android_app"</span>,
+    <span class="tok-str">"package_name"</span>: <span class="tok-str">"com.example.myapp"</span>,
+    <span class="tok-str">"sha256_cert_fingerprints"</span>: [<span class="tok-str">"AA:BB:CC:..."</span>]
+  }
+}]</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>H5 调用（只需打开 HTTPS 链接）</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+      <div class="code-content">
+<pre><code><span class="tok-cmt">// 操作系统自动判断：已安装 → 拉起；未安装 → 打开网页（iOS）</span>
+window.location.href = <span class="tok-str">'https://yourdomain.com/open/product/123'</span>;</code></pre>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-success" onclick="demoUniversalLink()">
+        🔗 模拟 Universal Link 跳转（跳到当前页面）
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 4: 微信内处理
+  ========================================== -->
+  <section>
+    <h2>
+      <span class="tag tag-Danger">微信</span>
+      微信内特殊处理
+    </h2>
+
+    <p style="color:#9ca3af;margin-bottom:1rem;font-size:0.9rem;">
+      微信 webview 限制大多数拉起 APP 的方案，需要使用微信开放标签或微下载。
+    </p>
+
+    <ul class="step-list" style="color:#9ca3af;font-size:0.9rem;">
+      <li><strong>已认证公众号</strong> → 使用 <code>&lt;wx-open-launch-app&gt;</code> 开放标签（需引入微信 JSSDK）</li>
+      <li><strong>未认证 / 兜底</strong> → 跳转微下载中间页 <code>https://common.jump.wxcmi.com/</code>（Android）</li>
+      <li><strong>iOS 微信 7.0+</strong> → 支持 Universal Links，可直接使用 HTTPS 链接</li>
+      <li>引导用户点击右上角 <strong>「在浏览器中打开」</strong> → 绕过限制</li>
+    </ul>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>微信开放标签示例</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+      <div class="code-content">
+<pre><code><span class="tok-cmt">// 需要已认证公众号，引入微信 JSSDK</span>
+<span class="tok-kw">&lt;script&gt;</span>
+  wx.config({
+    appId: <span class="tok-str">'wxxxxxxxx'</span>,
+    jsApiList: [<span class="tok-str">'openLocation'</span>],
+  });
+<spanspan class="tok-kw">&lt;/script&gt;</span>
+
+<span class="tok-kw">&lt;wx-open-launch-app</span>
+  id=<span class="tok-str">"launch-btn"</span>
+  appid=<span class="tok-str">"wxxxxxxxx"</span>
+  extraData=<span class="tok-str">"{'key':'value'}"</span>
+<span class="tok-kw">&gt;</span>
+  <span class="tok-kw">&lt;template&gt;</span>
+    <span class="tok-kw">&lt;button&gt;</span>打开 APP<span class="tok-kw">&lt;/button&gt;</span>
+  <span class="tok-kw">&lt;/template&gt;</span>
+<span class="tok-kw">&lt;/wx-open-launch-app&gt;</span>
+
+<span class="tok-kw">&lt;script&gt;</span>
+  document.getElementById(<span class="tok-str">'launch-btn'</span>).addEventListener(<span class="tok-str">'launch'</span>, (e) => {
+    console.log(<span class="tok-str">'APP 已拉起'</span>);
+  });
+  document.getElementById(<span class="tok-str">'launch-btn'</span>).addEventListener(<span class="tok-str">'error'</span>, (e) => {
+    <span class="tok-cmt">// 引导下载</span>
+    window.location.href = <span class="tok-str">'https://common.jump.wxcmi.com/?appid=wxxxxxxxx'</span>;
+  });
+<spanspan class="tok-kw">&lt;/script&gt;</span></code></pre>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="demoWeixinDownload()">
+        🔀 模拟跳转微下载
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 5: 综合方案
+  ========================================== -->
+  <section>
+    <h2>
+      <span class="tag tag-Both">综合</span>
+      推荐方案 — 渐进增强
+    </h2>
+
+    <p style="color:#9ca3af;margin-bottom:1rem;font-size:0.9rem;">
+      根据 UA 判断平台，优先使用 Universal Links / App Links（最可靠），降级到 URL Scheme + visibilitychange。
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>openAppOrFallback — 渐进增强实现</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+      <div class="code-content" style="max-height:400px;overflow-y:auto;">
+<pre><code><span class="tok-kw">function</span> <span class="tok-fn">openAppOrFallback</span>({
+  scheme,
+  universalLink,
+  downloadUrl,
+  timeout = <span class="tok-num">2000</span>,
+}) {
+  <span class="tok-kw">const</span> isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  <span class="tok-kw">const</span> isAndroid = /android/i.test(navigator.userAgent);
+  <span class="tok-kw">const</span> isWeixin = /micromessenger/i.test(navigator.userAgent);
+
+  <span class="tok-kw">if</span> (isWeixin) {
+    log(<span class="tok-str">'warn'</span>, <span class="tok-str">'微信环境 → 跳转微下载'</span>);
+    window.location.href = <span class="tok-str">'https://common.jump.wxcmi.com/'</span>;
+    <span class="tok-kw">return</span>;
+  }
+
+  <span class="tok-kw">if</span> (isIOS && universalLink) {
+    log(<span class="tok-str">'info'</span>, <span class="tok-str">'iOS + Universal Link → '</span> + universalLink);
+    window.location.href = universalLink;
+    setTimeout(() => { window.location.href = downloadUrl; }, timeout);
+    <span class="tok-kw">return</span>;
+  }
+
+  <span class="tok-kw">if</span> (isAndroid && universalLink) {
+    log(<span class="tok-str">'info'</span>, <span class="tok-str">'Android + App Link → '</span> + universalLink);
+    <span class="tok-kw">const</span> ifr = document.createElement(<span class="tok-str">'iframe'</span>);
+    ifr.style.display = <span class="tok-str">'none'</span>;
+    ifr.src = universalLink;
+    document.body.appendChild(ifr);
+    setTimeout(() => { window.location.href = downloadUrl; }, timeout);
+    <span class="tok-kw">return</span>;
+  }
+
+  <span class="tok-cmt">// 降级：URL Scheme + visibilitychange</span>
+  log(<span class="tok-str">'info'</span>, <span class="tok-str">'降级到 URL Scheme + visibilitychange'</span>);
+  openAppViaIframe(scheme || <span class="tok-str">'myapp://'</span>, downloadUrl, timeout);
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="config-row" style="margin-top:1rem;">
+      <label>URL Scheme</label>
+      <input id="cfg-scheme" value="myapp://home" placeholder="myapp://home"/>
+    </div>
+    <div class="config-row">
+      <label>Universal Link</label>
+      <input id="cfg-ul" value="https://yourdomain.com/open/home" placeholder="https://yourdomain.com/open/"/>
+    </div>
+    <div class="config-row">
+      <label>下载链接</label>
+      <input id="cfg-dl" value="https://example.com/download" placeholder="未安装时的下载页"/>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-success" onclick="runFullDemo()">
+        ▶️ 执行完整方案
+      </button>
+    </div>
+
+    <div id="result-banner" class="result-banner"></div>
+  </section>
+
+  <!-- ==========================================
+       LOG PANEL
+  ========================================== -->
+  <section>
+    <div class="log-panel">
+      <div class="log-header">
+        <span>📋 执行日志</span>
+        <button onclick="clearLog()" style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:0.75rem;">清空</button>
+      </div>
+      <div class="log-body" id="log-body">
+        <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info">等待操作...</span></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // ─── UA 信息 ───────────────────────────────────
+  (function () {
+    const ua = navigator.userAgent;
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    const isWeixin = /micromessenger/i.test(ua);
+    const isMobile = isIOS || isAndroid;
+
+    const badges = [];
+    if (isIOS) badges.push('<span class="ua-badge" style="background:#1d4ed8;color:#fff;">iOS</span>');
+    if (isAndroid) badges.push('<span class="ua-badge" style="background:#15803d;color:#fff;">Android</span>');
+    if (isWeixin) badges.push('<span class="ua-badge" style="background:#07c160;color:#fff;">微信</span>');
+    if (!isMobile) badges.push('<span class="ua-badge" style="background:#374151;color:#fff;">桌面端</span>');
+
+    document.getElementById('ua-info').innerHTML =
+      '当前环境：' + ua.substring(0, 60) + '… ' + badges.join(' ');
+  })();
+
+  // ─── 日志 ──────────────────────────────────────
+  function log(type, msg) {
+    const body = document.getElementById('log-body');
+    const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    const cls = { ok: 'log-ok', fail: 'log-fail', info: 'log-info', warn: 'log-warn' }[type] || 'log-info';
+    body.innerHTML += `<div class="log-entry"><span class="log-time">${time}</span><span class="${cls}">${msg}</span></div>`;
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('log-body').innerHTML = '';
+    log('info', '日志已清空');
+  }
+
+  // ─── 核心函数：iframe + visibilitychange ─────────
+  function openAppViaIframe(urlScheme, downloadUrl, timeout) {
+    // 清理旧的 iframe
+    const old = document.getElementById('__app_iframe__');
+    if (old) old.parentNode.removeChild(old);
+
+    const ifr = document.createElement('iframe');
+    ifr.id = '__app_iframe__';
+    ifr.style.display = 'none';
+    ifr.src = urlScheme;
+
+    let fellBack = false;
+    let timer = null;
+
+    const fallback = () => {
+      if (fellBack) return;
+      fellBack = true;
+      if (timer) clearTimeout(timer);
+      log('warn', '⏰ 超时未检测到 APP 拉起，跳转下载页...');
+      showResult(false);
+      if (downloadUrl && downloadUrl !== window.location.href) {
+        // 演示不真正跳转，仅提示
+        log('info', '📥 下载页：' + downloadUrl);
+      }
+      cleanup();
+    };
+
+    const onVis = () => {
+      if (document.hidden) {
+        log('ok', '👁️ visibilitychange → hidden（APP 已拉起）✓');
+        showResult(true);
+        cleanup();
+      } else {
+        log('info', '👁️ visibilitychange → visible（等待中...）');
+        if (!fellBack) {
+          timer = setTimeout(fallback, timeout || 2500);
+        }
+      }
+    };
+
+    const cleanup = () => {
+      document.removeEventListener('visibilitychange', onVis);
+      if (timer) clearTimeout(timer);
+      const el = document.getElementById('__app_iframe__');
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    };
+
+    document.addEventListener('visibilitychange', onVis);
+    document.body.appendChild(ifr);
+    log('info', '🔍 iframe 已创建，等待 visibilitychange... (超时 ' + (timeout || 2500) + 'ms)');
+    timer = setTimeout(fallback, timeout || 2500);
+  }
+
+  // ─── 渐进增强综合方案 ───────────────────────────
+  function openAppOrFallback({ scheme, universalLink, downloadUrl, timeout }) {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const isWeixin = /micromessenger/i.test(navigator.userAgent);
+
+    if (isWeixin) {
+      log('warn', '🔴 微信环境 → 跳转微下载: https://common.jump.wxcmi.com/');
+      log('info', '（实际会跳转微下载中间页，引导用户在浏览器打开）');
+      showResult(false, '微信内，跳转微下载');
+      return;
+    }
+
+    if (isIOS && universalLink) {
+      log('ok', '🍎 iOS 检测到 Universal Link → ' + universalLink);
+      log('info', '→ iOS 会自动拉起 APP，未安装则打开 App Store');
+      // 演示不真正跳转
+      showResult(true, 'iOS Universal Link 方案（真实环境会拉起 APP）');
+      return;
+    }
+
+    if (isAndroid && universalLink) {
+      log('ok', '🤖 Android 检测到 App Link → ' + universalLink);
+      log('info', '→ Android 会尝试拉起 APP，未安装则无响应（需额外兜底）');
+      showResult(true, 'Android App Link 方案（真实环境会拉起 APP）');
+      return;
+    }
+
+    log('info', '📉 降级到 URL Scheme + visibilitychange');
+    openAppViaIframe(scheme || 'myapp://', downloadUrl, timeout || 2000);
+  }
+
+  // ─── 结果展示 ──────────────────────────────────
+  function showResult(success, msg) {
+    const el = document.getElementById('result-banner');
+    el.className = 'result-banner show ' + (success ? 'result-success' : 'result-fail');
+    el.textContent = success
+      ? '✅ ' + (msg || 'APP 拉起成功（已检测到可见性变化）')
+      : '❌ ' + (msg || 'APP 未拉起，已触发下载引导');
+  }
+
+  // ─── 演示函数 ──────────────────────────────────
+  function demoBasicScheme() {
+    log('warn', '⚠️ 直接赋值 location.href（APP 不存在，页面不会跳转）');
+    log('info', '→ 这是不推荐的做法，因为无法判断安装状态');
+    // 实际执行（会因为 myapp:// 无效而失败）
+    // window.location.href = 'myapp://home';
+  }
+
+  function demoVisibilityScheme() {
+    openAppViaIframe('myapp://home', 'https://example.com/download', 2000);
+  }
+
+  function demoUniversalLink() {
+    const ul = document.getElementById('cfg-ul').value;
+    log('info', '🔗 模拟 Universal Link: ' + ul);
+    log('info', '（演示不跳转，真实环境下 iOS 会拉起 APP，未安装会打开网页）');
+    showResult(true, 'iOS: 会拉起 APP 或打开网页 | Android: 拉起 APP（未安装无响应）');
+  }
+
+  function demoWeixinDownload() {
+    log('warn', '🔴 模拟跳转微下载: https://common.jump.wxcmi.com/');
+    log('info', '→ 微信内建议使用此方案，引导用户在浏览器打开');
+    showResult(false, '微信环境，需使用微下载或开放标签');
+  }
+
+  function runFullDemo() {
+    const scheme = document.getElementById('cfg-scheme').value;
+    const ul = document.getElementById('cfg-ul').value;
+    const dl = document.getElementById('cfg-dl').value;
+    log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    log('info', '🚀 启动完整方案检测');
+    log('info', 'scheme: ' + scheme);
+    log('info', 'universalLink: ' + ul);
+    log('info', 'downloadUrl: ' + dl);
+    log('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    openAppOrFallback({ scheme, universalLink: ul, downloadUrl: dl, timeout: 2000 });
+  }
+
+  // ─── 代码复制 ──────────────────────────────────
+  function copyCode(btn) {
+    const block = btn.closest('.code-block').querySelector('pre code');
+    if (!block) return;
+    navigator.clipboard.writeText(block.innerText).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }).catch(() => {
+      btn.textContent = '复制失败';
+      setTimeout(() => { btn.textContent = '复制'; }, 1500);
+    });
+  }
+</script>
+</body>
+</html>
