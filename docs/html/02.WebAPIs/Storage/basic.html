@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本地存储 API - localStorage / sessionStorage / IndexedDB</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background: #fafafa; }
+    h1 { font-size: 24px; margin-bottom: 20px; color: #333; }
+    .tab-nav { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab-btn.active { color: #007AFF; border-bottom-color: #007AFF; font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .panel { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .panel h3 { font-size: 16px; color: #333; margin-bottom: 12px; }
+    input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px; }
+    textarea { min-height: 80px; resize: vertical; font-family: 'Courier New', monospace; }
+    .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px; margin-bottom: 8px; }
+    .btn-primary { background: #007AFF; color: white; }
+    .btn-danger { background: #FF3B30; color: white; }
+    .btn-success { background: #34C759; color: white; }
+    .btn-secondary { background: #8E8E93; color: white; }
+    .result { background: #f5f5f7; border-radius: 4px; padding: 12px; margin-top: 12px; font-family: 'Courier New', monospace; font-size: 13px; word-break: break-all; white-space: pre-wrap; min-height: 40px; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .info-table th, .info-table td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 13px; }
+    .info-table th { background: #f0f0f0; }
+    .status-ok { color: #34C759; font-weight: 600; }
+    .status-error { color: #FF3B30; font-weight: 600; }
+    .storage-list { max-height: 200px; overflow-y: auto; margin-top: 12px; }
+    .storage-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+    .storage-item:last-child { border-bottom: none; }
+    .storage-item span:first-child { color: #007AFF; font-family: monospace; }
+    .storage-item span:last-child { color: #666; }
+    .demo-section { margin: 16px 0; }
+    .demo-section label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .comparison-table th, .comparison-table td { border: 1px solid #ddd; padding: 10px 12px; text-align: center; font-size: 13px; }
+    .comparison-table th { background: #007AFF; color: white; }
+    .comparison-table tr:nth-child(even) { background: #f9f9f9; }
+    .idb-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .idb-panel .store-list { background: #f9f9f9; border-radius: 4px; padding: 12px; }
+    .idb-panel .data-view { background: #fff; border: 1px solid #eee; border-radius: 4px; padding: 12px; min-height: 200px; }
+    table.records { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.records th, table.records td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    table.records th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>📦 浏览器本地存储 API</h1>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="localstorage">localStorage</button>
+    <button class="tab-btn" data-tab="sessionstorage">sessionStorage</button>
+    <button class="tab-btn" data-tab="indexeddb">IndexedDB</button>
+    <button class="tab-btn" data-tab="compare">对比表</button>
+  </div>
+
+  <!-- localStorage Tab -->
+  <div id="localstorage" class="tab-content active">
+    <div class="panel">
+      <h3>localStorage 基本操作</h3>
+      <div class="demo-section">
+        <label>键 (key)</label>
+        <input type="text" id="ls-key" placeholder="输入键名" value="username">
+      </div>
+      <div class="demo-section">
+        <label>值 (value) — 字符串</label>
+        <textarea id="ls-value" placeholder="输入值">Hello World</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="lsSet()">存储 setItem()</button>
+      <button class="btn btn-primary" onclick="lsGet()">获取 getItem()</button>
+      <button class="btn btn-danger" onclick="lsRemove()">删除 removeItem()</button>
+      <button class="btn btn-danger" onclick="lsClear()">清空 clear()</button>
+      <div id="ls-result" class="result">点击按钮查看结果</div>
+    </div>
+
+    <div class="panel">
+      <h3>存储容量检测</h3>
+      <button class="btn btn-secondary" onclick="lsCheckQuota()">检测存储容量</button>
+      <div id="ls-quota-result" class="result">—</div>
+    </div>
+
+    <div class="panel">
+      <h3>遍历所有存储项</h3>
+      <button class="btn btn-success" onclick="lsListAll()">列出所有 localStorage</button>
+      <div id="ls-list" class="storage-list">—</div>
+    </div>
+
+    <div class="panel">
+      <h3>监听存储变化</h3>
+      <p style="font-size:13px;color:#666;margin-bottom:8px">在另一个标签页操作 localStorage，当前页面会触发 storage 事件</p>
+      <button class="btn btn-secondary" onclick="lsListen()">开启监听</button>
+      <div id="ls-listen-result" class="result">—</div>
+    </div>
+  </div>
+
+  <!-- sessionStorage Tab -->
+  <div id="sessionstorage" class="tab-content">
+    <div class="panel">
+      <h3>sessionStorage 基本操作</h3>
+      <div class="demo-section">
+        <label>键 (key)</label>
+        <input type="text" id="ss-key" placeholder="输入键名" value="sessionId">
+      </div>
+      <div class="demo-section">
+        <label>值 (value)</label>
+        <textarea id="ss-value" placeholder="输入值">abc123</textarea>
+      </div>
+      <button class="btn btn-primary" onclick="ssSet()">存储 setItem()</button>
+      <button class="btn btn-primary" onclick="ssGet()">获取 getItem()</button>
+      <button class="btn btn-danger" onclick="ssRemove()">删除 removeItem()</button>
+      <button class="btn btn-danger" onclick="ssClear()">清空 clear()</button>
+      <div id="ss-result" class="result">点击按钮查看结果</div>
+    </div>
+
+    <div class="panel">
+      <h3>sessionStorage vs localStorage 关键区别</h3>
+      <ul style="font-size:13px;color:#666;margin-left:20px;line-height:2">
+        <li><b>生命周期</b>：sessionStorage 在标签页关闭后自动清除；localStorage 永久保存</li>
+        <li><b>跨标签页</b>：sessionStorage 不跨标签页共享；localStorage 跨所有标签页共享</li>
+        <li><b>事件监听</b>：sessionStorage 不触发 storage 事件；localStorage 会触发</li>
+      </ul>
+      <button class="btn btn-success" onclick="ssOpenNew()">新标签页打开 sessionStorage 测试</button>
+    </div>
+  </div>
+
+  <!-- IndexedDB Tab -->
+  <div id="indexeddb" class="tab-content">
+    <div class="panel">
+      <h3>IndexedDB 数据库操作</h3>
+      <div class="demo-section">
+        <label>数据库名称</label>
+        <input type="text" id="idb-dbname" value="MyTestDB">
+      </div>
+      <div class="demo-section">
+        <label>对象仓库名称</label>
+        <input type="text" id="idb-storename" value="users">
+      </div>
+      <button class="btn btn-primary" onclick="idbOpen()">打开/创建数据库</button>
+      <button class="btn btn-danger" onclick="idbDelete()">删除数据库</button>
+      <div id="idb-result" class="result">—</div>
+    </div>
+
+    <div class="panel">
+      <h3>CRUD 操作</h3>
+      <div class="demo-section">
+        <label>ID（主键）</label>
+        <input type="number" id="idb-id" placeholder="数字 ID" value="1">
+      </div>
+      <div class="demo-section">
+        <label>姓名</label>
+        <input type="text" id="idb-name" placeholder="姓名" value="张三">
+      </div>
+      <div class="demo-section">
+        <label>年龄</label>
+        <input type="number" id="idb-age" placeholder="年龄" value="25">
+      </div>
+      <div class="demo-section">
+        <label>邮箱</label>
+        <input type="text" id="idb-email" placeholder="邮箱" value="zhang@example.com">
+      </div>
+      <button class="btn btn-primary" onclick="idbAdd()">新增 add()</button>
+      <button class="btn btn-primary" onclick="idbGet()">查询 get()</button>
+      <button class="btn btn-success" onclick="idbUpdate()">更新 put()</button>
+      <button class="btn btn-danger" onclick="idbDeleteRecord()">删除 delete()</button>
+      <button class="btn btn-secondary" onclick="idbGetAll()">查询全部 getAll()</button>
+      <div id="idb-crud-result" class="result">—</div>
+    </div>
+
+    <div class="panel">
+      <h3>数据库状态</h3>
+      <div id="idb-status" class="result">IndexedDB 尚未打开</div>
+    </div>
+  </div>
+
+  <!-- Compare Tab -->
+  <div id="compare" class="tab-content">
+    <div class="panel">
+      <h3>三大存储 API 对比</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>localStorage</th>
+            <th>sessionStorage</th>
+            <th>IndexedDB</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>容量</td><td>~5-10MB</td><td>~5-10MB</td><td>50MB - 无限制</td></tr>
+          <tr><td>数据类型</td><td>仅字符串</td><td>仅字符串</td><td>任意类型</td></tr>
+          <tr><td>API 形式</td><td>同步</td><td>同步</td><td>异步 (Promise/事件)</td></tr>
+          <tr><td>生命周期</td><td>永久</td><td>标签页关闭</td><td>永久</td></tr>
+          <tr><td>跨标签页</td><td>是</td><td>否</td><td>是</td></tr>
+          <tr><td>触发 storage 事件</td><td>是</td><td>否</td><td>否</td></tr>
+          <tr><td>支持索引</td><td>否</td><td>否</td><td>是</td></tr>
+          <tr><td>支持事务</td><td>否</td><td>否</td><td>是</td></tr>
+          <tr><td>适用场景</td><td>持久配置</td><td>临时会话</td><td>结构化大数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>选型决策树</h3>
+      <ol style="font-size:13px;color:#333;line-height:2;margin-left:20px">
+        <li>需要存储 <b>字符串/简单配置</b>？
+          <ul><li>是 → 标签页关闭后需要保留？<ul><li>是 → <b>localStorage</b></li><li>否 → <b>sessionStorage</b></li></ul></li></ul>
+        </li>
+        <li>需要存储 <b>大量结构化数据</b>？
+          <ul><li>是 → 需要索引/事务/查询能力？<ul><li>是 → <b>IndexedDB</b></li></ul></li></ul>
+        </li>
+        <li>考虑 <b>性能</b>？<ul><li>同步 API 阻塞主线程 → 大数据用 IndexedDB</li></ul>
+        </li>
+        <li>考虑 <b>兼容性</b>？<ul><li>所有现代浏览器都支持三者</li></ul>
+        </li>
+      </ol>
+    </div>
+
+    <div class="panel">
+      <h3>常见踩坑</h3>
+      <table class="info-table">
+        <tr><th>问题</th><th>原因</th><th>解决方案</th></tr>
+        <tr><td>容量超限 (QuotaExceededError)</td><td>数据超过 5-10MB</td><td>使用 IndexedDB 或清理旧数据</td></tr>
+        <tr><td>存储 "[object Object]"</td><td>直接存储对象未序列化</td><td>使用 JSON.stringify/parse</td></tr>
+        <tr><td>跨域访问失败</td><td>同源策略限制</td><td>确保协议+域名+端口一致</td></tr>
+        <tr><td>数据不是实时的</td><td>sessionStorage 不跨标签页同步</td><td>使用 localStorage 或 postMessage</td></tr>
+        <tr><td>IndexedDB 查询慢</td><td>未建立索引</td><td>使用 createIndex 创建索引</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ============= localStorage =============
+    function lsSet() {
+      const key = document.getElementById('ls-key').value;
+      const value = document.getElementById('ls-value').value;
+      if (!key) { document.getElementById('ls-result').textContent = '❌ 请输入键名'; return; }
+      try {
+        localStorage.setItem(key, value);
+        document.getElementById('ls-result').textContent = `✅ 已存储: ${key} = ${value}`;
+      } catch (e) {
+        document.getElementById('ls-result').textContent = `❌ 错误: ${e.name}: ${e.message}`;
+      }
+    }
+
+    function lsGet() {
+      const key = document.getElementById('ls-key').value;
+      if (!key) { document.getElementById('ls-result').textContent = '❌ 请输入键名'; return; }
+      const value = localStorage.getItem(key);
+      document.getElementById('ls-result').textContent = value === null ? `⚠️ 键 "${key}" 不存在` : `✅ ${key} = ${value}`;
+    }
+
+    function lsRemove() {
+      const key = document.getElementById('ls-key').value;
+      if (!key) { document.getElementById('ls-result').textContent = '❌ 请输入键名'; return; }
+      localStorage.removeItem(key);
+      document.getElementById('ls-result').textContent = `🗑️ 已删除: ${key}`;
+    }
+
+    function lsClear() {
+      localStorage.clear();
+      document.getElementById('ls-result').textContent = '🗑️ 已清空所有 localStorage';
+      lsListAll();
+    }
+
+    function lsListAll() {
+      const list = document.getElementById('ls-list');
+      if (localStorage.length === 0) {
+        list.innerHTML = '<div style="color:#999;font-size:13px">localStorage 为空</div>';
+        return;
+      }
+      let html = '';
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        const displayValue = value.length > 50 ? value.substring(0, 50) + '...' : value;
+        html += `<div class="storage-item"><span>${key}</span><span>${displayValue}</span></div>`;
+      }
+      list.innerHTML = html;
+    }
+
+    function lsCheckQuota() {
+      let total = 0;
+      let items = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        total += key.length + value.length;
+        items++;
+      }
+      const usedKB = (total / 1024).toFixed(2);
+      const limitMB = 5; // 保守估计
+      const percent = Math.round((total / (limitMB * 1024 * 1024)) * 100);
+      document.getElementById('ls-quota-result').innerHTML =
+        `已用: ~${usedKB} KB (${items} 项)\n估算配额: ~${limitMB}MB\n使用率: ${percent === 0 ? '<1' : percent}%`;
+    }
+
+    let lsListening = false;
+    function lsListen() {
+      const el = document.getElementById('ls-listen-result');
+      if (lsListening) {
+        window.removeEventListener('storage', onStorage);
+        lsListening = false;
+        el.textContent = '已关闭监听';
+        return;
+      }
+      lsListening = true;
+      el.textContent = '✅ 监听已开启 — 在另一个标签页操作 localStorage 查看事件';
+      window.addEventListener('storage', onStorage);
+      function onStorage(e) {
+        el.innerHTML = `📡 storage 事件触发:\n键: ${e.key}\n旧值: ${e.oldValue}\n新值: ${e.newValue}\n源: ${e.url}`;
+      }
+    }
+
+    // ============= sessionStorage =============
+    function ssSet() {
+      const key = document.getElementById('ss-key').value;
+      const value = document.getElementById('ss-value').value;
+      if (!key) { document.getElementById('ss-result').textContent = '❌ 请输入键名'; return; }
+      try {
+        sessionStorage.setItem(key, value);
+        document.getElementById('ss-result').textContent = `✅ 已存储: ${key} = ${value}`;
+      } catch (e) {
+        document.getElementById('ss-result').textContent = `❌ 错误: ${e.name}: ${e.message}`;
+      }
+    }
+
+    function ssGet() {
+      const key = document.getElementById('ss-key').value;
+      if (!key) { document.getElementById('ss-result').textContent = '❌ 请输入键名'; return; }
+      const value = sessionStorage.getItem(key);
+      document.getElementById('ss-result').textContent = value === null ? `⚠️ 键 "${key}" 不存在` : `✅ ${key} = ${value}`;
+    }
+
+    function ssRemove() {
+      const key = document.getElementById('ss-key').value;
+      if (!key) { document.getElementById('ss-result').textContent = '❌ 请输入键名'; return; }
+      sessionStorage.removeItem(key);
+      document.getElementById('ss-result').textContent = `🗑️ 已删除: ${key}`;
+    }
+
+    function ssClear() {
+      sessionStorage.clear();
+      document.getElementById('ss-result').textContent = '🗑️ 已清空所有 sessionStorage';
+    }
+
+    function ssOpenNew() {
+      window.open(location.href, '_blank');
+    }
+
+    // ============= IndexedDB =============
+    let db = null;
+    const DB_NAME = 'MyTestDB';
+    const STORE_NAME = 'users';
+
+    function idbOpen() {
+      const dbName = document.getElementById('idb-dbname').value || DB_NAME;
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const request = indexedDB.open(dbName, 1);
+
+      request.onerror = () => {
+        document.getElementById('idb-result').textContent = `❌ 打开失败: ${request.error}`;
+        document.getElementById('idb-status').textContent = '❌ IndexedDB 打开失败';
+      };
+
+      request.onsuccess = () => {
+        db = request.result;
+        document.getElementById('idb-result').textContent = `✅ 数据库 "${dbName}" 打开成功`;
+        document.getElementById('idb-status').innerHTML =
+          `✅ 数据库: ${db.name}\n版本: ${db.version}\n对象仓库: ${Array.from(db.objectStoreNames).join(', ') || '(无)'}`;
+      };
+
+      request.onupgradeneeded = (e) => {
+        const database = e.target.result;
+        if (!database.objectStoreNames.contains(storeName)) {
+          const store = database.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+          store.createIndex('name', 'name', { unique: false });
+          store.createIndex('email', 'email', { unique: true });
+          store.createIndex('age', 'age', { unique: false });
+          document.getElementById('idb-result').textContent = `✅ 数据库创建/升级，对象仓库 "${storeName}" 已创建（含索引）`;
+        }
+      };
+    }
+
+    function idbDelete() {
+      const dbName = document.getElementById('idb-dbname').value || DB_NAME;
+      const delReq = indexedDB.deleteDatabase(dbName);
+      delReq.onsuccess = () => {
+        db = null;
+        document.getElementById('idb-result').textContent = `✅ 数据库 "${dbName}" 已删除`;
+        document.getElementById('idb-status').textContent = 'IndexedDB 已删除';
+      };
+      delReq.onerror = () => {
+        document.getElementById('idb-result').textContent = `❌ 删除失败: ${delReq.error}`;
+      };
+    }
+
+    function idbAdd() {
+      if (!db) { document.getElementById('idb-crud-result').textContent = '❌ 请先打开数据库'; return; }
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const name = document.getElementById('idb-name').value;
+      const age = parseInt(document.getElementById('idb-age').value);
+      const email = document.getElementById('idb-email').value;
+      if (!name || !email) { document.getElementById('idb-crud-result').textContent = '❌ 请填写姓名和邮箱'; return; }
+
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const req = store.add({ name, age, email });
+      req.onsuccess = () => document.getElementById('idb-crud-result').textContent = `✅ 新增成功，ID: ${req.result}`;
+      req.onerror = () => document.getElementById('idb-crud-result').textContent = `❌ 新增失败: ${req.error}`;
+    }
+
+    function idbGet() {
+      if (!db) { document.getElementById('idb-crud-result').textContent = '❌ 请先打开数据库'; return; }
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const id = parseInt(document.getElementById('idb-id').value);
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const req = store.get(id);
+      req.onsuccess = () => {
+        const data = req.result;
+        document.getElementById('idb-crud-result').textContent =
+          data ? `✅ 查到数据: ${JSON.stringify(data)}` : `⚠️ ID ${id} 不存在`;
+      };
+      req.onerror = () => document.getElementById('idb-crud-result').textContent = `❌ 查询失败: ${req.error}`;
+    }
+
+    function idbUpdate() {
+      if (!db) { document.getElementById('idb-crud-result').textContent = '❌ 请先打开数据库'; return; }
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const id = parseInt(document.getElementById('idb-id').value);
+      const name = document.getElementById('idb-name').value;
+      const age = parseInt(document.getElementById('idb-age').value);
+      const email = document.getElementById('idb-email').value;
+      if (!name || !email) { document.getElementById('idb-crud-result').textContent = '❌ 请填写完整信息'; return; }
+
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const req = store.put({ id, name, age, email });
+      req.onsuccess = () => document.getElementById('idb-crud-result').textContent = `✅ 更新成功，ID: ${id}`;
+      req.onerror = () => document.getElementById('idb-crud-result').textContent = `❌ 更新失败: ${req.error}`;
+    }
+
+    function idbDeleteRecord() {
+      if (!db) { document.getElementById('idb-crud-result').textContent = '❌ 请先打开数据库'; return; }
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const id = parseInt(document.getElementById('idb-id').value);
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const req = store.delete(id);
+      req.onsuccess = () => document.getElementById('idb-crud-result').textContent = `🗑️ 删除成功，ID: ${id}`;
+      req.onerror = () => document.getElementById('idb-crud-result').textContent = `❌ 删除失败: ${req.error}`;
+    }
+
+    function idbGetAll() {
+      if (!db) { document.getElementById('idb-crud-result').textContent = '❌ 请先打开数据库'; return; }
+      const storeName = document.getElementById('idb-storename').value || STORE_NAME;
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const data = req.result;
+        if (!data.length) {
+          document.getElementById('idb-crud-result').textContent = '⚠️ 表为空';
+          return;
+        }
+        let html = '<table class="records"><tr><th>ID</th><th>姓名</th><th>年龄</th><th>邮箱</th></tr>';
+        data.forEach(row => { html += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.age}</td><td>${row.email}</td></tr>`; });
+        html += '</table>';
+        document.getElementById('idb-crud-result').innerHTML = `✅ 共 ${data.length} 条记录:\n${html}`;
+      };
+      req.onerror = () => document.getElementById('idb-crud-result').textContent = `❌ 查询失败: ${req.error}`;
+    }
+  </script>
+</body>
+</html>
