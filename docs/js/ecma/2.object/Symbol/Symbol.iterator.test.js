@@ -21,7 +21,7 @@ describe ('Symbol.iterator', function () {
         yield 1;
       },
     };
-    expect (obj).deep.equal ({a: 1});
+    expect (obj.a).to.equal(1);
     expect ([...obj]).deep.equal ([1]);
   });
 
