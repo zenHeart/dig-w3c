@@ -259,6 +259,6 @@ window.fetch = async (...args) => {
 - [Chrome Download Restrictions Policy](https://chromeenterprise.google/policies/?policy=DownloadRestrictions)
 - [Safe Browsing API](https://developers.google.com/safe-browsing)
 - [MDN: Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition)
-- [MDN: HTML <a> download attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download)
+- [MDN: HTML `<a>` download attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download)
 - [Chrome downloads API](https://developer.chrome.com/docs/extensions/reference/downloads/)
 - [CSP object-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/object-src)
