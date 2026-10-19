@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>浏览器文件类型识别机制 - 交互演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { font-size: 1.8rem; color: #1a1a1a; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+    h2 { font-size: 1.3rem; color: #1e40af; margin: 25px 0 12px; }
+    h3 { font-size: 1.1rem; color: #3730a3; margin: 20px 0 10px; }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      background: #e5e7eb;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #d1d5db; }
+    .tab-btn.active { background: #3b82f6; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      margin: 5px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn-outline {
+      background: white;
+      border: 2px solid #3b82f6;
+      color: #3b82f6;
+    }
+    .btn-outline:hover { background: #eff6ff; }
+    input[type="file"] { display: none; }
+    .result-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 10px 0;
+      text-align: left;
+      white-space: pre;
+    }
+    .result-box .key { color: #93c5fd; }
+    .result-box .value { color: #86efac; }
+    .result-box .warn { color: #fbbf24; }
+    .result-box .error { color: #f87171; }
+    .sig-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 10px 0;
+    }
+    .sig-table th { background: #1e40af; color: white; padding: 10px; text-align: left; }
+    .sig-table td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; font-family: monospace; }
+    .sig-table tr:nth-child(even) { background: #f8fafc; }
+    .sig-table .hex { color: #7c3aed; }
+    .sig-table .type { color: #059669; font-weight: 600; }
+    .flow-chart {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 0.85rem;
+    }
+    .flow-step {
+      background: #3b82f6;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .flow-arrow { color: #9ca3af; font-size: 1.2rem; }
+    .quiz-box {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+    }
+    .quiz-box h4 { color: #92400e; margin-bottom: 10px; }
+    .quiz-option {
+      display: block;
+      padding: 8px 12px;
+      margin: 6px 0;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quiz-option:hover { border-color: #3b82f6; background: #eff6ff; }
+    .quiz-option.correct { border-color: #10b981; background: #d1fae5; }
+    .quiz-option.wrong { border-color: #ef4444; background: #fee2e2; }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 15px 0;
+    }
+    .comparison-card {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .comparison-card .title { font-weight: 700; color: #1e40af; margin-bottom: 8px; font-size: 0.95rem; }
+    .comparison-card .desc { font-size: 0.8rem; color: #64748b; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .tag-safe { background: #d1fae5; color: #065f46; }
+    .tag-danger { background: #fee2e2; color: #991b1b; }
+    .tag-warning { background: #fef3c7; color: #92400e; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin: 15px 0;
+    }
+    .info-item {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.85rem;
+    }
+    .info-item .label { color: #64748b; margin-bottom: 4px; }
+    .info-item .value { font-weight: 600; color: #1e293b; font-family: monospace; }
+    .hidden { display: none; }
+    textarea { font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>📋 浏览器文件类型识别机制 — 交互演示</h1>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="overview">概念总览</button>
+    <button class="tab-btn" data-tab="sniffing">MIME Sniffing</button>
+    <button class="tab-btn" data-tab="signature">文件签名检测</button>
+    <button class="tab-btn" data-tab="security">安全防护</button>
+    <button class="tab-btn" data-tab="quiz">自测题</button>
+  </div>
+
+  <!-- Tab 1: 概念总览 -->
+  <div id="tab-overview" class="tab-content active">
+    <div class="card">
+      <h2>🔍 浏览器如何识别文件类型？</h2>
+      <p>浏览器识别文件类型有三种机制，按优先级排列：</p>
+      
+      <div class="flow-chart" style="margin-top: 20px;">
+        <div class="flow-step">Content-Type<br><small>最权威</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">MIME Sniffing<br><small>内容推断</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">URL Extension<br><small>最不可靠</small></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 Content-Type Header 示例</h2>
+      <div class="result-box">HTTP/1.1 200 OK
+<span class="key">Content-Type</span>: <span class="value">text/html; charset=utf-8</span>
+<span class="key">Content-Length</span>: <span class="value">1234</span>
+<span class="key">X-Content-Type-Options</span>: <span class="value">nosniff</span></div>
+    </div>
+
+    <div class="card">
+      <h2>📁 常见 MIME 类型</h2>
+      <table class="sig-table">
+        <thead>
+          <tr><th>MIME Type</th><th>文件</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="type">text/html</td><td>.html</td><td>HTML 文档</td></tr>
+          <tr><td class="type">text/css</td><td>.css</td><td>CSS 样式表</td></tr>
+          <tr><td class="type">application/json</td><td>.json</td><td>JSON 数据</td></tr>
+          <tr><td class="type">image/png</td><td>.png</td><td>PNG 图片</td></tr>
+          <tr><td class="type">image/jpeg</td><td>.jpg</td><td>JPEG 图片</td></tr>
+          <tr><td class="type">image/gif</td><td>.gif</td><td>GIF 图片</td></tr>
+          <tr><td class="type">application/pdf</td><td>.pdf</td><td>PDF 文档</td></tr>
+          <tr><td class="type">application/octet-stream</td><td>—</td><td>未知二进制流</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>🖱️ 尝试检测文件类型</h2>
+      <p>选择一个文件，我会读取它的魔术字节（Magic Bytes）来识别真实类型：</p>
+      <div class="card" style="background:#f8fafc;text-align:center;padding:40px;">
+        <p style="color:#64748b;margin-bottom:15px;">拖拽文件到此处，或点击按钮选择</p>
+        <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">选择文件</button>
+        <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])">
+      </div>
+      <div id="detectionResult" class="hidden" style="margin-top:20px;">
+        <h3>检测结果</h3>
+        <div class="info-grid" id="resultGrid"></div>
+        <h3>原始字节（Hex）</h3>
+        <div class="result-box" id="hexView"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: MIME Sniffing -->
+  <div id="tab-sniffing" class="tab-content">
+    <div class="card">
+      <h2>🤯 什么是 MIME Sniffing？</h2>
+      <p>当服务器没有正确设置 Content-Type 时，浏览器会<strong>根据文件内容推断类型</strong>。</p>
+    </div>
+
+    <div class="card">
+      <h2>🔬 Sniffing 规则详解</h2>
+      <h3>规则 1: 检查 HTML 特征</h3>
+      <div class="result-box">// 文件开头检测到这些字节模式：
+<span class="value">3C 21 44 4F 43 54 59 50 45</span>  →  <span class="warn">"<!DOCTYPE"</span>  → HTML
+<span class="value">3C 68 74 6D 6C 3E</span>          →  <span class="warn">"&lt;html&gt;"</span>  → HTML
+<span class="value">3C 21 2D 2D</span>              →  <span class="warn">&lt;!--</span>  → HTML</div>
+
+      <h3>规则 2: 检查图片签名</h3>
+      <div class="result-box"><span class="value">89 50 4E 47 0D 0A 1A 0A</span>  →  PNG 图片
+<span class="value">FF D8 FF</span>                    →  JPEG 图片
+<span class="value">47 49 46 38 39 61</span>          →  GIF89a 图片
+<span class="value">25 50 44 46</span>                  →  PDF 文档</div>
+    </div>
+
+    <div class="card">
+      <h2>⚠️ MIME Sniffing 安全风险</h2>
+      <div class="quiz-box">
+        <h4>🎯 攻击场景：恶意文件伪装</h4>
+        <p style="margin:10px 0;font-size:0.9rem;">1. 攻击者上传包含恶意 HTML 的"图片"文件</p>
+        <p style="margin:10px 0;font-size:0.9rem;">2. 服务器 Content-Type 设置为 image/png（错误）</p>
+        <p style="margin:10px 0;font-size:0.9rem;">3. 浏览器读取内容，发现是 HTML，执行恶意脚本</p>
+        <p style="margin:10px 0;font-size:0.9rem;"><span class="tag tag-danger">XSS 攻击成功！</span></p>
+      </div>
+      
+      <h3>✅ 防护方案：X-Content-Type-Options</h3>
+      <div class="result-box">// 服务器响应头
+<span class="key">X-Content-Type-Options</span>: <span class="value">nosniff</span>
+
+// 效果：
+// - 浏览器严格遵循 Content-Type
+// - 不会根据内容推断类型
+// - image/png 始终作为图片处理，不会执行 HTML</div>
+    </div>
+  </div>
+
+  <!-- Tab 3: 文件签名 -->
+  <div id="tab-signature" class="tab-content">
+    <div class="card">
+      <h2>🔐 什么是文件签名（Magic Bytes）？</h2>
+      <p>文件签名是文件开头的几个特殊字节，用于<strong>唯一标识文件类型</strong>。这是最可靠的文件类型识别方式。</p>
+      <div style="margin-top:15px;">
+        <span class="tag tag-safe">最可靠：文件签名</span>
+        <span class="tag tag-warning">服务器可伪造：Content-Type</span>
+        <span class="tag tag-danger">最不可靠：URL 扩展名</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 常见文件签名表</h2>
+      <table class="sig-table">
+        <thead>
+          <tr><th>类型</th><th>签名 (Hex)</th><th>ASCII 可见部分</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="type">PNG</td><td class="hex">89 50 4E 47 0D 0A 1A 0A</td><td>.PNG\r\n...</td></tr>
+          <tr><td class="type">JPEG</td><td class="hex">FF D8 FF</td><td>ÿØÿ</td></tr>
+          <tr><td class="type">GIF87a</td><td class="hex">47 49 46 38 37 61</td><td>GIF87a</td></tr>
+          <tr><td class="type">GIF89a</td><td class="hex">47 49 46 38 39 61</td><td>GIF89a</td></tr>
+          <tr><td class="type">PDF</td><td class="hex">25 50 44 46 2D</td><td>%PDF-</td></tr>
+          <tr><td class="type">ZIP</td><td class="hex">50 4B 03 04</td><td>PK..</td></tr>
+          <tr><td class="type">RAR</td><td class="hex">52 61 72 21</td><td>Rar!</td></tr>
+          <tr><td class="type">MP4</td><td class="hex">00 00 00 XX 66 74 79 70</td><td>....ftyp</td></tr>
+          <tr><td class="type">WebM</td><td class="hex">1A 45 DF A3</td><td>.EÓ£</td></tr>
+          <tr><td class="type">MP3 (ID3)</td><td class="hex">49 44 33</td><td>ID3</td></tr>
+          <tr><td class="type">WAV</td><td class="hex">52 49 46 46</td><td>RIFF</td></tr>
+          <tr><td class="type">BMP</td><td class="hex">42 4D</td><td>BM</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>💻 JavaScript 检测文件签名</h2>
+      <div class="result-box">// FileReader 读取文件头部字节
+const reader = new FileReader();
+reader.onload = (e) => {
+  const bytes = new Uint8Array(e.target.result);
+  const header = Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join(' ');
+  
+  // 检测签名
+  if (header.startsWith('89 50 4e 47')) return 'image/png';
+  if (header.startsWith('ff d8 ff')) return 'image/jpeg';
+  if (header.startsWith('47 49 46 38')) return 'image/gif';
+  if (header.startsWith('25 50 44 46')) return 'application/pdf';
+};</div>
+    </div>
+  </div>
+
+  <!-- Tab 4: 安全防护 -->
+  <div id="tab-security" class="tab-content">
+    <div class="card">
+      <h2>🛡️ 文件类型识别安全策略</h2>
+      
+      <h3>1. 启用 X-Content-Type-Options</h3>
+      <div class="result-box">// Express.js
+app.use((req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  next();
+});</div>
+
+      <h3>2. 服务端验证文件签名</h3>
+      <div class="result-box">// Node.js 文件上传安全检查
+async function validateFileSignature(fileBuffer) {
+  const header = fileBuffer.slice(0, 8).toString('hex');
+  
+  const ALLOWED = {
+    '89504e47': 'image/png',
+    'ffd8ff': 'image/jpeg',
+    '47494638': 'image/gif',
+    '25504446': 'application/pdf',
+  };
+  
+  for (const [sig, type] of Object.entries(ALLOWED)) {
+    if (header.startsWith(sig)) return { valid: true, type };
+  }
+  
+  return { valid: false, error: 'Invalid file signature' };
+}</div>
+
+      <h3>3. 文件上传最佳实践</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">1. 扩展名白名单</div>
+          <div class="value">.jpg, .png, .gif, .pdf</div>
+        </div>
+        <div class="info-item">
+          <div class="label">2. MIME type 检查</div>
+          <div class="value">image/jpeg, image/png</div>
+        </div>
+        <div class="info-item">
+          <div class="label">3. 文件签名验证</div>
+          <div class="value">Magic Bytes 检查</div>
+        </div>
+        <div class="info-item">
+          <div class="label">4. 文件重命名</div>
+          <div class="value">不用用户提供的名称</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚠️ 常见安全错误</h2>
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <div class="title">❌ 仅检查扩展名</div>
+          <div class="desc">攻击者可上传 malicious.php.jpg<br>扩展名是 .jpg，但内容是 PHP</div>
+        </div>
+        <div class="comparison-card">
+          <div class="title">❌ 仅检查 MIME type</div>
+          <div class="desc">浏览器可伪造 Content-Type<br>攻击者构造请求头声称是图片</div>
+        </div>
+        <div class="comparison-card">
+          <div class="title">✅ 检查文件签名</div>
+          <div class="desc">读取文件实际内容<br>服务端验证，不可伪造</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 5: 自测题 -->
+  <div id="tab-quiz" class="tab-content">
+    <div class="card">
+      <h2>📝 自测题</h2>
+
+      <div class="quiz-box" id="q1">
+        <h4>问题 1：浏览器识别文件类型最可靠的方式是？</h4>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">A. 根据 URL 扩展名判断</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">B. MIME Sniffing（内容推断）</div>
+        <div class="quiz-option" onclick="checkAnswer(this, true)">C. 文件签名（Magic Bytes）</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">D. 服务器设置的 Content-Type Header</div>
+      </div>
+
+      <div class="quiz-box" id="q2">
+        <h4>问题 2：以下哪个 HTTP 响应头可以禁用 MIME Sniffing？</h4>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">A. X-Frame-Options: DENY</div>
+        <div class="quiz-option" onclick="checkAnswer(this, true)">B. X-Content-Type-Options: nosniff</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">C. Content-Security-Policy</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">D. Cache-Control: no-store</div>
+      </div>
+
+      <div class="quiz-box" id="q3">
+        <h4>问题 3：PNG 文件的 Magic Bytes 签名是？</h4>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">A. FF D8 FF (JPEG)</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">B. 47 49 46 38 (GIF)</div>
+        <div class="quiz-option" onclick="checkAnswer(this, true)">C. 89 50 4E 47 (PNG)</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">D. 25 50 44 46 (PDF)</div>
+      </div>
+
+      <div class="quiz-box" id="q4">
+        <h4>问题 4：攻击者上传伪装成图片的 HTML 文件，属于什么安全风险？</h4>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">A. CSRF 攻击</div>
+        <div class="quiz-option" onclick="checkAnswer(this, true)">B. XSS 攻击</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">C. SQL 注入</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">D. DDOS 攻击</div>
+      </div>
+
+      <div class="quiz-box" id="q5">
+        <h4>问题 5：文件上传安全最佳实践是？</h4>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">A. 仅检查文件扩展名</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">B. 仅检查 MIME type</div>
+        <div class="quiz-option" onclick="checkAnswer(this, true)">C. 服务端验证文件签名</div>
+        <div class="quiz-option" onclick="checkAnswer(this, false)">D. 不做任何检查</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 文件签名数据库
+    const SIGNATURES = {
+      '89504e47': { type: 'image/png', name: 'PNG 图片' },
+      'ffd8ff': { type: 'image/jpeg', name: 'JPEG 图片' },
+      '47494638': { type: 'image/gif', name: 'GIF 图片' },
+      '25504446': { type: 'application/pdf', name: 'PDF 文档' },
+      '504b0304': { type: 'application/zip', name: 'ZIP 压缩包' },
+      '3c21444f4354595045': { type: 'text/html', name: 'HTML 文档' },
+      '7b': { type: 'application/json', name: 'JSON 数据' },
+      '5b': { type: 'application/json', name: 'JSON 数据' },
+    };
+
+    function handleFileSelect(file) {
+      if (!file) return;
+      detectFileType(file);
+    }
+
+    function detectFileType(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const bytes = new Uint8Array(e.target.result);
+        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        const hexSpaced = Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        
+        let detected = null;
+        for (const [sig, info] of Object.entries(SIGNATURES)) {
+          if (hex.startsWith(sig) || hexSpaced.replace(/ /g, '').toLowerCase().startsWith(sig.replace(/ /g, ''))) {
+            detected = info;
+            break;
+          }
+        }
+        
+        if (!detected) {
+          detected = { type: 'application/octet-stream', name: '未知二进制文件' };
+        }
+
+        // 显示结果
+        const resultDiv = document.getElementById('detectionResult');
+        const grid = document.getElementById('resultGrid');
+        const hexView = document.getElementById('hexView');
+        
+        resultDiv.classList.remove('hidden');
+        grid.innerHTML = `
+          <div class="info-item"><div class="label">文件名</div><div class="value">${file.name}</div></div>
+          <div class="info-item"><div class="label">文件大小</div><div class="value">${(file.size / 1024).toFixed(2)} KB</div></div>
+          <div class="info-item"><div class="label">浏览器 MIME</div><div class="value">${file.type || '未知'}</div></div>
+          <div class="info-item"><div class="label">检测类型</div><div class="value">${detected.type}</div></div>
+          <div class="info-item"><div class="label">检测名称</div><div class="value">${detected.name}</div></div>
+        `;
+        hexView.textContent = '文件签名 (前 16 字节): ' + hexSpaced.slice(0, 47);
+      };
+      reader.readAsArrayBuffer(file.slice(0, 16));
+    }
+
+    function checkAnswer(el, correct) {
+      const options = el.parentElement.querySelectorAll('.quiz-option');
+      options.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        opt.classList.remove('correct', 'wrong');
+      });
+      el.classList.add(correct ? 'correct' : 'wrong');
+    }
+  </script>
+</body>
+</html>

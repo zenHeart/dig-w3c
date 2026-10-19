@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataViz Catalogue Demo - 数据可视化目录</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card-bg: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --primary: #3b82f6;
+      --primary-light: #dbeafe;
+      --accent: #8b5cf6;
+      --accent-light: #ede9fe;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    header {
+      text-align: center;
+      padding: 40px 0 32px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); font-size: 15px; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all .15s;
+    }
+    .tab-btn:hover { background: var(--primary-light); color: var(--primary); }
+    .tab-btn.active { background: var(--primary); color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    h2 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--bg);
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .tag-blue { background: var(--primary-light); color: var(--primary); }
+    .tag-purple { background: var(--accent-light); color: var(--accent); }
+    .tag-green { background: #d1fae5; color: var(--success); }
+    .tag-orange { background: #fef3c7; color: var(--warning); }
+    .tag-red { background: #fee2e2; color: var(--danger); }
+    .chart-demo {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .chart-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .chart-card:hover { border-color: var(--primary); background: var(--primary-light); }
+    .chart-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .chart-name { font-size: 13px; font-weight: 500; }
+    .chart-type { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .code-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: "Fira Code", Consolas, monospace;
+      font-size: 12.5px;
+      overflow-x: auto;
+      line-height: 1.7;
+      margin: 12px 0;
+    }
+    .code-block .comment { color: #6c7086; }
+    .code-block .keyword { color: #cba6f7; }
+    .code-block .string { color: #a6e3a1; }
+    .code-block .function { color: #89b4fa; }
+    .code-block .number { color: #fab387; }
+    .dt-node {
+      padding: 10px 14px;
+      border-left: 3px solid var(--primary);
+      margin: 6px 0 6px 20px;
+      font-size: 13.5px;
+    }
+    .dt-leaf {
+      padding: 6px 12px;
+      background: var(--primary-light);
+      border-radius: 6px;
+      display: inline-block;
+      margin: 4px 4px 4px 16px;
+      font-size: 12.5px;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .color-swatch { text-align: center; font-size: 11px; border-radius: 6px; overflow: hidden; }
+    .color-swatch .color { height: 36px; }
+    .color-swatch .label { padding: 4px; background: white; }
+    .quiz {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .quiz h3 { margin-top: 0; color: #92400e; }
+    .quiz-question { margin: 12px 0; font-weight: 500; }
+    .quiz-options { display: flex; flex-direction: column; gap: 6px; }
+    .quiz-option {
+      padding: 10px 14px;
+      border: 1px solid #f59e0b;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      background: white;
+      transition: all .1s;
+    }
+    .quiz-option:hover { background: #fef3c7; }
+    .quiz-option.correct { background: #d1fae5; border-color: var(--success); color: #065f46; }
+    .quiz-option.wrong { background: #fee2e2; border-color: var(--danger); color: #991b1b; }
+    .quiz-result { margin-top: 10px; font-weight: 600; font-size: 14px; }
+    .footer { text-align: center; color: var(--text-secondary); font-size: 12px; padding: 24px 0; margin-top: 32px; border-top: 1px solid var(--border); }
+    ul { padding-left: 20px; margin: 8px 0; }
+    li { margin: 4px 0; font-size: 14px; }
+    p { font-size: 14px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Data Visualization Catalogue</h1>
+  <p class="subtitle">数据可视化目录 · datavizcatalogue.com 图表分类与选择指南</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="overview">总览</button>
+  <button class="tab-btn" data-tab="categories">图表分类</button>
+  <button class="tab-btn" data-tab="decision">选择决策树</button>
+  <button class="tab-btn" data-tab="colors">颜色指南</button>
+  <button class="tab-btn" data-tab="quiz">自测题</button>
+</div>
+
+<!-- 总览 Tab -->
+<div class="tab-content active" id="tab-overview">
+  <div class="card">
+    <h2>什么是 Data Visualization Catalogue？</h2>
+    <p>Data Visualization Catalogue（数据可视化目录）是一个由 Severino Ribecca 创建的在线图表百科全书。与传统的按"形状"分类（柱状图、饼图等）不同，它按照<strong>你想要完成的任务</strong>来组织图表。</p>
+    <p style="margin-top: 8px;">核心优势：</p>
+    <ul>
+      <li><strong>任务导向</strong> — 从"我想做什么"出发，而非"图表长什么样"</li>
+      <li><strong>详细说明</strong> — 每个图表都有使用场景、优缺点、最佳实践</li>
+      <li><strong>搜索功能</strong> — 快速找到适合的图表</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>六大分类总览</h2>
+    <div class="chart-demo">
+      <div class="chart-card">
+        <span class="chart-icon">📊</span>
+        <div class="chart-name">比较</div>
+        <div class="chart-type">Comparison</div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-icon">📈</span>
+        <div class="chart-name">分布</div>
+        <div class="chart-type">Distribution</div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-icon">🔗</span>
+        <div class="chart-name">关系</div>
+        <div class="chart-type">Relationship</div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-icon">🍰</span>
+        <div class="chart-name">构成</div>
+        <div class="chart-type">Composition</div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-icon">📉</span>
+        <div class="chart-name">趋势</div>
+        <div class="chart-type">Trend</div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-icon">🗺️</span>
+        <div class="chart-name">地理</div>
+        <div class="chart-type">Geospatial</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>经典案例</h2>
+    <table>
+      <thead>
+        <tr><th>场景</th><th>推荐图表</th><th>原因</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>比较不同产品的销量</td>
+          <td><span class="tag tag-blue">柱状图</span></td>
+          <td>类别不多，离散比较，柱子高度直观</td>
+        </tr>
+        <tr>
+          <td>查看用户年龄分布</td>
+          <td><span class="tag tag-purple">直方图</span></td>
+          <td>连续数据频数分布，揭示集中趋势</td>
+        </tr>
+        <tr>
+          <td>展示用户留存率随时间变化</td>
+          <td><span class="tag tag-green">折线图</span></td>
+          <td>时间序列趋势，一目了然</td>
+        </tr>
+        <tr>
+          <td>分析网站流量的来源构成</td>
+          <td><span class="tag tag-orange">环形图</span></td>
+          <td>少量类别比例，中心可放总计</td>
+        </tr>
+        <tr>
+          <td>展示转化漏斗各阶段流失</td>
+          <td><span class="tag tag-red">漏斗图</span></td>
+          <td>阶段递减，直观展示筛选过程</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 图表分类 Tab -->
+<div class="tab-content" id="tab-categories">
+  <div class="card">
+    <h2>📊 比较类（Comparison）</h2>
+    <p style="color: var(--text-secondary); font-size: 13px;">适用：比较不同类别之间的值的大小关系</p>
+    <table>
+      <thead><tr><th>图表</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><strong>柱状图</strong> Bar Chart</td><td>用柱子高度表示数值大小</td><td>类别不多（&lt;10）时的离散比较</td></tr>
+        <tr><td><strong>分组柱状图</strong> Grouped Bar</td><td>每组多个柱子</td><td>多个子类别在同维度下的比较</td></tr>
+        <tr><td><strong>堆叠柱状图</strong> Stacked Bar</td><td>柱子堆叠显示组成</td><td>部分与整体 + 类别比较</td></tr>
+        <tr><td><strong>南丁格尔玫瑰图</strong> Nightingale Rose</td><td>极坐标下的面积图</td><td>周期数据比较（如24小时数据）</td></tr>
+        <tr><td><strong>雷达图</strong> Radar Chart</td><td>多维数据轮廓对比</td><td>能力模型、特征对比</td></tr>
+        <tr><td><strong>子弹图</strong> Bullet Graph</td><td>柱状图 + 目标线</td><td>实际值 vs 目标值对比</td></tr>
+        <tr><td><strong>词云</strong> Word Cloud</td><td>文字大小表示频率</td><td>文本数据高频词可视化</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>📈 分布类（Distribution）</h2>
+    <p style="color: var(--text-secondary); font-size: 13px;">适用：展示数据的分布形态、集中趋势、离散程度</p>
+    <table>
+      <thead><tr><th>图表</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><strong>直方图</strong> Histogram</td><td>连续数据的频数分布</td><td>数据分布形态分析</td></tr>
+        <tr><td><strong>箱线图</strong> Box Plot</td><td>显示中位数、四分位数、异常值</td><td>多组数据分布对比</td></tr>
+        <tr><td><strong>小提琴图</strong> Violin Plot</td><td>箱线图 + 密度估计</td><td>分布形状的细节对比</td></tr>
+        <tr><td><strong>密度图</strong> Density Plot</td><td>平滑的连续分布曲线</td><td>连续变量分布趋势</td></tr>
+        <tr><td><strong>蜂群图</strong> Beeswarm Plot</td><td>点自动错开不重叠</td><td>小规模多组分布对比</td></tr>
+        <tr><td><strong>QQ图</strong> Q-Q Plot</td><td>检验数据是否服从某分布</td><td>正态性检验</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🔗 关系类（Relationship）</h2>
+    <p style="color: var(--text-secondary); font-size: 13px;">适用：展示两个或多个变量之间的关系</p>
+    <table>
+      <thead><tr><th>图表</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><strong>散点图</strong> Scatter Plot</td><td>X/Y 坐标表示两个变量</td><td>两连续变量的相关性分析</td></tr>
+        <tr><td><strong>气泡图</strong> Bubble Chart</td><td>散点 + 第三维（点大小）</td><td>三维数据（X/Y/大小）</td></tr>
+        <tr><td><strong>热力图</strong> Heatmap</td><td>颜色深浅表示数值</td><td>矩阵数据、相关性矩阵</td></tr>
+        <tr><td><strong>桑基图</strong> Sankey Diagram</td><td>流量宽度表示数量</td><td>能量/物质/成本流动</td></tr>
+        <tr><td><strong>和弦图</strong> Chord Diagram</td><td>环形 + 弦线表示关系</td><td>网络关系、流量/流向</td></tr>
+        <tr><td><strong>网络图</strong> Network Diagram</td><td>节点 + 边</td><td>复杂网络关系</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🍰 构成类（Composition）</h2>
+    <p style="color: var(--text-secondary); font-size: 13px;">适用：展示整体与部分的关系</p>
+    <table>
+      <thead><tr><th>图表</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><strong>饼图</strong> Pie Chart</td><td>扇形面积表示比例</td><td>少量类别（≤5）的比例展示</td></tr>
+        <tr><td><strong>环形图</strong> Donut Chart</td><td>中心挖空的饼图</td><td>比例展示，中心可放总计</td></tr>
+        <tr><td><strong>堆叠面积图</strong> Stacked Area</td><td>面积堆叠随时间变化</td><td>部分随时间的构成变化</td></tr>
+        <tr><td><strong>漏斗图</strong> Funnel Chart</td><td>逐步递减的形状</td><td>转化/筛选过程的阶段</td></tr>
+        <tr><td><strong>树图</strong> Treemap</td><td>矩形嵌套表示层次构成</td><td>层次数据的比例构成</td></tr>
+        <tr><td><strong>旭日图</strong> Sunburst Chart</td><td>多层环形图</td><td>层次数据的构成（中心向外）</td></tr>
+        <tr><td><strong>瀑布图</strong> Waterfall Chart</td><td>柱状递增/递减</td><td>数量增减过程的分解</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>📉 趋势类（Trend）</h2>
+    <p style="color: var(--text-secondary); font-size: 13px;">适用：展示数据随时间的变化</p>
+    <table>
+      <thead><tr><th>图表</th><th>说明</th><th>适用场景</th></tr></thead>
+      <tbody>
+        <tr><td><strong>折线图</strong> Line Chart</td><td>点 + 线段连接</td><td>时间序列趋势</td></tr>
+        <tr><td><strong>面积图</strong> Area Chart</td><td>折线下方填充</td><td>趋势 + 总量展示</td></tr>
+        <tr><td><strong>多线图</strong> Multi-Line Chart</td><td>多条折线</td><td>多系列趋势对比</td></tr>
+        <tr><td><strong>柱线组合图</strong> Combo Chart</td><td>柱状图 + 折线图组合</td><td>不同量级趋势组合</td></tr>
+        <tr><td><strong>日历热力图</strong> Calendar Heatmap</td><td>日历 + 颜色</td><td>长时间周期的事件分布</td></tr>
+        <tr><td><strong>蜡烛图</strong> Candlestick Chart</td><td>开盘/收盘/高/低</td><td>金融数据</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 决策树 Tab -->
+<div class="tab-content" id="tab-decision">
+  <div class="card">
+    <h2>图表选择决策树</h2>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">从"你想做什么"出发，逐步找到适合的图表</p>
+    <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+      <div class="dt-node" style="font-size: 15px; font-weight: 600;">你想要做什么？</div>
+      <div style="margin-left: 30px; margin-top: 8px;">
+        <div class="dt-node" style="border-color: var(--primary);">📊 <strong>比较类别之间的值？</strong>
+          <div class="dt-leaf">柱状图</div>
+          <div class="dt-leaf">分组柱状图</div>
+          <div class="dt-leaf">雷达图</div>
+          <div class="dt-leaf">词云</div>
+          <div class="dt-leaf">子弹图</div>
+        </div>
+        <div class="dt-node" style="border-color: var(--accent);">📈 <strong>查看数据分布？</strong>
+          <div class="dt-leaf">直方图</div>
+          <div class="dt-leaf">箱线图</div>
+          <div class="dt-leaf">小提琴图</div>
+          <div class="dt-leaf">密度图</div>
+          <div class="dt-leaf">蜂群图</div>
+        </div>
+        <div class="dt-node" style="border-color: var(--success);">🔗 <strong>展示变量之间的关系？</strong>
+          <div class="dt-leaf">散点图</div>
+          <div class="dt-leaf">气泡图</div>
+          <div class="dt-leaf">热力图</div>
+          <div class="dt-leaf">桑基图</div>
+          <div class="dt-leaf">和弦图</div>
+        </div>
+        <div class="dt-node" style="border-color: var(--warning);">🍰 <strong>展示整体与部分的构成？</strong>
+          <div class="dt-leaf">饼图</div>
+          <div class="dt-leaf">环形图</div>
+          <div class="dt-leaf">堆叠面积图</div>
+          <div class="dt-leaf">树图</div>
+          <div class="dt-leaf">旭日图</div>
+          <div class="dt-leaf">漏斗图</div>
+        </div>
+        <div class="dt-node" style="border-color: #ef4444;">📉 <strong>展示随时间变化的趋势？</strong>
+          <div class="dt-leaf">折线图</div>
+          <div class="dt-leaf">面积图</div>
+          <div class="dt-leaf">多线图</div>
+          <div class="dt-leaf">日历热力图</div>
+        </div>
+        <div class="dt-node" style="border-color: #8b5cf6;">🗺️ <strong>展示与地理位置相关的数据？</strong>
+          <div class="dt-leaf">等值区域图</div>
+          <div class="dt-leaf">热力图</div>
+          <div class="dt-leaf">流向图</div>
+          <div class="dt-leaf">六边形网格图</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>常见场景推荐</h2>
+    <table>
+      <thead><tr><th>问题/需求</th><th>推荐图表</th><th>为什么</th></tr></thead>
+      <tbody>
+        <tr><td>"哪些产品卖得最好？"</td><td><span class="tag tag-blue">柱状图</span></td><td>离散布尔比较，高度直观</td></tr>
+        <tr><td>"用户年龄集中在哪个区间？"</td><td><span class="tag tag-purple">直方图</span></td><td>连续数据分布，连续柱形展示频数</td></tr>
+        <tr><td>"销售额这个月涨了还是跌了？"</td><td><span class="tag tag-green">折线图</span></td><td>时间序列，趋势一目了然</td></tr>
+        <tr><td>"网站流量最大来源是哪？"</td><td><span class="tag tag-orange">环形图</span></td><td>少量类别比例，中心可显示总计</td></tr>
+        <tr><td>"两个变量的相关性如何？"</td><td><span class="tag tag-red">散点图</span></td><td>两连续变量关系，点的分布揭示相关性</td></tr>
+        <tr><td>"用户注册到付费的转化如何？"</td><td><span class="tag tag-purple">漏斗图</span></td><td>阶段递减，直观展示流失</td></tr>
+        <tr><td>"各地区销售额分布？"</td><td><span class="tag tag-blue">等值区域图</span></td><td>地理位置 + 颜色，直观区域对比</td></tr>
+        <tr><td>"转化过程中每步流失多少？"</td><td><span class="tag tag-orange">瀑布图</span></td><td>加减分解，变化过程清晰</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 颜色 Tab -->
+<div class="tab-content" id="tab-colors">
+  <div class="card">
+    <h2>图表颜色使用指南</h2>
+    <h3>1. 类别区分（Categorical）</h3>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">用于区分没有顺序的类别。使用色调差异大的颜色，4-8 色为宜。</p>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="color" style="background: #3b82f6;"></div><div class="label">#3b82f6</div></div>
+      <div class="color-swatch"><div class="color" style="background: #ef4444;"></div><div class="label">#ef4444</div></div>
+      <div class="color-swatch"><div class="color" style="background: #10b981;"></div><div class="label">#10b981</div></div>
+      <div class="color-swatch"><div class="color" style="background: #f59e0b;"></div><div class="label">#f59e0b</div></div>
+      <div class="color-swatch"><div class="color" style="background: #8b5cf6;"></div><div class="label">#8b5cf6</div></div>
+      <div class="color-swatch"><div class="color" style="background: #06b6d4;"></div><div class="label">#06b6d4</div></div>
+    </div>
+    <div class="code-block"><span class="comment">// D3 类别色标示例</span>
+<span class="keyword">const</span> <span class="function">categoryColors</span> = [
+  <span class="string">'#3b82f6'</span>, <span class="comment">// 蓝</span>
+  <span class="string">'#ef4444'</span>, <span class="comment">// 红</span>
+  <span class="string">'#10b981'</span>, <span class="comment">// 绿</span>
+  <span class="string">'#f59e0b'</span>, <span class="comment">// 黄</span>
+  <span class="string">'#8b5cf6'</span>, <span class="comment">// 紫</span>
+  <span class="string">'#06b6d4'</span>, <span class="comment">// 青</span>
+];</div>
+  </div>
+
+  <div class="card">
+    <h3>2. 数值大小（Sequential）</h3>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">用于表示从低到高的连续数值。使用单色渐变（浅→深）。</p>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="color" style="background: #eff6ff;"></div><div class="label">#eff6ff</div></div>
+      <div class="color-swatch"><div class="color" style="background: #bfdbfe;"></div><div class="label">#bfdbfe</div></div>
+      <div class="color-swatch"><div class="color" style="background: #60a5fa;"></div><div class="label">#60a5fa</div></div>
+      <div class="color-swatch"><div class="color" style="background: #2563eb;"></div><div class="label">#2563eb</div></div>
+      <div class="color-swatch"><div class="color" style="background: #1d4ed8;"></div><div class="label">#1d4ed8</div></div>
+      <div class="color-swatch"><div class="color" style="background: #1e3a8a;"></div><div class="label">#1e3a8a</div></div>
+    </div>
+    <div class="code-block"><span class="comment">// D3 顺序色标</span>
+<span class="keyword">import</span> { <span class="function">scaleSequential</span> } from <span class="string">'d3-scale'</span>;
+<span class="keyword">import</span> { <span class="function">interpolateBlues</span> } from <span class="string">'d3-scale-chromatic'</span>;
+
+<span class="keyword">const</span> colorScale = <span class="function">scaleSequential</span>(interpolateBlues)
+  .domain([<span class="number">0</span>, <span class="number">100</span>]);
+colorScale(<span class="number">0</span>);   <span class="comment">// #f0f9ff (浅)</span>
+colorScale(<span class="number">100</span>); <span class="comment">// #1e3a8a (深)</span></div>
+  </div>
+
+  <div class="card">
+    <h3>3. 正负对比（Diverging）</h3>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">用于表示偏离中心值的正负两端。使用双色渐变，中间为中性色。</p>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="color" style="background: #dc2626;"></div><div class="label">#dc2626 (负)</div></div>
+      <div class="color-swatch"><div class="color" style="background: #f87171;"></div><div class="label">#f87171</div></div>
+      <div class="color-swatch"><div class="color" style="background: #fecaca;"></div><div class="label">#fecaca (中性)</div></div>
+      <div class="color-swatch"><div class="color" style="background: #bbf7d0;"></div><div class="label">#bbf7d0 (中性)</div></div>
+      <div class="color-swatch"><div class="color" style="background: #4ade80;"></div><div class="label">#4ade80</div></div>
+      <div class="color-swatch"><div class="color" style="background: #16a34a;"></div><div class="label">#16a34a (正)</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>4. 不要（Don'ts）</h3>
+    <ul>
+      <li><strong>不要用饼图比较超过 5 个类别</strong> — 扇形太多难以阅读</li>
+      <li><strong>不要截断 Y 轴</strong> — 柱状图从 0 开始，否则比例失真</li>
+      <li><strong>不要用 3D 效果</strong> — 扭曲数据比例，造成误导</li>
+      <li><strong>不要用超过 8 种颜色</strong> — 造成视觉负担，难以区分</li>
+      <li><strong>不要用彩虹色渐变</strong> — 不是感知均匀的，数据解读困难</li>
+      <li><strong>不要忽略色盲友好</strong> — 避免红绿组合，使用蓝橙等安全色</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 自测题 Tab -->
+<div class="tab-content" id="tab-quiz">
+  <div class="card">
+    <h2>自测题</h2>
+
+    <div class="quiz" id="quiz1">
+      <h3>第 1 题</h3>
+      <p class="quiz-question">用户年龄分布应该用哪种图表？</p>
+      <div class="quiz-options">
+        <div class="quiz-option" data-correct="false">A. 柱状图</div>
+        <div class="quiz-option" data-correct="false">B. 饼图</div>
+        <div class="quiz-option" data-correct="false">C. 散点图</div>
+        <div class="quiz-option" data-correct="true">D. 直方图</div>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+
+    <div class="quiz" id="quiz2">
+      <h3>第 2 题</h3>
+      <p class="quiz-question">想展示网站流量来源的构成比例，哪种图表最合适（类别不超过 4 个）？</p>
+      <div class="quiz-options">
+        <div class="quiz-option" data-correct="true">

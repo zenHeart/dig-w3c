@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Lifecycle API - 交互演示</title>
+  <style>
+    :root {
+      --primary: #4285f4;
+      --success: #34a853;
+      --warning: #fbbc04;
+      --error: #ea4335;
+      --purple: #9c27b0;
+      --bg: #ffffff;
+      --surface: #f8f9fa;
+      --border: #e0e0e0;
+      --text: #202124;
+      --text-secondary: #5f6368;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+    /* Live state banner */
+    .live-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .state-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .state-chip.active-state { background: #e8f5e9; color: var(--success); border-color: var(--success); }
+    .state-chip.passive-state { background: #e3f2fd; color: #1565c0; border-color: #1565c0; }
+    .state-chip.hidden-state { background: #fff3e0; color: #e65100; border-color: #e65100; }
+    .state-chip.frozen-state { background: #f3e5f5; color: var(--purple); border-color: var(--purple); }
+    .state-chip.terminated-state { background: #fce8e6; color: var(--error); border-color: var(--error); }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Tab navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--bg);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      overflow: hidden;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 14px 22px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn:hover { background: #f1f3f4; color: var(--text); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #e8f0fe; }
+
+    .tab-content {
+      background: var(--bg);
+      border-radius: 0 0 12px 12px;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 28px 32px;
+      min-height: 500px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--text); }
+    h3 { font-size: 1rem; margin: 20px 0 10px; color: var(--text); }
+    p { margin-bottom: 12px; color: var(--text-secondary); }
+
+    .card {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .card-title { font-weight: 600; margin-bottom: 10px; font-size: 0.95rem; }
+
+    code {
+      background: #e8f0fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--primary);
+      font-family: 'Courier New', monospace;
+    }
+
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 12px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:nth-child(even) td { background: var(--surface); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-primary { background: #e8f0fe; color: var(--primary); }
+    .badge-success { background: #e6f4ea; color: var(--success); }
+    .badge-warning { background: #fef7e0; color: #f9a825; }
+    .badge-purple { background: #f3e5f5; color: var(--purple); }
+    .badge-error { background: #fce8e6; color: var(--error); }
+
+    /* State machine diagram */
+    .state-diagram {
+      background: linear-gradient(135deg, #e8f0fe 0%, #f8f9fa 100%);
+      border-radius: 10px;
+      padding: 24px;
+      margin: 16px 0;
+      border: 1px solid #c2d7fe;
+      overflow-x: auto;
+    }
+
+    .state-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .state-node {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: 2px solid transparent;
+      transition: all 0.4s;
+      white-space: nowrap;
+    }
+
+    .state-node.active { background: #e8f5e9; color: var(--success); border-color: var(--success); }
+    .state-node.passive { background: #e3f2fd; color: #1565c0; border-color: #1565c0; }
+    .state-node.hidden { background: #fff3e0; color: #e65100; border-color: #e65100; }
+    .state-node.frozen { background: #f3e5f5; color: var(--purple); border-color: var(--purple); }
+    .state-node.terminated { background: #fce8e6; color: var(--error); border-color: var(--error); }
+    .state-node.inactive { background: white; color: var(--text-secondary); border-color: var(--border); }
+
+    .arrow-label {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .arrow-line {
+      display: inline-block;
+      width: 32px;
+      height: 2px;
+      background: var(--border);
+      position: relative;
+    }
+
+    .arrow-line::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: -4px;
+      border: 5px solid transparent;
+      border-left-color: var(--border);
+    }
+
+    /* Event log */
+    .event-log {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      max-height: 260px;
+      overflow-y: auto;
+      margin: 12px 0;
+    }
+
+    .event-log::-webkit-scrollbar { width: 6px; }
+    .event-log::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+
+    .log-entry {
+      padding: 3px 0;
+      border-bottom: 1px solid #333;
+      display: flex;
+      gap: 10px;
+      line-height: 1.4;
+    }
+
+    .log-entry:last-child { border-bottom: none; }
+
+    .log-time { color: #888; flex-shrink: 0; }
+    .log-event { color: #82aaff; flex-shrink: 0; min-width: 150px; }
+    .log-msg { color: #c3e88d; flex: 1; }
+    .log-warn { color: #ffcb6b; }
+    .log-info { color: #89ddff; }
+    .log-error { color: #f07178; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #3367d6; }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #2d8e47; }
+
+    .btn-warning { background: var(--warning); color: #333; }
+    .btn-warning:hover { background: #e6a600; }
+
+    .btn-outline {
+      background: white;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .btn-outline:hover { background: #e8f0fe; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .result-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 14px;
+      font-size: 0.88rem;
+      min-height: 60px;
+    }
+
+    .result-box.success { border-color: var(--success); background: #e6f4ea; }
+    .result-box.warning { border-color: var(--warning); background: #fef7e0; }
+    .result-box.error { border-color: var(--error); background: #fce8e6; }
+    .result-box.info { border-color: var(--primary); background: #e8f0fe; }
+
+    /* Step list */
+    .step-list { list-style: none; }
+    .step-list li {
+      padding: 10px 0;
+      padding-left: 32px;
+      position: relative;
+      border-bottom: 1px dashed var(--border);
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    .step-list li:last-child { border-bottom: none; }
+
+    .step-list li::before {
+      content: attr(data-num);
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 22px;
+      height: 22px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* bfcache diagram */
+    .bfcache-flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .bfcache-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 90px;
+    }
+
+    .bfcache-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .bfcache-icon.blue { background: #e3f2fd; }
+    .bfcache-icon.green { background: #e8f5e9; }
+    .bfcache-icon.orange { background: #fff3e0; }
+    .bfcache-icon.purple { background: #f3e5f5; }
+
+    .bfcache-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .bfcache-arrow {
+      font-size: 1.2rem;
+      color: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* Quiz */
+    .quiz-section { margin-top: 20px; }
+
+    .quiz-item {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .quiz-question { font-weight: 500; margin-bottom: 12px; font-size: 0.92rem; }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .quiz-option:hover { border-color: var(--primary); background: #e8f0fe; }
+    .quiz-option.selected { border-color: var(--primary); background: #e8f0fe; }
+    .quiz-option.correct { border-color: var(--success); background: #e6f4ea; }
+    .quiz-option.wrong { border-color: var(--error); background: #fce8e6; }
+
+    .quiz-feedback {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.correct { background: #e6f4ea; color: var(--success); }
+    .quiz-feedback.wrong { background: #fce8e6; color: var(--error); }
+
+    /* Interactive zone */
+    .interactive-zone {
+      background: #fff8e1;
+      border: 2px dashed #ffc107;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .tag-note {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .tag-new { background: #e8f5e9; color: var(--success); }
+    .tag-exp { background: #fef7e0; color: #f9a825; }
+    .tag-std { background: #e8f0fe; color: var(--primary); }
+
+    .event-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .event-card.visibilitychange { border-left-color: var(--primary); }
+    .event-card.pageshow { border-left-color: var(--success); }
+    .event-card.pagehide { border-left-color: var(--warning); }
+    .event-card.freeze { border-left-color: var(--purple); }
+    .event-card.resume { border-left-color: var(--purple); }
+
+    .event-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .event-name { font-weight: 700; font-size: 0.95rem; font-family: 'Courier New', monospace; }
+    .event-note { margin-bottom: 8px; font-size: 0.83rem; color: var(--text-secondary); }
+
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .sim-controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+
+    .sim-btn {
+      padding: 8px 16px;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .sim-btn:hover { background: #e8f0fe; }
+    .sim-btn.active-sim { background: var(--primary); color: white; }
+    .sim-btn.frozen-sim { background: var(--purple); color: white; border-color: var(--purple); }
+    .sim-btn.terminated-sim { background: var(--error); color: white; border-color: var(--error); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>⏱ Web Lifecycle API</h1>
+  <p class="subtitle">页面生命周期状态管理 — 交互式学习演示</p>
+  <div class="live-banner">
+    <span style="font-size: 0.82rem; color: var(--text-secondary);">当前状态：</span>
+    <span class="state-chip active-state" id="state-chip">
+      <span class="dot pulse"></span>
+      <span id="state-label">Active</span>
+    </span>
+    <span style="font-size: 0.82rem; color: var(--text-secondary);">visibilityState：</span>
+    <span class="state-chip active-state" id="vis-chip">
+      <span id="vis-label">visible</span>
+    </span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="overview">📖 状态机总览</button>
+  <button class="tab-btn" data-tab="events">⚡ 核心事件</button>
+  <button class="tab-btn" data-tab="demo">🧪 事件演示</button>
+  <button class="tab-btn" data-tab="bfcache">💾 bfcache</button>
+  <button class="tab-btn" data-tab="quiz">📝 自测题</button>
+</nav>
+
+<div class="tab-content">
+
+<!-- Tab 1: 状态机总览 -->
+<div class="tab-panel active" id="tab-overview">
+  <h2>页面生命周期状态机</h2>
+  <p>Web Lifecycle API 将页面生命周期划分为 5 个互斥状态，每个状态之间有明确的转换条件。</p>
+
+  <div class="card">
+    <div class="card-title">📊 状态流转图</div>
+    <div class="state-diagram">
+      <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">
+        点击下方状态节点，可查看该状态的详细说明：
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+        <div class="state-node active" id="sn-active" onclick="showStateInfo('active')">Active</div>
+        <div style="color: var(--border); font-size: 1.2rem;">→</div>
+        <div class="state-node inactive" id="sn-passive" onclick="showStateInfo('passive')">Passive</div>
+        <div style="color: var(--border); font-size: 1.2rem;">→</div>
+        <div class="state-node inactive" id="sn-hidden" onclick="showStateInfo('hidden')">Hidden</div>
+      </div>
+      <div style="padding-left: 40px; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+        ↓ 可选路径（浏览器内存压力）
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 40px;">
+        <div class="state-node inactive" id="sn-frozen" onclick="showStateInfo('frozen')">Frozen</div>
+        <div style="color: var(--border); font-size: 1.2rem;">→</div>
+        <div class="state-node inactive" id="sn-terminated" onclick="showStateInfo('terminated')">Terminated</div>
+      </div>
+    </div>
+    <div class="result-box info" id="state-info-box">
+      点击上方状态节点，查看该状态的详细说明。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔍 状态详解</div>
+    <table>
+      <tr>
+        <th>状态</th>
+        <th>说明</th>
+        <th>触发条件</th>
+      </tr>
+      <tr>
+        <td><span class="badge badge-success">Active</span></td>
+        <td>页面在前台，完全可交互</td>
+        <td>页面首次加载、用户切回页面</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-primary">Passive</span></td>
+        <td>刚离开前台，尚未完全隐藏</td>
+        <td>切换标签但当前标签仍可见</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-warning">Hidden</span></td>
+        <td>完全不可见，但未被冻结</td>
+        <td>切换标签、最小化窗口、切换应用</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-purple">Frozen</span></td>
+        <td>JS 执行暂停，计时器冻结</td>
+        <td>浏览器自动将后台页面冻结</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-error">Terminated</span></td>
+        <td>页面销毁，内存释放</td>
+        <td>关闭标签、导航离开、内存回收</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ 与传统事件的关系</div>
+    <p>传统事件 <code>beforeunload</code> / <code>unload</code> 不可靠，而 Lifecycle API 提供的事件行为更一致：</p>
+    <div class="flex-row">
+      <button class="btn btn-outline" onclick="showEventRelation()">查看对比表</button>
+    </div>
+    <div class="result-box" id="relation-box" style="display:none;">
+      <div style="font-size: 0.85rem;">
+        <table>
+          <tr><th>事件</th><th>推荐度</th><th>说明</th></tr>
+          <tr><td>visibilitychange</td><td><span class="badge badge-success">推荐</span></td><td>最可靠的可见性检测，iOS Safari 支持</td></tr>
+          <tr><td>pagehide</td><td><span class="badge badge-success">推荐</span></td><td>比 unload 可靠，persisted 判断 bfcache</td></tr>
+          <tr><td>pageshow</td><td><span class="badge badge-success">推荐</span></td><td>包括 bfcache 恢复场景</td></tr>
+          <tr><td>freeze / resume</td><td><span class="badge badge-warning">实验性</span></td><td>Chrome 支持，其他浏览器有限</td></tr>
+          <tr><td>beforeunload</td><td><span class="badge badge-warning">谨慎</span></td><td>可弹窗提示，但不可靠</td></tr>
+          <tr><td>unload</td><td><span class="badge badge-error">不推荐</span></td><td>iOS Safari 等场景下不触发</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2: 核心事件 -->
+<div class="tab-panel" id="tab-events">
+  <h2>核心事件详解</h2>
+  <p>Lifecycle API 的 5 个核心事件，每个事件对应状态流转中的关键节点。</p>
+
+  <div class="event-card visibilitychange">
+    <div class="event-card-header">
+      <span class="event-name">visibilitychange</span>
+      <span class="tag-note tag-std">标准</span>
+      <span class="count-badge" id="cnt-visibilitychange">0</span>
+    </div>
+    <div class="event-note">document.visibilityState 从 visible 变为 hidden 或反之</div>
+    <p>最可靠的可视性检测方式。文档可见性发生变化时立即触发，iOS Safari 良好支持。</p>
+    <pre>document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') {
+    console.log('页面可见');
+  } else {
+    console.log('页面不可见');
+  }
+});</pre>
+  </div>
+
+  <div class="event-card pageshow">
+    <div class="event-card-header">
+      <span class="event-name">pageshow</span>
+      <span class="tag-note tag-std">标准</span>
+      <span class="count-badge" id="cnt-pageshow">0</span>
+    </div>
+    <div class="event-note">页面显示时触发，包括首次加载和 bfcache 恢复</div>
+    <p>页面首次加载和每次显示时触发。event.persisted = true 表示从 bfcache 恢复。</p>
+    <pre>window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    console.log('从 bfcache 恢复');
+  } else {
+    console.log('首次加载');
+  }
+});</pre>
+  </div>
+
+  <div class="event-card pagehide">
+    <div class="event-card-header">
+      <span class="event-name">pagehide</span>
+      <span class="tag-note tag-std">标准</span>
+      <span class="count-badge" id="cnt-pagehide">0</span>
+    </div>
+    <div class="event-note">页面隐藏时触发，判断是否进入 bfcache</div>
+    <p>页面从任意状态变为 hidden 时触发。event.persisted = true 表示页面可恢复（bfcache），false 表示将卸载。</p>
+    <pre>window.addEventListener('pagehide', function(event) {
+  if (event.persisted) {
+    console.log('进入 bfcache，可恢复');
+  } else {
+    console.log('即将卸载');
+  }
+});</pre>
+  </div>
+
+  <div class="event-card freeze">
+    <div class="event-card-header">
+      <span class="event-name">freeze</span>
+      <span class="tag-note tag-exp">待定</span>
+      <span class="count-badge" id="cnt-freeze">0</span>
+    </div>
+    <div class="event-note">页面被冻结，JS 执行暂停</div>
+    <p>浏览器冻结页面时触发。冻结后无法执行任何 JavaScript 代码，必须提前完成所有清理工作。</p>
+    <pre>document.addEventListener('freeze', function() {
+  // 冻结后无法执行异步操作
+  // 必须提前在 pagehide / visibilitychange 中保存状态
+  console.log('页面已被冻结');
+});</pre>
+  </div>
+
+  <div class="event-card resume">
+    <div class="event-card-header">
+      <span class="event-name">resume</span>
+      <span class="tag-note tag-exp">待定</span>
+      <span class="count-badge" id="cnt-resume">0</span>
+    </div>
+    <div class="event-note">页面从冻结状态恢复</div>
+    <p>页面从冻结状态恢复时触发。可在此恢复资源、重新初始化组件。</p>
+    <pre>document.addEventListener('resume', function() {
+  console.log('页面从冻结状态恢复');
+  restoreResources();
+});</pre>
+  </div>
+</div>
+
+<!-- Tab 3: 事件演示 -->
+<div class="tab-panel" id="tab-demo">
+  <h2>事件演示实验室</h2>
+  <p>切换标签页或最小化窗口，观察下方实时事件日志。也可使用模拟按钮手动触发状态变化。</p>
+
+  <div class="card">
+    <div class="card-title">🎛 模拟状态切换</div>
+    <p class="event-note">模拟不同的页面生命周期状态变化（用于演示，实际切换标签页观察更准确）：</p>
+    <div class="sim-controls">
+      <button class="sim-btn" id="btn-sim-active" onclick="simState('active')">设为 Active</button>
+      <button class="sim-btn" id="btn-sim-passive" onclick="simState('passive')">设为 Passive</button>
+      <button class="sim-btn" id="btn-sim-hidden" onclick="simState('hidden')">设为 Hidden</button>
+      <button class="sim-btn frozen-sim" id="btn-sim-frozen" onclick="simState('frozen')">设为 Frozen</button>
+      <button class="sim-btn terminated-sim" id="btn-sim-terminated" onclick="simState('terminated')">设为 Terminated</button>
+    </div>
+    <div class="result-box info" id="sim-result">点击按钮切换模拟状态，观察事件日志...</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 实时事件日志</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span class="event-note" style="margin: 0;">监听页面生命周期事件，每次触发实时记录：</span>
+      <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.82rem;" onclick="clearLog()">清空日志</button>
+    </div>
+    <div class="event-log" id="event-log">
+      <div class="log-entry">
+        <span class="log-time">--:--:--</span>
+        <span class="log-event log-warn">INFO</span>
+        <span class="log-msg">事件监听器已注册，请切换标签页或点击模拟按钮...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="interactive-zone">
+    <div class="card-title">🧪 真实场景测试</div>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">以下操作会真实触发 Lifecycle 事件：</p>
+    <div class="flex-row">
+      <button class="btn btn-primary" onclick="testTabSwitch()">打开新标签页</button>
+      <button class="btn btn-warning" onclick="testMinimize()">最小化窗口</button>
+      <button class="btn btn-outline" onclick="testNewPage()">导航到其他页面</button>
+    </div>
+    <div class="result-box info" id="test-result">切换到其他标签页或最小化窗口，即可在日志中看到真实事件...</div>
+  </div>
+</div>
+
+<!-- Tab 4: bfcache -->
+<div class="tab-panel" id="tab-bfcache">
+  <h2>后退缓存（bfcache）机制</h2>
+  <p>bfcache（Back-Forward Cache）是浏览器的特殊缓存，保存整个页面快照，使"后退"操作瞬间恢复。</p>
+
+  <div class="card">
+    <div class="card-title">🔄 bfcache 工作流程</div>
+    <div class="bfcache-flow">
+      <div class="bfcache-step">
+        <div class="bfcache-icon blue">📄</div>
+        <div class="bfcache-label">页面 A<br><small>（可交互）</small></div>
+      </div>
+      <div class="bfcache-arrow">→</div>
+      <div class="bfcache-step">
+        <div class="bfcache-icon green">🔗</div>
+        <div class="bfcache-label">点击链接<br>导航到页面 B</div>
+      </div>
+      <div class="bfcache-arrow">→</div>
+      <div class="bfcache-step">
+        <div class="bfcache-icon orange">💾</div>
+        <div class="bfcache-label">页面 A<br>存入 bfcache</div>
+      </div>
+      <div class="bfcache-arrow">→</div>
+      <div class="bfcache-step">
+        <div class="bfcache-icon green">↩️</div>
+        <div class="bfcache-label">点击后退按钮</div>
+      </div>
+      <div class="bfcache-arrow">→</div>
+      <div class="bfcache-step">
+        <div class="bfcache-icon purple">♻️</div>
+        <div class="bfcache-label">页面 A<br>从缓存恢复</div>
+      </div>
+    </div>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+      注意：页面 A 的 JavaScript 堆、DOM 状态、表单数据、滚动位置全部保留，<strong>无需重新加载</strong>。
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 pagehide persisted 属性</div>
+    <p>通过 event.persisted 属性判断页面状态：</p>
+    <table>
+      <tr><th>persisted</th><th>含义</th><th>后续状态</th><th>开发者应对</th></tr>
+      <tr>
+        <td><span class="badge badge-success">true</span></td>
+        <td>页面进入 bfcache</td>
+        <td>Frozen → 可恢复</td>
+        <td>暂停资源占用，页面会自动恢复</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-error">false</span></td>
+        <td>页面即将卸载</td>
+        <td>Terminated</td>
+        <td>保存所有关键状态到持久化存储</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠️ 哪些情况会阻止 bfcache？</div>
+    <ul style="font-size: 0.88rem; color: var(--text-secondary); padding-left: 20px;">
+      <li>页面持有未完成的 <code>XMLHttpRequest</code> 或 <code>fetch</code> 请求</li>
+      <li>打开了 <code>IndexedDB</code> 读写事务</li>
+      <li>存在打开的 <code>WebSocket</code> 连接</li>
+      <li>包含带有 <code>beforeunload</code> 监听器的 iframe（部分浏览器）</li>
+      <li>页面通过非正常方式被卸载（如浏览器崩溃）</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✅ 正确支持 bfcache 的代码模式</div>
+    <pre>// 页面隐藏时的处理
+window.addEventListener('pagehide', function(event) {
+  if (event.persisted) {
+    // 进入 bfcache，释放非必要资源
+    pauseAnimation();
+    releaseMediaStream();
+  } else {
+    // 即将卸载，保存关键状态
+    localStorage.setItem('app_state', JSON.stringify(getState()));
+  }
+});
+
+// 页面从 bfcache 恢复
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    // 从缓存恢复，重新初始化
+    restoreState();
+    resumeAnimation();
+  }
+});</pre>
+  </div>
+
+  <div class="interactive-zone">
+    <div class="card-title">🔧 bfcache 兼容性测试</div>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">测试当前浏览器对 Page Lifecycle API 的支持程度：</p>
+    <div class="flex-row">
+      <button class="btn btn-primary" onclick="testBfcache()">检测 bfcache 支持</button>
+    </div>
+    <div class="result-box" id="bfcache-result">点击按钮执行检测...</div>
+  </div>
+</div>
+
+<!-- Tab 5: 自测题 -->
+<div class="tab-panel" id="tab-quiz">
+  <h2>📝 自测题</h2>
+  <p>检验你对 Web Lifecycle API 的理解程度。</p>
+
+  <div class="quiz-section" id="quiz-container">
+
+    <div class="quiz-item" data-answer="B">
+      <div class="quiz-question">1. 页面从可见变为不可见时，以下哪个事件最可靠？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. unload</div>
+        <div class="quiz-option" data-choice="B">B. visibilitychange</div>
+        <div class="quiz-option" data-choice="C">C. beforeunload</div>
+        <div class="quiz-option" data-choice="D">D. mouseleave</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="C">
+      <div class="quiz-question">2. pagehide 事件的 event.persisted 为 true 时表示？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. 页面即将被关闭</div>
+        <div class="quiz-option" data-choice="B">B. 页面发生了崩溃</div>
+        <div class="quiz-option" data-choice="C">C. 页面进入了 bfcache，可以恢复</div>
+        <div class="quiz-option" data-choice="D">D. 页面已完全销毁</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="A">
+      <div class="quiz-question">3. 页面处于 Frozen 状态时，以下哪个说法正确？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. setTimeout/setInterval 暂停，JS 代码停止执行</div>
+        <div class="quiz-option" data-choice="B">B. 页面正常接收 WebSocket 消息</div>
+        <div class="quiz-option" data-choice="C">C. requestAnimationFrame 继续运行</div>
+        <div class="quiz-option" data-choice="D">D. 页面仍可执行任何 JavaScript</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="D">
+      <div class="quiz-question">4. iOS Safari 中点击后退按钮，以下哪个事件最可能不触发？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. visibilitychange</div>
+        <div class="quiz-option" data-choice="B">B. pageshow</div>
+        <div class="quiz-option" data-choice="C">C. pagehide</div>
+        <div class="quiz-option" data-choice="D">D. unload</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+    <div class="quiz-item" data-answer="B">
+      <div class="quiz-question">5. 以下哪个保存状态的模式最可靠？</div>
+      <div class="quiz-options">
+        <div class="quiz-option" data-choice="A">A. 在 beforeunload 中执行异步 API 调用</div>
+        <div class="quiz-option" data-choice="B">B. 在 visibilitychange（hidden）时同步保存到 localStorage</div>
+        <div class="quiz-option" data-choice="C">C. 在 freeze 事件中执行 fetch 保存数据</div>
+        <div class="quiz-option" data-choice="D">D. 在 unload 事件中调用 async function</div>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 20px; display: flex; gap: 12px;">
+    <button class="btn btn-primary" id="btn-check">检查答案</button>
+    <button class="btn btn-success" id="btn-reset">重新答题</button>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  Web Lifecycle API 交互演示 · dig-w3c 仓库
+</footer>
+
+</div>
+
+<script>
+(function() {
+  // ─── Tab switching ─────────────────────────────────────────────────────────
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = this.getAttribute('data-tab');
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
+      tabPanels.forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    });
+  });
+
+  // ─── State info ─────────────────────────────────────────────────────────────
+  var stateDescriptions = {
+    active: {
+      html: '<strong>Active（活动状态）</strong> — 页面在前台，完全可交互。浏览器正常调度所有任务，动画、计时器、视频等全部运行。',
+      color: 'success'
+    },
+    passive: {
+      html: '<strong>Passive（被动状态）</strong> — 页面刚离开前台，尚未完全隐藏。浏览器可能降低帧率，但仍保留大部分功能。通常由切换标签触发（标签栏仍可见）。',
+      color: 'primary'
+    },
+    hidden: {
+      html: '<strong>Hidden（隐藏状态）</strong> — 页面完全不可见。页面事件停止，但 JavaScript 引擎保持活跃。可以触发 pagehide / visibilitychange。',
+      color: 'warning'
+    },
+    frozen: {
+      html: '<strong>Frozen（冻结状态）</strong> — 浏览器暂停了 JavaScript 执行，所有计时器冻结，WebSocket 保持但不活跃。页面可随时恢复或被终止。',
+      color: 'purple'
+    },
+    terminated: {
+      html: '<strong>Terminated（终止状态）</strong> — 页面被完全销毁，DOM 移除，资源释放。不可恢复，只能重新加载。',
+      color: 'error'
+    }
+  };
+
+  window.showStateInfo = function(state) {
+    var desc = stateDescriptions[state];
+    var box = document.getElementById('state-info-box');
+    box.innerHTML = desc.html;
+    box.className = 'result-box';
+
+    // Highlight the clicked node
+    ['active','passive','hidden','frozen','terminated'].forEach(function(s) {
+      var node = document.getElementById('sn-' + s);
+      if (s === state) {
+        node.className = 'state-node ' + s;
+      } else {
+        node.className = 'state-node inactive';
+      }
+    });
+  };
+
+  window.showEventRelation = function() {
+    var box = document.getElementById('relation-box');
+    if (box.style.display === 'none') {
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  };
+
+  // ─── Event counters ────────────────────────────────────────────────────────
+  var counters = {
+    visibilitychange: 0,
+    pageshow: 0,
+    pagehide: 0,
+    freeze: 0,
+    resume: 0
+  };
+
+  function updateCounter(eventName) {
+    counters[eventName]++;
+    var el = document.getElementById('cnt-' + eventName);
+    if (el) {
+      el.textContent = counters[eventName];
+    }
+  }
+
+  // ─── State machine UI update ───────────────────────────────────────────────
+  var currentSimState = 'active';
+
+  function updateStateUI(state, visState) {
+    currentSimState = state;
+    var chip = document.getElementById('state-chip');
+    var label = document.getElementById('state-label');
+    label.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+    chip.className = 'state-chip ' + state + '-state';
+
+    var visChip = document.getElementById('vis-chip');
+    var visLabel = document.getElementById('vis-label');
+    if (visState === 'visible') {
+      visLabel.textContent = 'visible';
+      visChip.className = 'state-chip ' + (state === 'active' || state === 'passive' ? 'active-state' : 'hidden-state');
+    } else {
+      visLabel.textContent = 'hidden';
+      visChip.className = 'state-chip hidden-state';
+    }
+
+    // Update state machine diagram
+    ['active','passive','hidden','frozen','terminated'].forEach(function(s) {
+      var node = document.getElementById('sn-' + s);
+      node.className = 'state-node ' + (s === state ? s : 'inactive');
+    });
+
+    // Update sim button states
+    ['active','passive','hidden','frozen','terminated'].forEach(function(s) {
+      var btn = document.getElementById('btn-sim-' + s);
+      if (!btn) return;
+      btn.className = 'sim-btn' + (s === 'frozen' ? ' frozen-sim' : s === 'terminated' ? ' terminated-sim' : '') + (s === state ? ' active-sim' : '');
+    });
+  }
+
+  // ─── Event log ─────────────────────────────────────────────────────────────
+  function getTimeString() {
+    var d = new Date();
+    return [d.getHours(), d.getMinutes(), d.getSeconds()].map(function(n) {
+      return n < 10 ? '0' + n : '' + n;
+    }).join(':');
+  }
+
+  function addLog(eventName, message, type) {
+    var log = document.getElementById('event-log');
+    var entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML =
+      '<span class="log-time">' + getTimeString() + '</span>' +
+      '<span class="log-event">' + eventName + '</span>' +
+      '<span class="log-msg' + (type ? ' log-' + type : '') + '">' + message + '</span>';
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+
+    if (eventName !== 'INFO') {
+      updateCounter(eventName);
+    }
+  }
+
+  window.clearLog = function() {
+    document.getElementById('event-log').innerHTML = '';
+    addLog('INFO', '日志已清空。请切换标签页或点击模拟按钮观察事件...', 'warn');
+  };
+
+  // ─── Simulate state changes ─────────────────────────────────────────────────
+  var realVisState = document.visibilityState;
+
+  window.simState = function(state) {
+    var visMap = { active: 'visible', passive: 'visible', hidden: 'hidden', frozen: 'hidden', terminated: 'hidden' };
+    var simVisState = visMap[state] || 'hidden';
+
+    updateStateUI(state, simVisState);
+
+    var simResult = document.getElementById('sim-result');
+
+    if (state === 'active') {
+      addLog('visibilitychange', 'visibilityState: visible（模拟 Active 状态）', 'info');
+      addLog('INFO', '✅ 页面已切换为 Active 状态');
+      simResult.textContent = '✅ 已模拟 Active 状态 — 页面在前台可交互，visibilityState = visible';
+      simResult.className = 'result-box success';
+    } else if (state === 'passive') {
+      addLog('visibilitychange', 'visibilityState: visible（模拟 Passive 状态）', 'info');
+      addLog('INFO', '⚡ 页面已切换为 Passive 状态 — 刚离开前台，尚未完全隐藏');
+      simResult.textContent = '⚡ 已模拟 Passive 状态 — 页面刚离开前台，可能降低帧率';
+      simResult.className = 'result-box warning';
+    } else if (state === 'hidden') {
+      addLog('visibilitychange', 'visibilityState: hidden（模拟 Hidden 状态）', 'info');
+      addLog('pagehide', 'event.persisted = true（模拟页面进入 bfcache）', 'warn');
+      addLog('INFO', '🔒 页面已切换为 Hidden 状态 — 页面完全不可见，建议保存状态');
+      simResult.textContent = '🔒 已模拟 Hidden 状态 — 页面完全不可见，visibilityState = hidden，触发 pagehide';
+      simResult.className = 'result-box warning';
+    } else if (state === 'frozen') {
+      addLog('visibilitychange', 'visibilityState: hidden（模拟）', 'info');
+      addLog('pagehide', 'event.persisted = true（模拟）', 'warn');
+      addLog('freeze', '❄️ 页面已被冻结 — 所有计时器暂停，JS 停止执行', 'warn');
+      addLog('INFO', '❄️ 已模拟 Frozen 状态 — 注意：冻结后无法执行任何异步代码');
+      simResult.textContent = '❄️ 已模拟 Frozen 状态 — 计时器冻结，JS 暂停，无法执行异步操作';
+      simResult.className = 'result-box info';
+    } else if (state === 'terminated') {
+      addLog('visibilitychange', 'visibilityState: hidden（模拟）', 'info');
+      addLog('pagehide', 'event.persisted = false（模拟即将卸载）', 'error');
+      addLog('INFO', '🗑 已模拟 Terminated 状态 — 注意：演示中无法真正终止页面');
+      simResult.textContent = '🗑 已模拟 Terminated 状态 — 页面已销毁，此状态无法恢复（演示环境不可触发）';
+      simResult.className = 'result-box error';
+    }
+  };
+
+  // ─── Real event listeners ───────────────────────────────────────────────────
+  document.addEventListener('visibilitychange', function() {
+    var vis = document.visibilityState;
+    realVisState = vis;
+
+    var newState = vis === 'visible' ? 'active' : 'hidden';
+    updateStateUI(newState, vis);
+
+    var msg = 'visibilityState: ' + vis + '（真实事件）';
+    addLog('visibilitychange', msg, vis === 'visible' ? 'info' : 'warn');
+
+    if (vis === 'hidden') {
+      addLog('INFO', '🔒 页面不可见 — 建议在此保存所有关键状态', 'warn');
+    } else {
+      addLog('INFO', '✅ 页面恢复可见 — 可重新启动动画、计时器等', 'success');
+    }
+  });
+
+  window.addEventListener('pageshow', function(e) {
+    updateStateUI('active', 'visible');
+    var msg = e.persisted ? 'persisted = true，从 bfcache 恢复' : 'persisted = false，首次加载';
+    addLog('pageshow', msg + '（真实事件）', e.persisted ? 'info' : 'success');
+  });
+
+  window.addEventListener('pagehide', function(e) {
+    var state = e.persisted ? 'frozen' : 'terminated';
+    updateStateUI(state, 'hidden');
+
+    var msg = 'persisted = ' + e.persisted + '（真实事件）';
+    addLog('pagehide', msg, e.persisted ? 'warn' : 'error');
+
+    if (e.persisted) {
+      addLog('INFO', '💾 页面进入 bfcache，可被恢复', 'warn');
+    } else {
+      addLog('INFO', '🗑 页面即将卸载，所有状态应已保存', 'error');
+    }
+  });
+
+  // ─── Test scenarios ────────────────────────────────────────────────────────
+  window.testTabSwitch = function() {
+    var msg = '提示：请切换到其他标签页，' +
+      document.visibilityState === 'visible'
+        ? '然后再切换回来观察日志。'
+        : '然后切换回此标签页。';
+    document.getElementById('test-result').textContent = msg;
+    document.getElementById('test-result').className = 'result-box info';
+    addLog('INFO', '🧪 测试提示：' + msg, 'info');
+  };
+
+  window.testMinimize = function() {
+    document.getElementById('test-result').textContent =
+      '提示：请使用 Windows 快捷键 Win+M 最小化所有窗口，或手动最小化浏览器';
+    document.getElementById('test-result').className = 'result-box warning';
+    addLog('INFO', '🧪 测试提示：请手动最小化窗口或切换应用到后台', 'warn');
+  };
+
+  window.testNewPage = function() {
+    var confirmed = confirm('即将导航到新页面。点击确定后观察事件日志，然后点击后退按钮返回。');
+    if (confirmed) {
+      addLog('pagehide', 'persisted = false（即将导航离开）', 'error');
+      window.open(location.href, '_blank');
+    }
+  };
+
+  // ─── bfcache test ───────────────────────────────────────────────────────────
+  window.testBfcache = function() {
+    var resultEl = document.getElementById('bfcache-result');
+    var lines = [];
+
+    lines.push('🔍 检测结果：');
+    lines.push('• pageshow 事件：' + (typeof window.onpageshow !== 'undefined' || true ? '支持' : '不支持'));
+    lines.push('• pagehide 事件：' + (typeof window.onpagehide !== 'undefined' || true ? '支持' : '不支持'));
+    lines.push('• visibilitychange 事件：支持');
+    lines.push('• freeze 事件：' + (typeof document.onfreeze !== 'undefined' ? '支持' : 'Chrome 68+ 支持，其他浏览器有限'));
+    lines.push('• resume 事件：' + (typeof document.onresume !== 'undefined' ? '支持' : 'Chrome 68+ 支持，其他浏览器有限'));
+
+    var storage = window.localStorage || {};
+    lines.push('• localStorage：' + (storage ? '可用' : '不可用'));
+    lines.push('');
+    lines.push('💡 建议：在真实浏览器中打开此演示，切换标签页和后退按钮来观察实际行为。');
+
+    resultEl.innerHTML = lines.join('<br>');
+    resultEl.className = 'result-box success';
+  };
+
+  // ─── Quiz ───────────────────────────────────────────────────────────────────
+  var quizAnswered = {};
+
+  document.querySelectorAll('.quiz-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      var item = this.closest('.quiz-item');
+      var answer = item.getAttribute('data-answer');
+      var chosen = this.getAttribute('data-choice');
+
+      item.querySelectorAll('.quiz-option').forEach(function(o) {
+        o.classList.remove('selected', 'correct', 'wrong');
+      });
+
+      this.classList.add('selected');
+      quizAnswered[answer] = chosen;
+
+      var feedback = item.querySelector('.quiz-feedback');
+      feedback.classList.remove('show', 'correct', 'wrong');
+
+      if (chosen === answer) {
+        this.classList.add('correct');
+        feedback.textContent = '🎉 回答正确！';
+        feedback.classList.add('show', 'correct');
+      } else {
+        this.classList.add('wrong');
+        feedback.textContent = '❌ 回答错误。正确答案是 ' + answer + '。';
+        feedback.classList.add('show', 'wrong');
+      }
+    });
+  });
+
+  document.getElementById('btn-check').addEventListener('click', function() {
+    var total = document.querySelectorAll('.quiz-item').length;
+    var correct = Object.keys(quizAnswered).filter(function(k) {
+      return quizAnswered[k] === k;
+    }).length;
+    alert('你答对了 ' + correct + '/' + total + ' 题');
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    quizAnswered = {};
+    document.querySelectorAll('.quiz-option').forEach(function(o) {
+      o.classList.remove('selected', 'correct', 'wrong');
+    });
+    document.querySelectorAll('.quiz-feedback').forEach(function(f) {
+      f.classList.remove('show', 'correct', 'wrong');
+    });
+  });
+
+  // ─── Initial state ──────────────────────────────────────────────────────────
+  updateStateUI('active', 'visible');
+
+})();
+</script>
+</body>
+</html>
