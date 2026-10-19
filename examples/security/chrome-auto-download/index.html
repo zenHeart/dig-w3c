@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chrome 自动下载安全策略演示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #2c3e50; padding: 24px; }
+    h1 { font-size: 22px; margin-bottom: 20px; color: #2196F3; }
+    h2 { font-size: 16px; margin: 24px 0 12px; color: #2c3e50; border-left: 4px solid #2196F3; padding-left: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .card h3 { font-size: 14px; color: #2196F3; margin-bottom: 10px; }
+    .tag { display: inline-block; background: #e3f2fd; color: #1565C0; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
+    .tag.danger { background: #ffebee; color: #c62828; }
+    .tag.warning { background: #fff8e1; color: #f57f17; }
+    pre { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px; font-size: 12px; overflow-x: auto; margin: 8px 0; line-height: 1.5; }
+    code { background: #f8f9fa; padding: 1px 4px; border-radius: 3px; font-size: 12px; color: #d63384; }
+    .log { max-height: 200px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 6px; padding: 8px; background: #1e1e1e; color: #d4d4d4; font-size: 12px; font-family: 'Courier New', monospace; }
+    .log-entry { padding: 2px 0; border-bottom: 1px solid #333; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry.ok { color: #4ec9b0; }
+    .log-entry.warn { color: #dcdcaa; }
+    .log-entry.fail { color: #f48771; }
+    .log-entry.info { color: #9cdcfe; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
+    th { background: #e3f2fd; text-align: left; padding: 6px 8px; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e9ecef; }
+    tr:last-child td { border-bottom: none; }
+    button { background: #2196F3; color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; margin: 4px 4px 4px 0; transition: background .2s; }
+    button:hover { background: #1976D2; }
+    button.danger { background: #e53935; }
+    button.danger:hover { background: #c62828; }
+    button.success { background: #43a047; }
+    button.success:hover { background: #2E7D32; }
+    button.warning { background: #fb8c00; }
+    button.warning:hover { background: #ef6c00; }
+    .policy-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .policy-0 { background: #e8f5e9; color: #2e7d32; }
+    .policy-1 { background: #fff8e1; color: #f57f17; }
+    .policy-2 { background: #fbe9e7; color: #d84315; }
+    .policy-3 { background: #ffebee; color: #c62828; }
+    .counter { font-size: 24px; font-weight: bold; color: #2196F3; }
+    .progress-bar { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #43a047, #2e7d32); border-radius: 4px; transition: width .3s; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Chrome 自动下载安全策略演示</h1>
+
+  <!-- DownloadRestrictions 策略模拟 -->
+  <h2>1. DownloadRestrictions 策略模拟</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>当前策略</h3>
+      <div class="policy-badge policy-0" id="policy-display">NoRestrictions (值=0)</div>
+      <p style="font-size:12px;color:#6c757d;margin:8px 0;">设置 Chrome 企业策略 DownloadRestrictions</p>
+      <div>
+        <button class="policy-0" onclick="setPolicy(0)">无限制</button>
+        <button class="warning" onclick="setPolicy(1)">NormalWarning</button>
+        <button class="danger" onclick="setPolicy(2)">ExpertWarning</button>
+        <button class="danger" onclick="setPolicy(3)">BlockAll</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>下载计数器</h3>
+      <div class="counter"><span id="dl-count">0</span> / 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="dl-progress" style="width:0%"></div>
+      </div>
+      <p style="font-size:12px;color:#6c757d;">Chrome 对连续自动下载限制为 10 个文件</p>
+      <div>
+        <button class="success" onclick="triggerDownload()">模拟下载一个文件</button>
+        <button class="danger" onclick="resetCounter()">重置计数器</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 触发机制 -->
+  <h2>2. 自动下载触发机制对比</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>触发方式</th><th>是否触发下载</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>&lt;a download&gt;</code></td><td><span class="tag">✅ 是</span></td><td>下载属性直接触发</td></tr>
+        <tr><td><code>location.href = url</code></td><td><span class="tag">✅ 是</span></td><td>简单文件下载</td></tr>
+        <tr><td>Blob URL + click</td><td><span class="tag">✅ 是</span></td><td>程序生成文件下载</td></tr>
+        <tr><td><code>&lt;iframe&gt;</code></td><td><span class="tag warning">⚠️ 视情况</span></td><td>需配合服务端 attachment 头</td></tr>
+        <tr><td>HTTP <code>Content-Disposition: attachment</code></td><td><span class="tag">✅ 是</span></td><td>服务端强制下载</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Safe Browsing -->
+  <h2>3. Safe Browsing 判断流程</h2>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;">
+      <button class="success" onclick="simCheck('safe')">测试安全 URL</button>
+      <button class="danger" onclick="simCheck('malware')">测试恶意 URL</button>
+      <button class="warning" onclick="simCheck('unknown')">测试未知 URL</button>
+    </div>
+    <div id="sb-result" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+
+  <!-- CSP 影响 -->
+  <h2>4. CSP 对下载的影响</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>CSP 可限制（间接）</h3>
+      <span class="tag danger">object-src</span>
+      <span class="tag danger">frame-src</span>
+      <span class="tag warning">form-action</span>
+      <pre>Content-Security-Policy: object-src 'none'</pre>
+      <p style="font-size:12px;color:#6c757d;">阻止通过 object/embed/iframe 触发的恶意下载</p>
+    </div>
+    <div class="card">
+      <h3>CSP 无法限制</h3>
+      <span class="tag warning">&lt;a download&gt;</span>
+      <span class="tag warning">location.href</span>
+      <span class="tag warning">Blob URL</span>
+      <pre>// CSP 无法直接控制 download 属性
+&lt;a href="evil.exe" download&gt;</pre>
+      <p style="font-size:12px;color:#6c757d;">download 属性不受 CSP 控制，需配合其他策略</p>
+    </div>
+  </div>
+
+  <!-- JS 控制下载 -->
+  <h2>5. JavaScript 检测/控制下载</h2>
+  <div class="card">
+    <h3>chrome.downloads API 示例（扩展）</h3>
+    <pre>chrome.downloads.onCreated.addListener((item) => {
+  if (item.url.includes('malware')) {
+    chrome.downloads.cancel(item.id)
+    log('❌ 已阻止恶意文件下载')
+  }
+})
+
+chrome.downloads.onChanged.addListener((delta) => {
+  if (delta.state?.current === 'complete') {
+    log(`✅ 下载完成: ${delta.filename}`)
+  }
+})</pre>
+    <div>
+      <button class="success" onclick="simChromeExt()">模拟扩展拦截</button>
+    </div>
+  </div>
+
+  <!-- 操作日志 -->
+  <h2>操作日志</h2>
+  <div class="log" id="main-log"></div>
+
+  <script>
+    let currentPolicy = 0
+    let dlCount = 0
+    const MAX_DL = 10
+
+    function log(msg, type = 'info') {
+      const el = document.getElementById('main-log')
+      const entry = document.createElement('div')
+      entry.className = `log-entry ${type}`
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+      el.insertBefore(entry, el.firstChild)
+    }
+
+    function setPolicy(val) {
+      currentPolicy = val
+      const labels = ['NoRestrictions (值=0)', 'NormalWarning (值=1)', 'ExpertWarning (值=2)', 'BlockAll (值=3)']
+      const classes = ['policy-0', 'policy-1', 'policy-2', 'policy-3']
+      const display = document.getElementById('policy-display')
+      display.textContent = labels[val]
+      display.className = `policy-badge ${classes[val]}`
+      log(`策略已设置为: ${labels[val]}`, val === 3 ? 'fail' : val === 0 ? 'ok' : 'warn')
+    }
+
+    function updateCounter() {
+      document.getElementById('dl-count').textContent = dlCount
+      document.getElementById('dl-progress').style.width = `${(dlCount / MAX_DL) * 100}%`
+    }
+
+    function triggerDownload() {
+      if (currentPolicy >= 3) {
+        log('❌ 策略 BlockAll: 下载被完全阻止', 'fail')
+        return
+      }
+      if (dlCount >= MAX_DL) {
+        log('❌ 超过 10 文件限制，下载已暂停', 'fail')
+        return
+      }
+      dlCount++
+      updateCounter()
+      const dangerousExts = ['.exe', '.msi', '.bat', '.js', '.ps1', '.jar']
+      const file = `document_${dlCount}.pdf`
+      const result = dlCount >= 8 ? 'warn' : 'ok'
+      const msg = dlCount >= 8
+        ? `⚠️ 下载数接近限制 (${dlCount}/10)，建议确认操作`
+        : `✅ 文件下载中: ${file}`
+      log(msg, result)
+    }
+
+    function resetCounter() {
+      dlCount = 0
+      updateCounter()
+      log('计数器已重置', 'info')
+    }
+
+    function simCheck(type) {
+      const el = document.getElementById('sb-result')
+      if (type === 'safe') {
+        el.innerHTML = '<span class="tag success">✅ 安全 — 允许下载</span><p style="margin-top:6px;font-size:12px;">URL 不在 Safe Browsing 黑名单中，SHA-256 哈希未匹配恶意数据库</p>'
+        log('Safe Browsing 检查: ✅ 安全 URL，允许下载', 'ok')
+      } else if (type === 'malware') {
+        if (currentPolicy >= 1) {
+          el.innerHTML = '<span class="tag danger">❌ 已阻止 — 危险文件</span><p style="margin-top:6px;font-size:12px;">文件被识别为恶意软件（Safe Browsing Hash + AI 判定），下载已阻止</p>'
+          log('Safe Browsing 检查: ❌ 恶意 URL，已阻止（策略=' + currentPolicy + '）', 'fail')
+        } else {
+          el.innerHTML = '<span class="tag warning">⚠️ 危险但策略=0，仍允许下载</span><p style="margin-top:6px;font-size:12px;">检测到恶意文件，但 DownloadRestrictions=0 仅做警告</p>'
+          log('Safe Browsing 检查: ⚠️ 恶意 URL，策略=0 仍允许下载', 'warn')
+        }
+      } else {
+        el.innerHTML = '<span class="tag warning">⚠️ 未知 URL — 可选允许（带警告）</span><p style="margin-top:6px;font-size:12px;">URL 不在黑名单中也未在白名单中，取决于用户配置</p>'
+        log('Safe Browsing 检查: ⚠️ 未知 URL，行为取决于配置', 'warn')
+      }
+    }
+
+    function simChromeExt() {
+      const blocked = Math.random() > 0.5
+      if (blocked) {
+        log('chrome.downloads.cancel(): 恶意文件已拦截', 'fail')
+      } else {
+        log('chrome.downloads.onChanged: 文件下载完成', 'ok')
+      }
+    }
+
+    log('演示页面加载完成，请操作各功能模块', 'info')
+  </script>
+</body>
+</html>
