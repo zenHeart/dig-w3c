@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>devicePixelRatio 交互演示</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --border: #2a2a4a;
+      --accent: #6c5ce7;
+      --accent2: #00cec9;
+      --text: #e0e0f0;
+      --text-muted: #8888aa;
+      --red: #ff6b6b;
+      --green: #51cf66;
+      --yellow: #fcc419;
+      --code-bg: #12121f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      color: var(--accent2);
+      margin: 24px 0 12px;
+      border-left: 3px solid var(--accent2);
+      padding-left: 10px;
+    }
+
+    p { color: var(--text-muted); margin-bottom: 16px; }
+
+    .formula {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      color: var(--yellow);
+      text-align: center;
+      margin: 16px 0;
+      letter-spacing: 1px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      transition: border-color 0.3s;
+    }
+
+    .card:hover { border-color: var(--accent); }
+
+    .card-value {
+      font-size: 2.4rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 8px 0 4px;
+    }
+
+    .card-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .live-badge {
+      display: inline-block;
+      background: var(--red);
+      color: white;
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-left: 8px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .formula-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .formula-box .physical { color: var(--red); font-size: 1.3rem; }
+    .formula-box .divide { color: var(--text-muted); font-size: 1.5rem; }
+    .formula-box .css { color: var(--green); font-size: 1.3rem; }
+    .formula-box .equals { color: var(--text-muted); font-size: 1.5rem; }
+    .formula-box .dpr { color: var(--yellow); font-size: 1.5rem; font-weight: bold; }
+
+    .canvas-section {
+      margin-top: 20px;
+    }
+
+    .canvas-container {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 16px 0;
+    }
+
+    canvas {
+      background: #222;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .canvas-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .canvas-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas.normal {
+      width: 200px;
+      height: 200px;
+    }
+
+    canvas.retina {
+      /* CSS size set by JS */
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      margin: 12px 0;
+      white-space: pre;
+      color: #a8d8ff;
+    }
+
+    .code-block .comment { color: #6a6a8a; }
+    .code-block .keyword { color: var(--accent); }
+    .code-block .string { color: var(--green); }
+    .code-block .number { color: var(--yellow); }
+    .code-block .function { color: #61dafb; }
+    .code-block .property { color: var(--accent2); }
+
+    .demo-area {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .demo-area h3 {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .pixel-grid {
+      display: grid;
+      gap: 1px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .pixel-grid .pixel {
+      background: var(--accent);
+      aspect-ratio: 1;
+      width: 100%;
+    }
+
+    .pixel-grid .pixel.filled { background: var(--accent); }
+    .pixel-grid .pixel.empty { background: #1a1a2e; }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 12px 0;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table th {
+      color: var(--accent2);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .comparison-table tr:hover td { background: rgba(108, 92, 231, 0.05); }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .tag-1 { background: rgba(136, 136, 170, 0.2); color: var(--text-muted); }
+    .tag-2 { background: rgba(108, 92, 231, 0.2); color: var(--accent); }
+    .tag-3 { background: rgba(0, 206, 201, 0.2); color: var(--accent2); }
+    .tag-4 { background: rgba(255, 107, 107, 0.2); color: var(--red); }
+
+    .alert {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--red);
+      margin: 12px 0;
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 16px 0;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.8; }
+    button:active { opacity: 0.6; }
+
+    button.secondary {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    #zoom-display {
+      font-size: 1.2rem;
+      color: var(--yellow);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .image-demo {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .image-demo .img-wrapper {
+      text-align: center;
+    }
+
+    .image-demo img {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #333;
+      image-rendering: auto;
+    }
+
+    .image-demo .img-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .dpi-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dpi-row:last-child { border-bottom: none; }
+
+    .dpi-bar {
+      height: 8px;
+      background: var(--accent);
+      border-radius: 4px;
+      min-width: 8px;
+    }
+
+    .dpi-label { color: var(--text-muted); font-size: 0.85rem; min-width: 100px; }
+    .dpi-value { color: var(--yellow); font-weight: bold; min-width: 80px; }
+
+    @media (max-width: 600px) {
+      body { padding: 16px; }
+      h1 { font-size: 1.4rem; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .canvas-container { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>devicePixelRatio 交互演示</h1>
+  <p>深入理解 DPR 的计算方式、实际应用场景，以及它如何影响 Canvas 渲染和图片显示。</p>
+
+  <!-- ── 1. 核心公式 ── -->
+  <h2>1. 核心公式</h2>
+  <div class="formula">
+    devicePixelRatio = physical pixels / CSS pixels
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">当前 DPR</div>
+      <div class="card-value" id="dpr-value">—</div>
+      <div class="card-label" id="dpr-desc">devicePixelRatio</div>
+    </div>
+    <div class="card">
+      <div class="card-label">物理分辨率</div>
+      <div class="card-value" id="physical-res">—</div>
+      <div class="card-label">screen.width × screen.height</div>
+    </div>
+    <div class="card">
+      <div class="card-label">CSS 分辨率</div>
+      <div class="card-value" id="css-res">—</div>
+      <div class="card-label">window.innerWidth × innerHeight</div>
+    </div>
+    <div class="card">
+      <div class="card-label">CSS 像素对应的物理像素数</div>
+      <div class="card-value" id="px-count">—</div>
+      <div class="card-label">DPR² = 每个 CSS 像素包含的物理像素数</div>
+    </div>
+  </div>
+
+  <!-- ── 2. DPR 计算演示 ── -->
+  <h2>2. DPR 计算过程 <span class="live-badge">LIVE</span></h2>
+
+  <div class="formula-box" id="formula-box">
+    <span class="physical" id="f-physical">1920</span>
+    <span class="divide">/</span>
+    <span class="css" id="f-css">1920</span>
+    <span class="equals">=</span>
+    <span class="dpr" id="f-dpr">1</span>
+  </div>
+
+  <div class="comparison-table">
+    <thead>
+      <tr>
+        <th>设备</th>
+        <th>物理分辨率</th>
+        <th>CSS 分辨率</th>
+        <th>DPR</th>
+        <th>类型</th>
+      </tr>
+    </thead>
+    <tbody id="device-table"></tbody>
+  </div>
+
+  <!-- ── 3. Canvas 高清适配对比 ── -->
+  <h2>3. Canvas 高清适配对比</h2>
+  <p>两张 Canvas 都声明 CSS 尺寸为 200×200px，实际像素缓冲区不同。</p>
+
+  <div class="canvas-section">
+    <div class="canvas-container">
+      <div class="canvas-wrapper">
+        <canvas id="canvas-normal" class="normal"></canvas>
+        <div class="canvas-label">未适配高清（模糊）</div>
+        <div class="code-block" id="code-normal" style="max-width:200px; margin-top:8px; font-size:0.7rem;"></div>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="canvas-retina"></canvas>
+        <div class="canvas-label">已适配高清（清晰）</div>
+        <div class="code-block" id="code-retina" style="max-width:200px; margin-top:8px; font-size:0.7rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert">
+    ⚠️ 在 DPR=2+ 的设备上（如 Retina MacBook），左侧未适配 Canvas 会明显模糊。右侧通过 <code style="color:var(--yellow)">width×DPR, height×DPR, scale(DPR)</code> 解决了这个问题。
+  </div>
+
+  <!-- ── 4. DPR 与 DPI 对照 ── -->
+  <h2>4. DPR 与 DPI 对照</h2>
+  <p>DPR × 96 ≈ 屏幕 DPI（近似值）。标准显示器 DPR=1 = 96 DPI。</p>
+
+  <div id="dpi-chart" style="margin: 16px 0;"></div>
+
+  <!-- ── 5. 页面缩放的影响 ── -->
+  <h2>5. 页面缩放对 DPR 的影响</h2>
+  <p>放大页面（Ctrl/Cmd +）会让 CSS 像素变大，浏览器所见 CSS 分辨率降低，DPR 增大。</p>
+
+  <div class="zoom-controls">
+    <button class="secondary" id="zoom-out">🔍 放大页面</button>
+    <div id="zoom-display">100%</div>
+    <button class="secondary" id="zoom-in">🔍 缩小页面</button>
+    <button class="secondary" id="zoom-reset">重置</button>
+  </div>
+
+  <div class="formula-box">
+    <span style="color:var(--text-muted)">CSS 分辨率 =</span>
+    <span class="physical" id="zoom-physical">1920</span>
+    <span style="color:var(--text-muted)">/</span>
+    <span id="zoom-factor" style="color:var(--yellow)">1</span>
+    <span style="color:var(--text-muted)">=</span>
+    <span class="css" id="zoom-css">1920</span>
+    <span style="color:var(--text-muted)">→ DPR ≈</span>
+    <span class="dpr" id="zoom-dpr">1</span>
+  </div>
+
+  <div class="alert">
+    📐 <strong>捏合缩放（Pinch Zoom）</strong>：仅放大视觉内容，不改变 CSS 分辨率，不影响 DPR。但 <strong>页面缩放（Page Zoom）</strong> 会同时改变两者。
+  </div>
+
+  <!-- ── 6. 图片高清适配 ── -->
+  <h2>6. 图片高清适配策略</h2>
+
+  <div class="image-demo">
+    <div class="img-wrapper">
+      <img id="img-1x" width="100" height="100" alt="1x image">
+      <div class="img-label">@1x (标准)</div>
+    </div>
+    <div class="img-wrapper">
+      <img id="img-2x" width="100" height="100" alt="2x image">
+      <div class="img-label">@2x (Retina)</div>
+    </div>
+    <div class="img-wrapper">
+      <img id="img-3x" width="100" height="100" alt="3x image">
+      <div class="img-label">@3x (iPhone Pro)</div>
+    </div>
+  </div>
+
+  <div class="code-block"><span class="comment">/* CSS Media Query 检测高清屏 */</span>
+<span class="keyword">@media</span> (<span class="property">-webkit-min-device-pixel-ratio</span>: <span class="number">2</span>),
+       (<span class="property">min-resolution</span>: <span class="number">192dpi</span>) {
+  .logo { <span class="property">background-image</span>: <span class="string">url('logo@2x.png')</span>; }
+}</div>
+
+  <!-- ── 7. DPR 变化监听 ── -->
+  <h2>7. DPR 变化监听</h2>
+  <p>将浏览器窗口拖动到不同屏幕（不同 DPR），或在不同缩放级别间切换，查看实时变化。</p>
+
+  <div class="formula-box" style="flex-direction:column; align-items:flex-start; gap:8px;">
+    <div style="color:var(--text-muted)">监听方式：</div>
+    <div class="code-block" style="width:100%;"><span class="keyword">const</span> mq = <span class="property">window</span>.<span class="function">matchMedia</span>(
+  `(resolution: ${<span class="property">window</span>.<span class="function">devicePixelRatio</span>}dppx)`
+);
+mq.<span class="function">addEventListener</span>(<span class="string">'change'</span>, () => {
+  <span class="property">console</span>.<span class="function">log</span>(<span class="string">'DPR changed to'</span>, <span class="property">window</span>.<span class="property">devicePixelRatio</span>);
+});</div>
+  </div>
+
+  <div id="dpr-changes" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:16px; margin-top:12px; min-height:60px; font-size:0.8rem; color:var(--text-muted);">
+    等待 DPR 变化事件... <span style="color:var(--accent2)">(拖动窗口到不同屏幕试试)</span>
+  </div>
+
+  <!-- ── 8. 像素可视化 ── -->
+  <h2>8. CSS 像素中的物理像素可视化</h2>
+  <p>每个大方块 = 1 个 CSS 像素。绿色方块 = 填满的物理像素数。</p>
+
+  <div id="pixel-viz" style="margin:16px 0;"></div>
+
+  <script>
+    // ──────────────────────────────────────────────
+    // 1. 实时数据更新
+    // ──────────────────────────────────────────────
+    const dpr = window.devicePixelRatio || 1;
+    const physicalW = window.screen.width;
+    const physicalH = window.screen.height;
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    const cssFromDpr = Math.round(physicalW / dpr);
+    const calculatedDpr = (physicalW / cssFromDpr).toFixed(2);
+
+    document.getElementById('dpr-value').textContent = dpr;
+    document.getElementById('physical-res').textContent = `${physicalW}×${physicalH}`;
+    document.getElementById('css-res').textContent = `${cssW}×${cssH}`;
+    document.getElementById('px-count').textContent = `${dpr}×${dpr} = ${dpr * dpr}`;
+
+    // DPR 描述
+    const dprDesc = document.getElementById('dpr-desc');
+    if (dpr >= 4) dprDesc.textContent = '高端 Android 设备';
+    else if (dpr >= 3) dprDesc.textContent = 'iPhone Retina+ / 高端 Android';
+    else if (dpr >= 2) dprDesc.textContent = 'Retina / HiDPI 屏幕';
+    else dprDesc.textContent = '标准显示器';
+
+    // 公式更新
+    document.getElementById('f-physical').textContent = physicalW;
+    document.getElementById('f-css').textContent = cssFromDpr;
+    document.getElementById('f-dpr').textContent = calculatedDpr;
+
+    // ──────────────────────────────────────────────
+    // 2. 设备对照表
+    // ──────────────────────────────────────────────
+    const devices = [
+      { name: '标准显示器', physW: 1920, physH: 1080, dpr: 1 },
+      { name: 'MacBook Retina', physW: 2560, physH: 1600, dpr: 2 },
+      { name: 'iPhone 13 Pro', physW: 2532, physH: 1170, dpr: 3 },
+      { name: '高端 Android', physW: 3200, physH: 1440, dpr: 4 },
+      { name: '当前设备', physW: physicalW, physH: physicalH, dpr: dpr },
+    ];
+
+    const tbody = document.getElementById('device-table');
+    devices.forEach((dev, i) => {
+      const cssW_dev = Math.round(dev.physW / dev.dpr);
+      const cssH_dev = Math.round(dev.physH / dev.dpr);
+      const tagClass = dev.dpr >= 4 ? 'tag-4' : dev.dpr >= 3 ? 'tag-3' : dev.dpr >= 2 ? 'tag-2' : 'tag-1';
+      const isCurrent = dev.name === '当前设备';
+      const tr = document.createElement('tr');
+      tr.style.background = isCurrent ? 'rgba(108,92,231,0.1)' : '';
+      tr.innerHTML = `
+        <td>${isCurrent ? '<strong>' + dev.name + '</strong> ★' : dev.name}</td>
+        <td>${dev.physW}×${dev.physH}</td>
+        <td>${cssW_dev}×${cssH_dev}</td>
+        <td><span class="tag ${tagClass}">${dev.dpr}</span></td>
+        <td>${dev.physW / cssW_dev === dev.dpr ? '✅' : '≈'} ${dev.dpr}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // ──────────────────────────────────────────────
+    // 3. Canvas 高清适配对比
+    // ──────────────────────────────────────────────
+    const CSS_SIZE = 200;
+
+    // 普通 Canvas（未适配）
+    const canvasNormal = document.getElementById('canvas-normal');
+    const ctxNormal = canvasNormal.getContext('2d');
+    canvasNormal.width = CSS_SIZE;
+    canvasNormal.height = CSS_SIZE;
+    document.getElementById('code-normal').textContent =
+      `canvas.width = ${CSS_SIZE}\ncanvas.height = ${CSS_SIZE}`;
+    drawGrid(ctxNormal, CSS_SIZE, CSS_SIZE, 20, '#333');
+    ctxNormal.fillStyle = '#6c5ce7';
+    ctxNormal.font = '14px monospace';
+    ctxNormal.fillText('未适配', 10, 25);
+    ctxNormal.fillText(`DPR=${dpr}`, 10, 43);
+    ctxNormal.fillText(`缓冲区: ${CSS_SIZE}×${CSS_SIZE}`, 10, 61);
+    ctxNormal.fillStyle = '#ff6b6b';
+    ctxNormal.fillRect(60, 80, 120, 80);
+    ctxNormal.fillStyle = '#0f0f1a';
+    ctxNormal.fillRect(65, 85, 50, 35);
+    ctxNormal.fillRect(125, 85, 50, 35);
+
+    // Retina Canvas（已适配）
+    const canvasRetina = document.getElementById('canvas-retina');
+    const ctxRetina = canvasRetina.getContext('2d');
+    const retinaW = CSS_SIZE * dpr;
+    const retinaH = CSS_SIZE * dpr;
+    canvasRetina.width = retinaW;
+    canvasRetina.height = retinaH;
+    canvasRetina.style.width = CSS_SIZE + 'px';
+    canvasRetina.style.height = CSS_SIZE + 'px';
+    ctxRetina.scale(dpr, dpr);
+    document.getElementById('code-retina').textContent =
+      `canvas.width = ${CSS_SIZE}×${dpr}\ncanvas.height = ${CSS_SIZE}×${dpr}\nctx.scale(${dpr},${dpr})`;
+    drawGrid(ctxRetina, CSS_SIZE, CSS_SIZE, 20, '#333');
+    ctxRetina.fillStyle = '#6c5ce7';
+    ctxRetina.font = '14px monospace';
+    ctxRetina.fillText('已适配', 10, 25);
+    ctxRetina.fillText(`DPR=${dpr}`, 10, 43);
+    ctxRetina.fillText(`缓冲区: ${retinaW}×${retinaH}`, 10, 61);
+    ctxRetina.fillStyle = '#51cf66';
+    ctxRetina.fillRect(60, 80, 120, 80);
+    ctxRetina.fillStyle = '#0f0f1a';
+    ctxRetina.fillRect(65, 85, 50, 35);
+    ctxRetina.fillRect(125, 85, 50, 35);
+
+    function drawGrid(ctx, w, h, step, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x <= w; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // 4. DPI 对照图
+    // ──────────────────────────────────────────────
+    const dpiData = [
+      { dpr: 1, dpi: 96, label: '标准显示器' },
+      { dpr: 1.25, dpi: 120, label: 'Windows 125%' },
+      { dpr: 1.5, dpi: 144, label: 'Windows 150%' },
+      { dpr: 2, dpi: 192, label: 'Retina / HiDPI' },
+      { dpr: 3, dpi: 288, label: 'iPhone Pro' },
+      { dpr: 4, dpi: 384, label: '高端 Android' },
+    ];
+
+    const maxDpi = 400;
+    const dpiChart = document.getElementById('dpi-chart');
+    dpiData.forEach(item => {
+      const barW = Math.round((item.dpi / maxDpi) * 200);
+      const isCurrent = Math.abs(item.dpr - dpr) < 0.1;
+      const row = document.createElement('div');
+      row.className = 'dpi-row';
+      row.innerHTML = `
+        <div class="dpi-label">${item.label}</div>
+        <div class="dpi-bar" style="width:${barW}px; background:${isCurrent ? '#ff6b6b' : '#6c5ce7'}"></div>
+        <div class="dpi-value">${item.dpi} DPI / DPR ${item.dpr}${isCurrent ? ' ← 当前' : ''}</div>
+      `;
+      dpiChart.appendChild(row);
+    });
+
+    // ──────────────────────────────────────────────
+    // 5. 页面缩放演示
+    // ──────────────────────────────────────────────
+    let currentZoom = 100;
+    document.getElementById('zoom-display').textContent = '100%';
+
+    function updateZoomDisplay() {
+      const zoomFactor = currentZoom / 100;
+      const effectiveCssW = Math.round(physicalW / zoomFactor / dpr);
+      const effectiveCssH = Math.round(physicalH / zoomFactor / dpr);
+      const effectiveDpr = (physicalW / effectiveCssW).toFixed(2);
+
+      document.getElementById('zoom-display').textContent = currentZoom + '%';
+      document.getElementById('zoom-factor').textContent = zoomFactor.toFixed(2);
+      document.getElementById('zoom-physical').textContent = physicalW;
+      document.getElementById('zoom-css').textContent = effectiveCssW;
+      document.getElementById('zoom-dpr').textContent = effectiveDpr;
+    }
+
+    document.getElementById('zoom-in').onclick = () => {
+      if (currentZoom > 50) {
+        currentZoom -= 25;
+        document.body.style.zoom = currentZoom + '%';
+        updateZoomDisplay();
+      }
+    };
+
+    document.getElementById('zoom-out').onclick = () => {
+      if (currentZoom < 300) {
+        currentZoom += 25;
+        document.body.style.zoom = currentZoom + '%';
+        updateZoomDisplay();
+      }
+    };
+
+    document.getElementById('zoom-reset').onclick = () => {
+      currentZoom = 100;
+      document.body.style.zoom = '100%';
+      updateZoomDisplay();
+    };
+
+    // ──────────────────────────────────────────────
+    // 6. 图片演示
+    // ──────────────────────────────────────────────
+    // 使用 SVG 绘制简单图形代替真实图片
+    function makeSvgDataURL(label, color, size) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+        <rect width="${size}" height="${size}" fill="${color}"/>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+          fill="white" font-family="monospace" font-size="${Math.round(size/4)}">${label}</text>
+      </svg>`;
+      return 'data:image/svg+xml;base64,' + btoa(svg);
+    }
+
+    document.getElementById('img-1x').src = makeSvgDataURL('@1x', '#6c5ce7', 100);
+    document.getElementById('img-2x').src = makeSvgDataURL('@2x', '#00cec9', 200);
+    document.getElementById('img-3x').src = makeSvgDataURL('@3x', '#ff6b6b', 300);
+
+    // ──────────────────────────────────────────────
+    // 7. DPR 变化监听
+    // ──────────────────────────────────────────────
+    const changesDiv = document.getElementById('dpr-changes');
+    let changeCount = 0;
+    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    const changeLog = [];
+
+    function logChange(msg) {
+      changeCount++;
+      const time = new Date().toLocaleTimeString();
+      changeLog.unshift(`<span style="color:var(--accent)">[${time}]</span> ${msg}`);
+      if (changeLog.length > 5) changeLog.pop();
+      changesDiv.innerHTML = changeLog.join('<br>');
+    }
+
+    if (mq.addEventListener) {
+      mq.addEventListener('change', () => {
+        logChange(`DPR 变化 → <strong style="color:var(--yellow)">${window.devicePixelRatio}</strong>`);
+      });
+    } else {
+      changesDiv.innerHTML = '⚠️ 当前浏览器不支持 resolution media query 监听。请使用 Chrome/Edge/Firefox 最新版。';
+    }
+
+    // ──────────────────────────────────────────────
+    // 8. 像素可视化
+    // ──────────────────────────────────────────────
+    const pixelViz = document.getElementById('pixel-viz');
+    const gridSize = Math.min(6, Math.max(2, Math.round(dpr)));
+    pixelViz.style.display = 'grid';
+    pixelViz.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+    pixelViz.style.gap = '2px';
+    pixelViz.style.maxWidth = '200px';
+
+    for (let i = 0; i < gridSize * gridSize; i++) {
+      const px = document.createElement('div');
+      px.className = 'pixel filled';
+      px.title = `物理像素 ${i + 1} / ${gridSize * gridSize}`;
+      px.style.background = i < gridSize * gridSize ? '#51cf66' : '#1a1a2e';
+      pixelViz.appendChild(px);
+    }
+
+    const vizLabel = document.createElement('p');
+    vizLabel.style.fontSize = '0.8rem';
+    vizLabel.style.color = 'var(--text-muted)';
+    vizLabel.style.marginTop = '8px';
+    vizLabel.textContent = `1 CSS 像素 = ${gridSize}×${gridSize} = ${gridSize * gridSize} 物理像素 (DPR=${dpr})`;
+    pixelViz.after(vizLabel);
+  </script>
+</body>
+</html>
