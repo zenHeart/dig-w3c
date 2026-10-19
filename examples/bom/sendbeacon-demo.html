@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>navigator.sendBeacon 演示</title>
+  <style>
+    :root {
+      --primary: #007AFF;
+      --success: #34C759;
+      --danger: #FF3B30;
+      --warning: #FF9500;
+      --bg: #F5F5F7;
+      --text: #1D1D1F;
+      --text-secondary: #86868B;
+      --border: #E5E5EA;
+      --code-bg: #1E1E1E;
+      --code-text: #D4D4D4;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--border);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+    }
+
+    .tab.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tab-content {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 20px 0 12px;
+      color: var(--text);
+    }
+
+    p {
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn:hover {
+      background: #0066D6;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #E8E8ED;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #E6342A;
+    }
+
+    /* Code Block */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--code-text);
+      white-space: pre;
+    }
+
+    /* Output */
+    .output {
+      background: #FFF9F0;
+      border: 1px solid #FFE4B5;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      min-height: 60px;
+    }
+
+    .output-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #FFE4B5;
+    }
+
+    .output-item:last-child {
+      border-bottom: none;
+    }
+
+    .output .success {
+      color: var(--success);
+    }
+
+    .output .error {
+      color: var(--danger);
+    }
+
+    .output .info {
+      color: var(--primary);
+    }
+
+    /* Table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table th {
+      background: var(--bg);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .comparison-table td {
+      color: var(--text);
+    }
+
+    .comparison-table .yes {
+      color: var(--success);
+    }
+
+    .comparison-table .no {
+      color: var(--danger);
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--primary);
+      color: white;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-success {
+      background: var(--success);
+    }
+
+    .badge-warning {
+      background: var(--warning);
+    }
+
+    .badge-danger {
+      background: var(--danger);
+    }
+
+    /* Demo Area */
+    .demo-area {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .demo-area label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .demo-area input[type="text"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .demo-area input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .log-list {
+      max-height: 300px;
+      overflow-y: auto;
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      color: var(--code-text);
+    }
+
+    .log-item {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      gap: 12px;
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .log-type {
+      flex-shrink: 0;
+      width: 60px;
+    }
+
+    .log-type.beacon {
+      color: var(--success);
+    }
+
+    .log-type.fetch {
+      color: var(--primary);
+    }
+
+    .log-type.error {
+      color: var(--danger);
+    }
+
+    .log-data {
+      word-break: break-all;
+      color: var(--code-text);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>navigator.sendBeacon</h1>
+    <p class="subtitle">在页面卸载时可靠发送数据的 BOM API</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">概念总览</button>
+      <button class="tab" data-tab="demo">交互演示</button>
+      <button class="tab" data-tab="compare">对比 fetch</button>
+      <button class="tab" data-tab="tips">最佳实践</button>
+    </div>
+
+    <!-- Tab: 概念总览 -->
+    <div class="tab-content active" id="overview">
+      <h2>什么是 sendBeacon？</h2>
+      <p>`navigator.sendBeacon()` 是浏览器提供的 BOM API，专门用于在页面即将被卸载时可靠地发送小量数据到服务器。与传统的 `XMLHttpRequest` 和 `fetch` 不同，`sendBeacon` 保证请求会在页面关闭过程中被发送，不会因页面卸载而被取消。</p>
+
+      <h3>核心特点</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>可靠发送</td>
+            <td>页面卸载时保证数据发送，不会被浏览器中断</td>
+          </tr>
+          <tr>
+            <td>异步非阻塞</td>
+            <td>不会阻塞页面卸载，不影响导航性能</td>
+          </tr>
+          <tr>
+            <td>仅 POST</td>
+            <td>始终使用 HTTP POST 方法发送数据</td>
+          </tr>
+          <tr>
+            <td>多格式支持</td>
+            <td>支持 ArrayBuffer, Blob, FormData, DOMString 等</td>
+          </tr>
+          <tr>
+            <td>无响应返回</td>
+            <td>无法获取服务器响应数据</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>基本语法</h3>
+      <div class="code-block">
+        <code>navigator.sendBeacon(url, data)</code>
+      </div>
+
+      <h3>返回值</h3>
+      <ul style="margin-left: 20px; font-size: 14px;">
+        <li><span class="badge badge-success">true</span> — 浏览器已接受数据并即将发送</li>
+        <li><span class="badge badge-danger">false</span> — 无法将数据加入传输队列（极少见）</li>
+      </ul>
+    </div>
+
+    <!-- Tab: 交互演示 -->
+    <div class="tab-content" id="demo">
+      <h2>交互演示</h2>
+      <p class="desc">在下方输入数据，点击按钮发送。由于演示环境没有真实服务器，使用 console.log 模拟发送。</p>
+
+      <div class="demo-area">
+        <label>发送的数据格式：</label>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+          <button class="btn btn-secondary active" data-format="json" style="margin: 0;">JSON</button>
+          <button class="btn btn-secondary" data-format="text" style="margin: 0;">Text</button>
+          <button class="btn btn-secondary" data-format="formdata" style="margin: 0;">FormData</button>
+          <button class="btn btn-secondary" data-format="blob" style="margin: 0;">Blob</button>
+        </div>
+
+        <div id="json-input" class="form-group">
+          <label>JSON 数据：</label>
+          <input type="text" id="json-data" placeholder='{"event": "click", "time": 1234567890}'>
+        </div>
+
+        <div id="text-input" class="form-group" style="display: none;">
+          <label>文本数据：</label>
+          <input type="text" id="text-data" placeholder="输入纯文本...">
+        </div>
+
+        <div id="formdata-input" class="form-group" style="display: none;">
+          <label>FormData：</label>
+          <input type="text" id="formdata-key" placeholder="Key" style="margin-bottom: 6px;">
+          <input type="text" id="formdata-value" placeholder="Value">
+        </div>
+
+        <div id="blob-input" class="form-group" style="display: none;">
+          <label>Blob 数据：</label>
+          <input type="text" id="blob-data" placeholder="输入 Blob 内容...">
+        </div>
+
+        <button class="btn" id="send-beacon">发送 sendBeacon</button>
+        <button class="btn btn-secondary" id="send-fetch">发送 fetch + keepalive</button>
+        <button class="btn btn-danger" id="clear-log">清空日志</button>
+      </div>
+
+      <h3>发送日志：</h3>
+      <div class="log-list" id="log-list">
+        <div style="color: var(--text-secondary); padding: 12px;">点击按钮发送数据，日志将显示在这里...</div>
+      </div>
+
+      <h3 style="margin-top: 20px;">触发时机说明</h3>
+      <div class="code-block">
+        <code>// 推荐：使用 visibilitychange 事件（更可靠）
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    navigator.sendBeacon('/analytics', data);
+  }
+});
+
+// 不推荐：beforeunload 在移动端可靠性较低
+window.addEventListener('beforeunload', () => {
+  navigator.sendBeacon('/analytics', data);
+});</code>
+      </div>
+    </div>
+
+    <!-- Tab: 对比 fetch -->
+    <div class="tab-content" id="compare">
+      <h2>sendBeacon vs fetch + keepalive</h2>
+      <p class="desc">两者都可以在页面卸载时发送请求，但有一些关键区别：</p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>sendBeacon</th>
+            <th>fetch + keepalive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>页面卸载时发送</td>
+            <td class="yes">✅ 保证</td>
+            <td class="yes">✅ 保证</td>
+          </tr>
+          <tr>
+            <td>异步非阻塞</td>
+            <td class="yes">✅</td>
+            <td class="yes">✅</td>
+          </tr>
+          <tr>
+            <td>获取响应数据</td>
+            <td class="no">❌ 不支持</td>
+            <td class="yes">✅ 支持</td>
+          </tr>
+          <tr>
+            <td>请求方法</td>
+            <td>仅 POST</td>
+            <td>任意方法</td>
+          </tr>
+          <tr>
+            <td>数据格式</td>
+            <td>多种</td>
+            <td>多种</td>
+          </tr>
+          <tr>
+            <td>跨域请求</td>
+            <td class="yes">✅ 支持</td>
+            <td class="yes">✅ 支持</td>
+          </tr>
+          <tr>
+            <td>使用复杂度</td>
+            <td>简单</td>
+            <td>稍复杂</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>sendBeacon 示例</h3>
+      <div class="code-block">
+        <code>window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    navigator.sendBeacon('/analytics', JSON.stringify({
+      event: 'page_view',
+      path: location.pathname
+    }));
+  }
+});</code>
+      </div>
+
+      <h3>fetch + keepalive 示例</h3>
+      <div class="code-block">
+        <code>window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    fetch('/analytics', {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'page_view', path: location.pathname })
+    }).then(res => console.log('服务器响应:', res))
+      .catch(err => console.error('发送失败:', err));
+  }
+});</code>
+      </div>
+
+      <h3>如何选择？</h3>
+      <ul style="margin-left: 20px; font-size: 14px;">
+        <li><strong>使用 sendBeacon：</strong>不需要服务器响应，只需确认数据送达；发送的数据较小；实现简单的埋点场景</li>
+        <li><strong>使用 fetch + keepalive：</strong>需要获取服务器响应；使用 GET 请求；发送的数据较大；需要错误处理</li>
+      </ul>
+    </div>
+
+    <!-- Tab: 最佳实践 -->
+    <div class="tab-content" id="tips">
+      <h2>最佳实践</h2>
+
+      <h3>1. 结合 visibilitychange 事件</h3>
+      <p class="desc">推荐使用 `visibilitychange` 事件而非 `unload`/`beforeunload`：</p>
+      <div class="code-block">
+        <code>// ✅ 推荐：visibilitychange 在移动端更可靠
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    navigator.sendBeacon('/analytics', data);
+  }
+});
+
+// ⚠️ 谨慎：beforeunload 在移动浏览器中可能不触发
+window.addEventListener('beforeunload', () => {
+  navigator.sendBeacon('/analytics', data);
+});</code>
+      </div>
+
+      <h3>2. 数据大小注意</h3>
+      <p class="desc">虽然规范没有限制，但浏览器通常对数据大小有限制（通常几 MB）。发送大量数据时应使用其他方案。</p>
+
+      <h3>3. 数据格式选择</h3>
+      <div class="code-block">
+        <code>// JSON 格式（常用）
+navigator.sendBeacon('/api', JSON.stringify({ key: 'value' }));
+
+// FormData 格式（适合表单数据）
+const form = new FormData();
+form.append('username', 'john');
+form.append('action', 'login');
+navigator.sendBeacon('/api', form);
+
+// Blob 格式（适合二进制数据）
+const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+navigator.sendBeacon('/api', blob);</code>
+      </div>
+
+      <h3>4. HTTPS 环境</h3>
+      <p class="desc">建议在 HTTPS 环境下使用 sendBeacon，否则某些浏览器可能会降级或拒绝发送。</p>
+
+      <h3>5. Analytics 埋点示例</h3>
+      <div class="code-block">
+        <code>// 页面浏览埋点
+const trackPageView = () => {
+  navigator.sendBeacon('/analytics', JSON.stringify({
+    event: 'page_view',
+    page: location.pathname,
+    referrer: document.referrer,
+    timestamp: Date.now()
+  }));
+};
+
+// 点击事件埋点
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('[data-track]');
+  if (target) {
+    navigator.sendBeacon('/analytics', JSON.stringify({
+      event: 'click',
+      action: target.dataset.track,
+      x: e.clientX,
+      y: e.clientY
+    }));
+  }
+});
+
+// 页面卸载时自动发送
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    trackPageView();
+  }
+});</code>
+      </div>
+
+      <h3>6. 浏览器支持检测</h3>
+      <div class="code-block">
+        <code>if (navigator.sendBeacon) {
+  navigator.sendBeacon('/analytics', data);
+} else {
+  // fallback: 使用 fetch + keepalive
+  fetch('/analytics', {
+    method: 'POST',
+    keepalive: true,
+    body: data
+  });
+}</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>navigator.sendBeacon 交互演示 | 适用于 analytics 埋点、性能监控等场景</p>
+  </div>
+
+  <script>
+    // Tab Navigation
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.dataset.tab;
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === targetId) {
+            content.classList.add('active');
+          }
+        });
+      });
+    });
+
+    // Format buttons
+    const formatBtns = document.querySelectorAll('[data-format]');
+    const jsonInput = document.getElementById('json-input');
+    const textInput = document.getElementById('text-input');
+    const formdataInput = document.getElementById('formdata-input');
+    const blobInput = document.getElementById('blob-input');
+
+    formatBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        formatBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const format = btn.dataset.format;
+        jsonInput.style.display = format === 'json' ? 'block' : 'none';
+        textInput.style.display = format === 'text' ? 'block' : 'none';
+        formdataInput.style.display = format === 'formdata' ? 'block' : 'none';
+        blobInput.style.display = format === 'blob' ? 'block' : 'none';
+      });
+    });
+
+    // Log list
+    const logList = document.getElementById('log-list');
+    let logId = 0;
+
+    function addLog(type, data) {
+      if (logId === 0) {
+        logList.innerHTML = '';
+      }
+      
+      const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      div.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-type ${type}">${type === 'beacon' ? 'Beacon' : type === 'fetch' ? 'fetch' : 'error'}</span>
+        <span class="log-data">${typeof data === 'string' ? data : JSON.stringify(data)}</span>
+      `;
+      logList.insertBefore(div, logList.firstChild);
+      logId++;
+    }
+
+    // Send beacon
+    document.getElementById('send-beacon').addEventListener('click', () => {
+      const activeBtn = document.querySelector('[data-format].active');
+      const format = activeBtn ? activeBtn.dataset.format : 'json';
+      
+      let data;
+      switch (format) {
+        case 'json':
+          const jsonStr = document.getElementById('json-data').value || '{"event": "beacon_test", "time": ' + Date.now() + '}';
+          data = jsonStr;
+          break;
+        case 'text':
+          data = document.getElementById('text-data').value || 'Hello Beacon ' + Date.now();
+          break;
+        case 'formdata':
+          const key = document.getElementById('formdata-key').value || 'key';
+          const value = document.getElementById('formdata-value').value || 'value';
+          const form = new FormData();
+          form.append(key, value);
+          data = form;
+          break;
+        case 'blob':
+          const blobStr = document.getElementById('blob-data').value || 'Blob data ' + Date.now();
+          data = new Blob([blobStr], { type: 'text/plain' });
+          break;
+      }
+
+      // Simulate beacon send (since we don't have a real server)
+      const mockUrl = '/api/analytics';
+      console.log('[sendBeacon模拟]', { url: mockUrl, data: data, type: format });
+      
+      // Try real sendBeacon (will fail CORS but that's OK for demo)
+      try {
+        const result = navigator.sendBeacon(mockUrl, data);
+        if (result) {
+          addLog('beacon', `发送成功 (${format}) - ${JSON.stringify(data)}`);
+        } else {
+          addLog('error', '发送失败：无法加入传输队列');
+        }
+      } catch (err) {
+        console.log('[sendBeacon 实际发送]', err);
+        addLog('beacon', `发送请求已发出 (${format})`);
+      }
+    });
+
+    // Send fetch + keepalive
+    document.getElementById('send-fetch').addEventListener('click', async () => {
+      const activeBtn = document.querySelector('[data-format].active');
+      const format = activeBtn ? activeBtn.dataset.format : 'json';
+      
+      let body;
+      const headers = { 'Content-Type': 'application/json' };
+      
+      switch (format) {
+        case 'json':
+          const jsonStr = document.getElementById('json-data').value || '{"event": "fetch_test", "time": ' + Date.now() + '}';
+          body = jsonStr;
+          break;
+        case 'text':
+          body = document.getElementById('text-data').value || 'Hello Fetch ' + Date.now();
+          headers['Content-Type'] = 'text/plain';
+          break;
+        case 'formdata':
+          const key = document.getElementById('formdata-key').value || 'key';
+          const value = document.getElementById('formdata-value').value || 'value';
+          const form = new FormData();
+          form.append(key, value);
+          body = form;
+          delete headers['Content-Type']; // Let browser set it automatically
+          break;
+        case 'blob':
+          const blobStr = document.getElementById('blob-data').value || 'Blob data ' + Date.now();
+          body = new Blob([blobStr], { type: 'text/plain' });
+          break;
+      }
+
+      try {
+        const response = await fetch('/api/analytics', {
+          method: 'POST',
+          headers: headers,
+          body: body,
+          keepalive: true
+        });
+        console.log('[fetch + keepalive 模拟]', response);
+        addLog('fetch', `发送成功 (${format}) - 状态: ${response.status || 'N/A'}`);
+      } catch (err) {
+        console.log('[fetch + keepalive 实际发送]', err);
+        addLog('fetch', `请求已发出 (${format}) - 跨域限制`);
+      }
+    });
+
+    // Clear log
+    document.getElementById('clear-log').addEventListener('click', () => {
+      logList.innerHTML = '<div style="color: var(--text-secondary); padding: 12px;">日志已清空...</div>';
+      logId = 0;
+    });
+
+    // Auto-fill JSON with sample data
+    document.getElementById('json-data').value = JSON.stringify({
+      event: 'demo_click',
+      button: 'send_beacon',
+      timestamp: Date.now()
+    }, null, 2);
+  </script>
+</body>
+</html>
