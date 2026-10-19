@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node API 浜や簰婕旂ず</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; padding: 20px; line-height: 1.6; }
+    h1 { font-size: 1.5rem; margin-bottom: 20px; color: #333; }
+    h2 { font-size: 1.1rem; margin: 20px 0 10px; color: #555; }
+    
+    .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    
+    .demo-box { border: 2px dashed #ccc; padding: 12px; min-height: 80px; margin: 10px 0; border-radius: 4px; background: #fafafa; }
+    .demo-box .item { background: #4a90d9; color: white; padding: 8px 12px; margin: 4px; border-radius: 4px; display: inline-block; cursor: pointer; transition: background 0.2s; }
+    .demo-box .item:hover { background: #357abd; }
+    .demo-box .item.blue { background: #4a90d9; }
+    .demo-box .item.green { background: #5cb85c; }
+    .demo-box .item.orange { background: #f0ad4e; }
+    .demo-box .item.purple { background: #9b59b6; }
+    
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    button { background: #4a90d9; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
+    button:hover { background: #357abd; }
+    button.danger { background: #d9534f; }
+    button.danger:hover { background: #c9302c; }
+    button.success { background: #5cb85c; }
+    button.success:hover { background: #4cae4c; }
+    button.secondary { background: #777; }
+    button.secondary:hover { background: #555; }
+    
+    .log { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+    .log .entry { padding: 2px 0; border-bottom: 1px solid #333; }
+    .log .entry:last-child { border-bottom: none; }
+    .log .action { color: #569cd6; }
+    .log .result { color: #4ec9b0; }
+    .log .node { color: #ce9178; }
+    .log .error { color: #f48771; }
+    
+    .info { background: #e7f3ff; border: 1px solid #b3d9ff; padding: 12px; border-radius: 4px; font-size: 0.85rem; margin: 10px 0; }
+    .info code { background: #d0e8ff; padding: 2px 5px; border-radius: 3px; }
+    
+    .tree-visual { font-family: monospace; font-size: 0.8rem; white-space: pre; background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; overflow-x: auto; }
+    
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.85rem; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+  <h1>馃尦 Node API 浜や簰婕旂ず</h1>
+  
+  <div class="container">
+    <!-- 宸︿晶锛氭搷浣滈潰鏉?-->
+    <div class="panel">
+      <h2>馃摝 appendChild / insertBefore</h2>
+      <div class="demo-box" id="box-insert">
+        <div class="item blue" data-id="1">Item 1</div>
+        <div class="item green" data-id="2">Item 2</div>
+        <div class="item orange" data-id="3">Item 3</div>
+      </div>
+      <div class="controls">
+        <button onclick="appendNewItem()">appendChild 鏂拌妭鐐?/button>
+        <button onclick="insertBeforeFirst()">insertBefore 鍒板紑澶?/button>
+        <button onclick="insertAfterLast()">insertAfter 鍒版湯灏?/button>
+        <button class="secondary" onclick="resetInsertDemo()">閲嶇疆</button>
+      </div>
+      
+      <h2>馃棏锔?removeChild</h2>
+      <div class="demo-box" id="box-remove">
+        <div class="item blue" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+        <div class="item green" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+        <div class="item orange" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+      </div>
+      <div class="controls">
+        <button class="danger" onclick="removeFirstChild()">removeChild(firstChild)</button>
+        <button class="danger" onclick="removeLastChild()">removeChild(lastChild)</button>
+        <button class="secondary" onclick="resetRemoveDemo()">閲嶇疆</button>
+      </div>
+      
+      <h2>馃攧 replaceChild</h2>
+      <div class="demo-box" id="box-replace">
+        <div class="item purple" data-id="a">A</div>
+        <div class="item blue" data-id="b">B</div>
+        <div class="item green" data-id="c">C</div>
+      </div>
+      <div class="controls">
+        <button class="success" onclick="replaceFirst()">replaceChild(鏂拌妭鐐? firstChild)</button>
+        <button class="secondary" onclick="resetReplaceDemo()">閲嶇疆</button>
+      </div>
+    </div>
+    
+    <!-- 鍙充晶锛氳緭鍑洪潰鏉?-->
+    <div class="panel">
+      <h2>馃搳 鑺傜偣灞炴€?/h2>
+      <div class="info" id="node-properties">
+        閫夋嫨涓€涓妭鐐规煡鐪嬪叾灞炴€?      </div>
+      <div class="controls">
+        <button class="secondary" onclick="showNodeProperties()">鍒锋柊灞炴€?/button>
+      </div>
+      
+      <h2>馃攳 contains / compareDocumentPosition</h2>
+      <div class="controls">
+        <button onclick="testContains()">娴嬭瘯 contains</button>
+        <button onclick="testComparePosition()">娴嬭瘯 compareDocumentPosition</button>
+      </div>
+      
+      <h2>馃尣 鏍戠粨鏋勫彲瑙嗗寲</h2>
+      <div class="tree-visual" id="tree-visual"></div>
+      
+      <h2>馃搵 鎿嶄綔鏃ュ織</h2>
+      <div class="log" id="log"></div>
+      <div class="controls" style="margin-top:8px">
+        <button class="secondary" onclick="clearLog()">娓呯┖鏃ュ織</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container" style="margin-top:20px">
+    <div class="panel">
+      <h2>馃摎 cloneNode 婕旂ず</h2>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div>
+          <strong>鍘熻妭鐐癸細</strong>
+          <div class="demo-box" id="box-clone-source" style="min-width:150px">
+            <div class="item blue">鍙厠闅嗚妭鐐?/div>
+          </div>
+          <div class="controls">
+            <button onclick="cloneNodeDemo(false)">cloneNode(false) 娴呭厠闅?/button>
+            <button onclick="cloneNodeDemo(true)">cloneNode(true) 娣卞厠闅?/button>
+          </div>
+        </div>
+        <div>
+          <strong>鍏嬮殕缁撴灉锛?/strong>
+          <div class="demo-box" id="box-clone-result" style="min-width:150px;background:#fffbea">
+            <em style="color:#999">鐐瑰嚮鎸夐挳鍚庢樉绀?/em>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <h2>馃摉 DocumentFragment 鎬ц兘瀵规瘮</h2>
+      <div class="info">
+        <strong>娴嬭瘯璇存槑锛?/strong>鍚戝鍣ㄤ腑娣诲姞 1000 涓妭鐐癸紝瀵规瘮鐩存帴娣诲姞 vs DocumentFragment 鐨勫洖娴佹鏁般€?      </div>
+      <div class="controls">
+        <button onclick="testDirectAppend()">鐩存帴 appendChild锛埫?000锛?/button>
+        <button onclick="testFragmentAppend()">DocumentFragment锛埫?000锛?/button>
+        <button class="danger" onclick="clearPerformanceBox()">娓呯┖</button>
+      </div>
+      <div class="demo-box" id="box-performance" style="min-height:100px;overflow:auto;max-height:200px"></div>
+      <div id="performance-result" style="margin-top:10px;font-weight:bold"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 宸ュ叿鍑芥暟 =====
+    function log(action, result) {
+      const logEl = document.getElementById('log')
+      const entry = document.createElement('div')
+      entry.className = 'entry'
+      entry.innerHTML = `<span class="action">${action}</span> 鈫?<span class="result">${result}</span>`
+      logEl.appendChild(entry)
+      logEl.scrollTop = logEl.scrollHeight
+    }
+    
+    function clearLog() {
+      document.getElementById('log').innerHTML = ''
+    }
+    
+    function updateTree() {
+      const box = document.getElementById('box-insert')
+      const visual = document.getElementById('tree-visual')
+      const walker = document.createTreeWalker(box, NodeFilter.SHOW_ALL, null, false)
+      let indent = 0
+      let html = ''
+      
+      while (walker.nextNode()) {
+        const node = walker.currentNode
+        if (node === box) {
+          html += '<span style="color:#569cd6">' + node.nodeName + '</span> #box-insert\n'
+          continue
+        }
+        indent = walker.currentNode.parentElement === box ? 1 : (walker.depth - 1)
+        const typeColors = {
+          1: '#4ec9b0',   // ELEMENT
+          3: '#ce9178',   // TEXT
+          8: '#6a9955'    // COMMENT
+        }
+        const color = typeColors[node.nodeType] || '#d4d4d4'
+        let label = node.nodeType === 3 ? `"${node.textContent.slice(0,10)}"` : (node.className || node.id || node.nodeName)
+        html += '  '.repeat(indent) + `<span style="color:${color}">[${node.nodeType}]</span> ${label}\n`
+      }
+      visual.textContent = html || '(empty)'
+    }
+    
+    // ===== insertBefore / appendChild =====
+    let itemId = 4
+    const insertBox = document.getElementById('box-insert')
+    
+    function appendNewItem() {
+      const newItem = document.createElement('div')
+      newItem.className = 'item blue'
+      newItem.dataset.id = itemId++
+      newItem.textContent = 'Item ' + newItem.dataset.id
+      newItem.onclick = function() { removeSelf(this) }
+      insertBox.appendChild(newItem)
+      log('appendChild', `<span class="node">${newItem.textContent}</span> added to end`)
+      updateTree()
+    }
+    
+    function insertBeforeFirst() {
+      const newItem = document.createElement('div')
+      newItem.className = 'item green'
+      newItem.dataset.id = itemId++
+      newItem.textContent = 'Item ' + newItem.dataset.id
+      newItem.onclick = function() { removeSelf(this) }
+      const first = insertBox.firstChild
+      insertBox.insertBefore(newItem, first)
+      log('insertBefore(new, firstChild)', `<span class="node">${newItem.textContent}</span> inserted at beginning`)
+      updateTree()
+    }
+    
+    function insertAfterLast() {
+      const newItem = document.createElement('div')
+      newItem.className = 'item orange'
+      newItem.dataset.id = itemId++
+      newItem.textContent = 'Item ' + newItem.dataset.id
+      newItem.onclick = function() { removeSelf(this) }
+      insertBox.insertBefore(newItem, null) // null = insertBefore 鐨?appendChild 绛夋晥
+      log('insertBefore(new, null)', `<span class="node">${newItem.textContent}</span> inserted at end (via insertBefore)')
+      updateTree()
+    }
+    
+    function resetInsertDemo() {
+      insertBox.innerHTML = `
+        <div class="item blue" data-id="1" onclick="removeSelf(this)">Item 1</div>
+        <div class="item green" data-id="2" onclick="removeSelf(this)">Item 2</div>
+        <div class="item orange" data-id="3" onclick="removeSelf(this)">Item 3</div>
+      `
+      itemId = 4
+      log('reset', 'insertBefore/appendChild demo reset')
+      updateTree()
+    }
+    
+    // ===== removeChild =====
+    const removeBox = document.getElementById('box-remove')
+    
+    function removeSelf(el) {
+      const removed = el.parentNode.removeChild(el)
+      log('removeChild', `removed <span class="node">${removed.textContent}</span>`)
+      updateTree()
+    }
+    
+    function removeFirstChild() {
+      if (removeBox.firstChild) {
+        const removed = removeBox.removeChild(removeBox.firstChild)
+        log('removeChild(firstChild)', `removed <span class="node">${removed.textContent || removed.nodeName}</span>`)
+        updateTree()
+      }
+    }
+    
+    function removeLastChild() {
+      if (removeBox.lastChild) {
+        const removed = removeBox.removeChild(removeBox.lastChild)
+        log('removeChild(lastChild)', `removed <span class="node">${removed.textContent || removed.nodeName}</span>`)
+        updateTree()
+      }
+    }
+    
+    function resetRemoveDemo() {
+      removeBox.innerHTML = `
+        <div class="item blue" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+        <div class="item green" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+        <div class="item orange" onclick="removeSelf(this)">鐐瑰嚮绉婚櫎鎴?/div>
+      `
+      log('reset', 'removeChild demo reset')
+      updateTree()
+    }
+    
+    // ===== replaceChild =====
+    const replaceBox = document.getElementById('box-replace')
+    
+    function createReplacement() {
+      const newNode = document.createElement('div')
+      newNode.className = 'item purple'
+      newNode.textContent = 'NEW-' + Date.now().toString().slice(-3)
+      newNode.style.fontWeight = 'bold'
+      return newNode
+    }
+    
+    function replaceFirst() {
+      if (replaceBox.firstChild) {
+        const newNode = createReplacement()
+        const old = replaceBox.replaceChild(newNode, replaceBox.firstChild)
+        log('replaceChild', `replaced <span class="node">${old.textContent}</span> with <span class="node">${newNode.textContent}</span>`)
+        updateTree()
+      }
+    }
+    
+    function resetReplaceDemo() {
+      replaceBox.innerHTML = `
+        <div class="item purple" data-id="a">A</div>
+        <div class="item blue" data-id="b">B</div>
+        <div class="item green" data-id="c">C</div>
+      `
+      log('reset', 'replaceChild demo reset')
+      updateTree()
+    }
+    
+    // ===== 鑺傜偣灞炴€?=====
+    let selectedNode = null
+    
+    document.getElementById('box-insert').addEventListener('click', function(e) {
+      if (e.target !== this) {
+        selectedNode = e.target
+        showNodeProperties()
+      }
+    })
+    
+    function showNodeProperties() {
+      const el = selectedNode || insertBox
+      const props = {
+        'nodeName': el.nodeName,
+        'nodeType': el.nodeType + ' (' + ['INVALID','ELEMENT','TEXT','COMMENT','DOCUMENT','DOC_FRAG','?','?','?','?','?','?','?','?','?','?'][el.nodeType] + ')',
+        'tagName/localName': el.tagName || el.nodeName,
+        'className': el.className || '(none)',
+        'id': el.id || '(none)',
+        'textContent': el.textContent.slice(0,30) + (el.textContent.length > 30 ? '...' : ''),
+        'childNodes.length': el.childNodes?.length ?? 'N/A',
+        'children.length': el.children?.length ?? 'N/A',
+        'firstChild': el.firstChild?.nodeName || 'null',
+        'lastChild': el.lastChild?.nodeName || 'null',
+        'nextSibling': el.nextSibling?.nodeName || 'null',
+        'previousSibling': el.previousSibling?.nodeName || 'null',
+        'parentNode': el.parentNode?.nodeName || 'null',
+        'ownerDocument': el.ownerDocument?.nodeName || 'null',
+        'baseURI': el.baseURI?.slice(0,40) || 'null'
+      }
+      
+      let html = '<table>'
+      for (const [key, value] of Object.entries(props)) {
+        html += `<tr><th>${key}</th><td><code>${value}</code></td></tr>`
+      }
+      html += '</table>'
+      html += '<p style="margin-top:8px;font-size:0.8rem;color:#666">馃挕 鐐瑰嚮涓婃柟褰╄壊鏂瑰潡鏌ョ湅鍏跺睘鎬?/p>'
+      document.getElementById('node-properties').innerHTML = html
+    }
+    
+    // ===== contains / compareDocumentPosition =====
+    function testContains() {
+      const box1 = document.getElementById('box-insert')
+      const box2 = document.getElementById('box-remove')
+      const firstItem = insertBox.firstChild
+      
+      log('contains', `box-insert.contains(firstItem): <span class="result">${box1.contains(firstItem)}</span>`)
+      log('contains', `box-remove.contains(firstItem): <span class="result">${box2.contains(firstItem)}</span>`)
+      log('contains', `box-insert.contains(box-insert): <span class="result">${box1.contains(box1)}</span> (鑷韩)`)
+    }
+    
+    function testComparePosition() {
+      const item1 = insertBox.children[0]
+      const item2 = insertBox.children[1]
+      
+      const pos = item1.compareDocumentPosition(item2)
+      const DISCONNECTED = 1, PRECEDING = 2, FOLLOWING = 4, CONTAINS = 8, CONTAINED_BY = 16
+      
+      let desc = []
+      if (pos & DISCONNECTED) desc.push('鏂紑')
+      if (pos & PRECEDING) desc.push('item1 鍦?item2 <strong>涔嬪墠</strong>')
+      if (pos & FOLLOWING) desc.push('item1 鍦?item2 <strong>涔嬪悗</strong>')
+      if (pos & CONTAINS) desc.push('item1 鍖呭惈 item2')
+      if (pos & CONTAINED_BY) desc.push('item1 琚?item2 鍖呭惈')
+      
+      log('compareDocumentPosition', `item1 vs item2: <span class="result">${desc.join(', ')}</span> (code: ${pos})`)
+      
+      const reversePos = item2.compareDocumentPosition(item1)
+      desc = []
+      if (reversePos & PRECEDING) desc.push('item2 鍦?item1 <strong>涔嬪墠</strong>')
+      if (reversePos & FOLLOWING) desc.push('item2 鍦?item1 <strong>涔嬪悗</strong>')
+      log('compareDocumentPosition', `item2 vs item1: <span class="result">${desc.join(', ')}</span> (code: ${reversePos})`)
+    }
+    
+    // ===== cloneNode =====
+    const cloneSource = document.getElementById('box-clone-source')
+    const cloneResult = document.getElementById('box-clone-result')
+    
+    function cloneNodeDemo(deep) {
+      const original = cloneSource.querySelector('.item')
+      const clone = original.cloneNode(deep)
+      cloneResult.innerHTML = ''
+      cloneResult.appendChild(clone)
+      clone.onclick = function() { removeSelf(this) }
+      log('cloneNode(' + deep + ')', `<span class="node">${original.nodeName}</span> cloned ${deep ? 'deeply' : 'shallowly'}`)
+    }
+    
+    // ===== DocumentFragment 鎬ц兘娴嬭瘯 =====
+    function clearPerformanceBox() {
+      document.getElementById('box-performance').innerHTML = ''
+      document.getElementById('performance-result').textContent = ''
+    }
+    
+    function testDirectAppend() {
+      const box = document.getElementById('box-performance')
+      box.innerHTML = ''
+      
+      const entries = []
+      const perf = performance.now()
+      
+      for (let i = 0; i < 1000; i++) {
+        const div = document.createElement('div')
+        div.textContent = i
+        div.style.cssText = 'font-size:10px;margin:1px;display:inline-block'
+        box.appendChild(div)
+      }
+      
+      const time = performance.now() - perf
+      document.getElementById('performance-result').innerHTML = 
+        `鈴?鐩存帴 1000脳 appendChild: <strong style="color:#d9534f">${time.toFixed(2)}ms</strong>`
+      log('performance', `Direct appendChild 脳1000: <span class="result">${time.toFixed(2)}ms</span>`)
+    }
+    
+    function testFragmentAppend() {
+      const box = document.getElementById('box-performance')
+      box.innerHTML = ''
+      
+      const perf = performance.now()
+      const fragment = document.createDocumentFragment()
+      
+      for (let i = 0; i < 1000; i++) {
+        const div = document.createElement('div')
+        div.textContent = i
+        div.style.cssText = 'font-size:10px;margin:1px;display:inline-block'
+        fragment.appendChild(div)
+      }
+      
+      box.appendChild(fragment)
+      const time = performance.now() - perf
+      document.getElementById('performance-result').innerHTML = 
+        `鈴?DocumentFragment 脳1000: <strong style="color:#5cb85c">${time.toFixed(2)}ms</strong>`
+      log('performance', `DocumentFragment 脳1000: <span class="result">${time.toFixed(2)}ms</span>`)
+    }
+    
+    // ===== 鍒濆鍖?=====
+    updateTree()
+    showNodeProperties()
+    log('init', 'Node API 婕旂ず宸插氨缁?)
+  </script>
+</body>
+</html>
