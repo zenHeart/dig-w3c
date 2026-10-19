@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tabindex 浜や簰婕旂ず</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 24px 16px; background: #f8f9fa; }
+    h1 { color: #1a1a2e; border-bottom: 3px solid #4361ee; padding-bottom: 12px; }
+    h2 { color: #2d3436; margin-top: 32px; }
+    h3 { color: #636e72; }
+
+    .demo-box { background: white; border-radius: 12px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+
+    /* 鍙仛鐒﹀厓绱犲熀纭€鏍峰紡 */
+    .focus-el {
+      padding: 14px 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      margin: 8px 0;
+      transition: all 0.2s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .focus-el:focus {
+      outline: 3px solid #4361ee;
+      border-color: #4361ee;
+      background: #eef2ff;
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    }
+
+    /* 鍚?tabindex 鍊煎搴旂殑棰滆壊 */
+    .t-neg { border-color: #ffc107; }
+    .t-neg:focus { border-color: #e0a800; background: #fff8e1; outline-color: #e0a800; }
+    .t-zero { border-color: #2ecc71; }
+    .t-zero:focus { border-color: #27ae60; background: #eafaf1; outline-color: #27ae60; }
+    .t-pos { border-color: #e74c3c; }
+    .t-pos:focus { border-color: #c0392b; background: #fdecea; outline-color: #c0392b; }
+    .t-natural { border-color: #95a5a6; }
+
+    /* 鏍囩寰界珷 */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .b-neg { background: #ffc107; color: #333; }
+    .b-zero { background: #2ecc71; color: white; }
+    .b-pos { background: #e74c3c; color: white; }
+    .b-natural { background: #95a5a6; color: white; }
+
+    /* Tab 瀵艰埅鎸囩ず */
+    .nav-hint {
+      background: linear-gradient(135deg, #fff9c4, #fff59d);
+      padding: 14px 20px;
+      border-radius: 8px;
+      border-left: 4px solid #f9a825;
+      font-size: 15px;
+    }
+    kbd {
+      background: #333;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    /* 浜嬩欢鏃ュ織 */
+    .event-log {
+      background: #1a1a2e;
+      color: #4cd137;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 220px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+    .event-log .time { color: #555; margin-right: 8px; }
+    .event-log .focus-msg { color: #4cd137; }
+    .event-log .blur-msg { color: #747d8c; }
+
+    /* 鎸夐挳 */
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: #4361ee; color: white; }
+    .btn-primary:hover { background: #3651d4; }
+    .btn-secondary { background: #e9ecef; color: #333; }
+    .btn-secondary:hover { background: #dee2e6; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-warning:hover { background: #d68910; }
+
+    /* 淇℃伅琛ㄦ牸 */
+    .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    .info-table th, .info-table td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+    .info-table th { background: #f8f9fa; font-weight: 600; }
+    .info-table tr:hover td { background: #f1f3f5; }
+
+    /* Tab 鍒嗗尯 */
+    .section-tabs { display: flex; gap: 6px; margin: 24px 0 16px; flex-wrap: wrap; }
+    .section-tab {
+      padding: 10px 20px;
+      border: 2px solid transparent;
+      background: #e9ecef;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      color: #495057;
+    }
+    .section-tab:hover { background: #dee2e6; }
+    .section-tab.active { background: #4361ee; color: white; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ARIA 婕旂ず */
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: #4361ee;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 0 0 6px 0;
+      text-decoration: none;
+      font-weight: 500;
+      z-index: 10;
+    }
+    .skip-link:focus { left: 0; top: 0; }
+
+    .fake-nav {
+      background: #e9ecef;
+      padding: 14px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .fake-main {
+      background: white;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    /* 鑿滃崟婕旂ず */
+    .menu-bar { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+
+    /* 璇存槑鏂囧瓧 */
+    .note { color: #636e72; font-size: 13px; margin-top: 8px; }
+    .warning { color: #e74c3c; font-size: 13px; margin-top: 8px; }
+    .tip { color: #2ecc71; font-size: 13px; margin-top: 8px; }
+
+    /* 鎸夐挳缁?*/
+    .btn-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+    code { background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-size: 0.88em; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+
+<h1>馃攳 tabindex 浜や簰婕旂ず</h1>
+
+<div class="nav-hint">
+  <strong>馃挕 鎿嶄綔鎻愮ず锛?/strong>鎸?<kbd>Tab</kbd> 閿湪涓嬫柟鍏冪礌闂村垏鎹㈠鑸紝瑙傚療涓嶅悓 <code>tabindex</code> 鍊肩殑琛屼负宸紓銆?</div>
+
+<!-- 鍒嗗尯 Tab 瀵艰埅 -->
+<div class="section-tabs">
+  <button class="section-tab active" onclick="showSection('overview')">馃搵 姒傝堪涓庡姣?/button>
+  <button class="section-tab" onclick="showSection('positive')">馃敘 姝ｆ暣鏁?tabindex</button>
+  <button class="section-tab" onclick="showSection('zero')">馃煝 tabindex="0"</button>
+  <button class="section-tab" onclick="showSection('negative')">馃煛 tabindex="-1"</button>
+  <button class="section-tab" onclick="showSection('aria')">鈾?ARIA 鏃犻殰纰?/button>
+  <button class="section-tab" onclick="showSection('best')">鉁?鏈€浣冲疄璺?/button>
+</div>
+
+<!-- ========== 姒傝堪 ========== -->
+<div id="overview" class="tab-content active">
+
+  <h2>tabindex 鍙栧€煎鐓ц〃</h2>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr>
+        <th>鍙栧€?/th>
+        <th>Tab 閿彲鑱氱劍</th>
+        <th>JS focus() 鍙仛鐒?/th>
+        <th>鍏稿瀷浣跨敤鍦烘櫙</th>
+      </tr>
+      <tr>
+        <td><span class="badge b-neg">-1</span></td>
+        <td>鉂?鍚?/td>
+        <td>鉁?鏄?/td>
+        <td>ARIA 缁勪欢鍐呴儴銆佺▼搴忓寲鑱氱劍</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-zero">0</span></td>
+        <td>鉁?鏄紙鑷劧椤哄簭锛?/td>
+        <td>鉁?鏄?/td>
+        <td>灏?div 鍙樹负鍙仛鐒?/td>
+      </tr>
+      <tr>
+        <td><span class="badge b-pos">1, 2, 3...</span></td>
+        <td>鉁?鏄紙浼樺厛閬嶅巻锛?/td>
+        <td>鉁?鏄?/td>
+        <td>鉂?涓嶆帹鑽?/td>
+      </tr>
+    </table>
+  </div>
+
+  <h2>Tab 閿亶鍘嗛『搴忔紨绀?/h2>
+  <div class="demo-box">
+    <p><strong>閬嶅巻瑙勫垯锛?/strong>姝ｆ暣鏁版寜浠庡皬鍒板ぇ 鈫?<span class="badge b-zero">0</span> 鍜屾棤 tabindex 鎸?DOM 椤哄簭</p>
+
+    <div class="focus-el t-pos" tabindex="3">
+      tabindex="3" <span class="badge b-pos">3</span>
+    </div>
+    <div class="focus-el t-pos" tabindex="1">
+      tabindex="1" <span class="badge b-pos">1</span>
+    </div>
+    <div class="focus-el t-pos" tabindex="2">
+      tabindex="2" <span class="badge b-pos">2</span>
+    </div>
+    <div class="focus-el t-zero" tabindex="0">
+      tabindex="0" <span class="badge b-zero">0</span>
+    </div>
+    <div class="focus-el t-natural">
+      鏃?tabindex锛堣嚜鐒?DOM 椤哄簭锛?span class="badge b-natural">鑷劧</span>
+    </div>
+
+    <p class="note">馃挕 鎸?Tab 娴嬭瘯锛氶『搴忔槸 <strong>1 鈫?2 鈫?3 鈫?0 鈫?鑷劧</strong>锛岀劧鍚庡惊鐜?/p>
+  </div>
+
+  <h2>鑱氱劍鍏冪礌榛樿鍊硷紙鏃犻渶 tabindex锛?/h2>
+  <div class="demo-box">
+    <p>浠ヤ笅鍏冪礌<strong>榛樿鍙仛鐒?/strong>锛屾棤闇€娣诲姞 tabindex锛?/p>
+    <button class="focus-el" style="display:inline-block; text-align:left; width:auto;">button 鎸夐挳</button>
+    <a href="javascript:void(0)" class="focus-el" style="display:inline-block; text-align:left; width:auto; color:#4361ee;">a 閾炬帴</a>
+    <input type="text" placeholder="input 杈撳叆妗? class="focus-el" style="display:inline-block; width:auto;" />
+    <select class="focus-el" style="display:inline-block; width:auto;">
+      <option>select 涓嬫媺</option>
+    </select>
+    <textarea class="focus-el" rows="1" style="display:inline-block; width:auto; resize:none;" placeholder="textarea"></textarea>
+  </div>
+
+</div>
+
+<!-- ========== 姝ｆ暣鏁?tabindex ========== -->
+<div id="positive" class="tab-content">
+
+  <h2>姝ｆ暣鏁?tabindex锛堚潓 涓嶆帹鑽愶級</h2>
+  <div class="demo-box">
+    <p>姝ｆ暣鏁颁細鎵撲贡鑷劧鐨?DOM 椤哄簭锛屽鑷?HTML 缁撴瀯鍜?Tab 椤哄簭涓嶄竴鑷淬€?/p>
+
+    <div class="focus-el t-pos" tabindex="3">
+      HTML 椤哄簭绗?1 浣?鈫?tabindex="3" <span class="badge b-pos">3</span>
+    </div>
+    <div class="focus-el t-pos" tabindex="1">
+      HTML 椤哄簭绗?2 浣?鈫?tabindex="1" <span class="badge b-pos">1</span>
+    </div>
+    <div class="focus-el t-pos" tabindex="2">
+      HTML 椤哄簭绗?3 浣?鈫?tabindex="2" <span class="badge b-pos">2</span>
+    </div>
+
+    <p class="warning">鈿狅笍 HTML 椤哄簭鏄?3鈫?鈫?锛屼絾 Tab 閬嶅巻椤哄簭鏄?1鈫?鈫?锛屽鏄撻€犳垚缁存姢娣蜂贡</p>
+  </div>
+
+  <h3>涓轰粈涔堜笉鎺ㄨ崘浣跨敤姝ｆ暣鏁帮紵</h3>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr><th>闂</th><th>璇存槑</th></tr>
+      <tr><td>缁存姢鍥伴毦</td><td>鏂板鍏冪礌璇ュ垎閰嶅摢涓暟瀛楋紵鍒犻櫎鍏冪礌鍚庢暟瀛楀浣曡皟鏁达紵</td></tr>
+      <tr><td>椤哄簭涓嶇洿瑙?/td><td>闇€瑕佸悓鏃惰浣?HTML 缁撴瀯鍜?tabindex 鍊?/td></tr>
+      <tr><td>鐮村潖 DOM 椤哄簭鍋囪</td><td>杈呭姪鎶€鏈敤鎴蜂緷璧栧彲棰勬祴鐨?Tab 椤哄簭</td></tr>
+      <tr><td>鏃犱笂闄愮害鏉?/td><td>娌℃湁鏍囧噯鎸囧紩璇ョ敤澶氬ぇ鏁板€?/td></tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========== tabindex="0" ========== -->
+<div id="zero" class="tab-content">
+
+  <h2>tabindex="0" 鈥?鑷劧椤哄簭鑱氱劍</h2>
+  <div class="demo-box">
+    <p><code>tabindex="0"</code> 璁╁厓绱犲弬涓庤嚜鐒剁殑 Tab 椤哄簭锛屼笌 DOM 涓嚭鐜扮殑椤哄簭涓€鑷淬€?/p>
+
+    <div class="focus-el t-zero" tabindex="0">
+      绗竴涓?div <span class="badge b-zero">0</span>
+    </div>
+    <div class="focus-el t-zero" tabindex="0">
+      绗簩涓?div <span class="badge b-zero">0</span>
+    </div>
+    <div class="focus-el t-zero" tabindex="0">
+      绗笁涓?div <span class="badge b-zero">0</span>
+    </div>
+
+    <p class="tip">鉁?鎸?DOM 椤哄簭閬嶅巻锛屼笌鏅€?button/input 涓€鑷?/p>
+  </div>
+
+  <h3>鍏稿瀷浣跨敤鍦烘櫙</h3>
+  <div class="demo-box">
+    <h3>灏?div 鍙樹负鍙仛鐒︾殑"鍗＄墖鎸夐挳"</h3>
+    <div class="focus-el t-zero" tabindex="0"
+         onclick="logEvent('鍗＄墖琚偣鍑?)"
+         onkeydown="if(event.key==='Enter'||event.key===' '){logEvent('鍗＄墖琚縺娲伙紙Enter/Space锛?); event.preventDefault();}"
+         style="cursor:pointer;">
+      鍙仛鐒︾殑鍗＄墖缁勪欢锛堟寜 Enter 鎴?绌烘牸閿縺娲伙級
+    </div>
+    <p class="note">馃挕 tabindex="0" + onKeyDown 瀹炵幇閿洏鍙闂殑鑷畾涔夌粍浠?/p>
+  </div>
+
+  <h3>浣跨敤鍦烘櫙鎬荤粨</h3>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr><th>鍦烘櫙</th><th>绀轰緥</th></tr>
+      <tr><td>鑷畾涔夊崱鐗囩粍浠堕渶瑕侀敭鐩樿闂?/td><td><code>&lt;div tabindex="0" role="button"&gt;</code></td></tr>
+      <tr><td>鍙鍖栧浘琛ㄩ渶瑕侀敭鐩樺鑸?/td><td><code>&lt;svg tabindex="0"&gt;</code></td></tr>
+      <tr><td>闈炲師鐢熶氦浜掑厓绱犻渶瑕佺撼鍏?Tab 椤哄簭</td><td>鑷畾涔変笅鎷夎彍鍗曢」 <code>role="option" tabindex="0"</code></td></tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========== tabindex="-1" ========== -->
+<div id="negative" class="tab-content">
+
+  <h2>tabindex="-1" 鈥?浠呯▼搴忓寲鑱氱劍</h2>
+  <div class="demo-box">
+    <p><code>tabindex="-1"</code> 鍏冪礌<strong>涓嶈兘</strong>閫氳繃 Tab 閿仛鐒︼紝浣嗗彲浠ョ敤 JavaScript 鐨?<code>focus()</code> 鏂规硶鑱氱劍銆?/p>
+
+    <div class="focus-el t-neg" tabindex="-1">
+      tabindex="-1" 鈥?鍙€氳繃 JS focus() 鑱氱劍 <span class="badge b-neg">-1</span>
+    </div>
+    <div class="focus-el t-neg" tabindex="-1">
+      绗簩涓?tabindex="-1" 鍏冪礌 <span class="badge b-neg">-1</span>
+    </div>
+    <div class="focus-el t-natural">
+      鏃?tabindex 鈥?鏅€?div锛堝畬鍏ㄤ笉鍙仛鐒︼級 <span class="badge b-natural">鑷劧</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-warning" onclick="focusFirstNeg()">鑱氱劍绗?1 涓?-1 鍏冪礌</button>
+      <button class="btn btn-warning" onclick="focusAllNeg()">鑱氱劍鎵€鏈?-1 鍏冪礌</button>
+    </div>
+  </div>
+
+  <h3>浣跨敤鍦烘櫙</h3>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr><th>鍦烘櫙</th><th>璇存槑</th></tr>
+      <tr><td>ARIA 涓嬫媺鑿滃崟鐨勫瓙閫夐」</td><td>鐢ㄦ柟鍚戦敭瀵艰埅锛屽瓙閫夐」 <code>tabindex="-1"</code>锛孞S 鑱氱劍</td></tr>
+      <tr><td>妯℃€佹鎵撳紑鏃惰仛鐒?/td><td>鎵撳紑鏃?<code>modal.querySelector('button').focus()</code></td></tr>
+      <tr><td>璺宠浆鍒颁富瑕佸唴瀹?/td><td><code>&lt;a href="#main" tabindex="-1"&gt;</code> 瑙嗚闅愯棌锛孞S 鑱氱劍鍒?main</td></tr>
+      <tr><td>閿洏闄烽槺锛坱rap focus锛?/td><td>妯℃€佹鍐呭惊鐜仛鐒︼紝Tab 閿笉璺冲嚭</td></tr>
+    </table>
+  </div>
+
+  <h3>JS focus() 鑱氱劍婕旂ず</h3>
+  <div class="demo-box">
+    <div class="focus-el t-neg" id="js-target" tabindex="-1" style="text-align:center; font-weight:500;">
+      杩欎釜 div tabindex="-1"锛岀瓑寰?JS 鑱氱劍...
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="focusJsTarget()">璋冪敤 .focus() 鑱氱劍</button>
+      <button class="btn btn-secondary" onclick="blurJsTarget()">璋冪敤 .blur() 澶辩劍</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== ARIA 鏃犻殰纰?========== -->
+<div id="aria" class="tab-content">
+
+  <h2>ARIA 鏃犻殰纰嶅簲鐢?/h2>
+
+  <div class="demo-box">
+    <h3>鑷畾涔夋寜閽紙鏃犻殰纰嶏級</h3>
+    <p>浣跨敤 <code>role="button"</code> + <code>tabindex="-1"</code> + <code>onKeyDown</code> 瀹炵幇閿洏鍙闂殑鑷畾涔夌粍浠讹細</p>
+
+    <div class="focus-el t-neg"
+         role="button"
+         tabindex="-1"
+         style="text-align:center; cursor:pointer; font-weight:500;"
+         onclick="logEvent('鎸夐挳琚偣鍑伙紙onClick锛?)"
+         onkeydown="if(event.key==='Enter' || event.key===' '){ logEvent('鎸夐挳琚縺娲伙紙onKeyDown: ' + event.key + '锛?); event.preventDefault(); }">
+      鑷畾涔夋寜閽紙鎸?Enter 鎴?绌烘牸閿Е鍙戯級
+    </div>
+
+    <p class="note">馃挕 <code>tabindex="-1"</code> 浣?div 鍙 JS 鑱氱劍锛?code>role="button"</code> 鍛婅瘔灞忓箷闃呰鍣ㄨ繖鏄寜閽紱<code>onKeyDown</code> 澶勭悊閿洏婵€娲?/p>
+  </div>
+
+  <div class="demo-box">
+    <h3>璺宠浆鍒颁富瑕佸唴瀹归摼鎺ワ紙Skip Link锛?/h3>
+    <p>瑙嗚闅愯棌鐨勯摼鎺ワ紝鍏佽鐢ㄦ埛璺宠繃瀵艰埅鐩存帴鍒颁富瑕佸唴瀹癸細</p>
+
+    <a href="#main-content" tabindex="-1" class="skip-link" onfocus="this.style.left='0'">璺宠繃瀵艰埅</a>
+
+    <div class="fake-nav">
+      瀵艰埅鑿滃崟锛?strong>棣栭〉</strong> | 鏂囩珷 | 浜у搧 | 鍏充簬 | 鑱旂郴 | 甯歌闂
+    </div>
+
+    <div id="main-content" class="fake-main" tabindex="-1">
+      <strong>鉁?涓昏鍐呭鍖哄煙</strong><br/>
+      鎸?Tab 閿烦杞埌杩欓噷銆傚鏋滄病鏈?璺宠繃瀵艰埅"閾炬帴锛岄渶瑕侀亶鍘嗕笂闈㈡墍鏈夊鑸」鎵嶈兘鍒拌揪杩欓噷銆?    </div>
+
+    <p class="note">馃挕 <code>tabindex="-1"</code> 璁╀富瑕佸唴瀹瑰彲閫氳繃 JS 鑱氱劍锛涜瑙変笂閫氳繃 <code>position:absolute; left:-9999px</code> 闅愯棌</p>
+  </div>
+
+  <div class="demo-box">
+    <h3>鑷畾涔夎彍鍗曪紙ARIA 妯″紡锛?/h3>
+    <div role="menu" style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div class="focus-el t-zero" role="menuitem" tabindex="0" style="flex:0 0 auto;">鏂囦欢</div>
+      <div class="focus-el t-zero" role="menuitem" tabindex="0" style="flex:0 0 auto;">缂栬緫</div>
+      <div class="focus-el t-zero" role="menuitem" tabindex="0" style="flex:0 0 auto;">瑙嗗浘</div>
+    </div>
+    <p class="note">馃挕 鏂瑰悜閿鑸渶瑕侀澶栫殑 onKeyDown 澶勭悊锛堝彲閰嶅悎 tabindex="-1" 瀹炵幇瀛愯彍鍗曡仛鐒︼級</p>
+  </div>
+
+</div>
+
+<!-- ========== 鏈€浣冲疄璺?========== -->
+<div id="best" class="tab-content">
+
+  <h2>鉁?鏈€浣冲疄璺?/h2>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr><th>鍦烘櫙</th><th>鎺ㄨ崘</th><th>鍘熷洜</th></tr>
+      <tr><td>鍙氦浜掑師鐢熷厓绱?/td><td>涓嶉渶瑕?tabindex</td><td>榛樿鍙仛鐒?/td></tr>
+      <tr><td>鑷畾涔夊彲鑱氱劍缁勪欢</td><td><span class="badge b-zero">tabindex="0"</span></td><td>鍙備笌鑷劧 Tab 椤哄簭</td></tr>
+      <tr><td>闇€瑕佺▼搴忚仛鐒︿絾涓嶉渶瑕?Tab 閬嶅巻</td><td><span class="badge b-neg">tabindex="-1"</span></td><td>ARIA 缁勪欢甯哥敤妯″紡</td></tr>
+      <tr><td>璺宠浆鍒颁富瑕佸唴瀹?/td><td><span class="badge b-neg">tabindex="-1"</span></td><td>瑙嗚闅愯棌锛岀▼搴忚仛鐒?/td></tr>
+      <tr><td>**浠讳綍鎯呭喌**</td><td><span class="badge b-pos">姝ｆ暣鏁?/span></td><td>鉂?缁濆涓嶈浣跨敤</td></tr>
+    </table>
+  </div>
+
+  <h3>浠ｇ爜瑙勮寖妫€鏌ユ竻鍗?/h3>
+  <div class="demo-box">
+    <ul style="line-height:2.2; font-size:15px;">
+      <li>鉁?浼樺厛浣跨敤鍘熺敓鍏冪礌锛坆utton, a, input锛?/li>
+      <li>鉁?鑷畾涔夌粍浠朵娇鐢?<code>tabindex="0"</code></li>
+      <li>鉁?闇€瑕佺▼搴忚仛鐒︽椂浣跨敤 <code>tabindex="-1"</code></li>
+      <li>鉁?閰嶅悎 <code>role</code> 灞炴€т娇鐢紝瀹炵幇璇箟鍖?/li>
+      <li>鉁?缁勫悎浣跨敤锛氶《灞?<code>tabindex="0"</code> + 瀛愰」 <code>tabindex="-1"</code></li>
+      <li>鉂?涓嶈浣跨敤 <code>tabindex &gt; 0</code></li>
+      <li>鉂?涓嶈瀵瑰凡鍙仛鐒﹀厓绱犳坊鍔?tabindex</li>
+      <li>鉂?涓嶈浣跨敤 <code>accesskey</code>锛堝凡搴熷純锛?/li>
+    </ul>
+  </div>
+
+  <h3>涓?accesskey 鐨勫叧绯?/h3>
+  <div class="demo-box">
+    <table class="info-table">
+      <tr><th>灞炴€?/th><th>浣滅敤</th><th>鐘舵€?/th></tr>
+      <tr><td><code>accesskey</code></td><td>璁剧疆閿洏蹇嵎閿紙娴忚鍣?淇グ閿縺娲伙級</td><td>鉂?宸插簾寮冿紝涓嶆帹鑽?/td></tr>
+      <tr><td><code>tabindex</code></td><td>鎺у埗 Tab 閿亶鍘嗛『搴?/td><td>鉁?鏍稿績鏃犻殰纰嶅睘鎬?/td></tr>
+    </table>
+    <p class="note">accesskey 鐨勯棶棰橈細娴忚鍣ㄥ揩鎹烽敭鍐茬獊銆佹棤鏍囧噯鍖栫害瀹氥€佺Щ鍔ㄧ鍑犱箮鏃犳晥銆?br/>鐜颁唬鏇夸唬锛氳嚜瀹氫箟蹇嵎閿鐞嗗櫒锛堝 Mousetrap銆乭otkeys.js锛夈€?/p>
+  </div>
+
+</div>
+
+<!-- ========== 浜嬩欢鏃ュ織 ========== -->
+<h2 style="margin-top:40px;">馃摐 鑱氱劍浜嬩欢鏃ュ織</h2>
+<div class="demo-box" style="padding:16px;">
+  <div id="eventLog" class="event-log">
+    <div><span class="time">--:--:--</span><span class="note">绛夊緟鑱氱劍浜嬩欢...</span></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-secondary" onclick="clearLog()">馃棏 娓呴櫎鏃ュ織</button>
+    <button class="btn btn-secondary" onclick="focusLog()">馃搷 鑱氱劍鏃ュ織鍖?/button>
+  </div>
+</div>
+
+<script>
+  const logEl = document.getElementById('eventLog');
+
+  function getTime() {
+    const now = new Date();
+    return [now.getHours(), now.getMinutes(), now.getSeconds()]
+      .map(n => String(n).padStart(2, '0')).join(':');
+  }
+
+  function logEvent(msg, type) {
+    const time = getTime();
+    const typeClass = type === 'focus' ? 'focus-msg' : 'blur-msg';
+    const div = document.createElement('div');
+    div.innerHTML = `<span class="time">${time}</span><span class="${typeClass}">${msg}</span>`;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // 鐩戝惉鎵€鏈?.focus-el 鐨?focus 鍜?blur 浜嬩欢
+  document.querySelectorAll('.focus-el').forEach(el => {
+    el.addEventListener('focus', () => {
+      const tabindex = el.getAttribute('tabindex') ?? '鑷劧';
+      const label = el.textContent.trim().split('\n')[0].trim();
+      logEvent(`鑱氱劍: ${label} (tabindex=${tabindex})`, 'focus');
+    });
+    el.addEventListener('blur', () => {
+      const label = el.textContent.trim().split('\n')[0].trim();
+      logEvent(`澶辩劍: ${label}`, 'blur');
+    });
+  });
+
+  function focusFirstNeg() {
+    const el = document.querySelector('#negative .focus-el[tabindex="-1"]');
+    if (el) { el.focus(); logEvent('JS focus() 鈫?绗?涓?-1 鍏冪礌', 'focus'); }
+  }
+
+  function focusAllNeg() {
+    const els = document.querySelectorAll('#negative .focus-el[tabindex="-1"]');
+    els.forEach(el => { el.focus(); });
+    logEvent(`JS focus() 鈫?鎵归噺鑱氱劍 ${els.length} 涓?-1 鍏冪礌`, 'focus');
+  }
+
+  function focusJsTarget() {
+    const el = document.getElementById('js-target');
+    el.focus();
+    logEvent('focus() 鑱氱劍 #js-target', 'focus');
+  }
+
+  function blurJsTarget() {
+    const el = document.getElementById('js-target');
+    el.blur();
+    logEvent('blur() 澶辩劍 #js-target', 'blur');
+  }
+
+  function clearLog() {
+    logEl.innerHTML = `<div><span class="time">${getTime()}</span><span class="note">鏃ュ織宸叉竻闄?/span></div>`;
+  }
+
+  function focusLog() {
+    logEl.focus();
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.section-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (event) event.target.classList.add('active');
+  }
+
+  // 椤甸潰鍔犺浇鏃惰褰?  logEvent('椤甸潰鍔犺浇瀹屾垚锛岃鎸?Tab 閿紑濮嬫祴璇?, 'focus');
+</script>
+
+</body>
+</html>
