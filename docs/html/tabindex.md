@@ -229,7 +229,7 @@
 
 ## 婕旂ず
 
-馃憠 [tabindex 浜や簰婕旂ず](./tabindex-demo.html)
+交互演示见仓库中的 examples/html/demos/tabindex-demo.html。
 
 ---
 
